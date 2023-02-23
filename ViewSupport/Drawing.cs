@@ -168,7 +168,7 @@ namespace ViewSupport
         //}
 
         /// <summary>Redraws the current ViewPrimitives list onto the off screen buffer. Calling Blit() will blit it to the supplied graphics object. Returns true if the redraw occurred successfully.</summary>
-        private static bool ReDraw()
+        public static bool ReDraw()
         {
             //if (Enabled && NextRedraw != RedrawTypeRequired.None)
             if (NextRedraw != RedrawTypeRequired.None)

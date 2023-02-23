@@ -1,16 +1,17 @@
-using System;
+using FileParser;
+using Primitives;
+using ScratchUtility;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using Primitives;
-using ScratchUtility;
-using System.IO;
 using System.Xml;
-using FileParser;
+using System;
 
 namespace ScratchTest
 {
@@ -32,7 +33,7 @@ namespace ScratchTest
             SetVisibilityMode();
             mView.SwitchLeftRight = mSwitchCheckBox.Checked;
             TrySetPointWidth();
-            SetUpFileList(@"C:\Projects(NAS)\HoloZens\scratchhologram\Data");
+            SetUpFileList(@".\..\..\..\Data"); // C:\Projects(NAS)\HoloZens\scratchhologram\Data");
  //           SetUpFileList(@"C:\Program Files\Blender Foundation\Blender");
             //begin drawing
             //mView.DrawingEnabled = true;
@@ -298,8 +299,21 @@ namespace ScratchTest
 
         private void mGenerateButton_Click(object sender, EventArgs e)
         {
+            mView.ShowArcs = mArcCheckBox.Checked = true;
+            mVectorsCheckBox.Checked = false;
+
+            //Graphics g = Graphics.FromHwnd(this.Handle);
+            //g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+
+            // TODO: Pass flag suppressing actual UI render when only generating gcode
+            DateTime start = DateTime.Now;
+            ViewSupport.Drawing.ReDraw();
+            Debug.WriteLine("Drawing.ReDraw, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
+
             txtOutput.Text = ViewSupport.DrawOptions.Gcode.sbGcode.ToString();
+
             UpdateOutputSummary();
+            //Invalidate();
         }
 
 
