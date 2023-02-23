@@ -12,6 +12,7 @@ namespace ViewSupport
         {
             BackgroundColor = Color.White,
             ArcPen = new Pen(Color.Gray),
+            ArcTextBrush = Brushes.DarkGray,
             VectorPen = new Pen(Color.Blue),
             PointBrush = Brushes.Blue,
             RedBlueModePointBrush = Brushes.Black,  // Can't be Blue
@@ -21,6 +22,7 @@ namespace ViewSupport
         {
             BackgroundColor = Color.FromArgb(30, 30, 30),
             ArcPen = new Pen(Color.Gray),
+            ArcTextBrush = Brushes.LightGray,
             VectorPen = new Pen(Color.LightBlue),
             PointBrush = Brushes.LightGray,
             RedBlueModePointBrush = Brushes.White
@@ -33,5 +35,7 @@ namespace ViewSupport
         public Brush PointBrush { get; set; }
 
         public Brush RedBlueModePointBrush { get; set; }
+
+        public Brush ArcTextBrush { get; set; }
     }
 }

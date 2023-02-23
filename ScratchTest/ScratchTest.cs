@@ -197,8 +197,6 @@ namespace ScratchTest
                 mView.AddShape(ifs);
             }
             mView.PreProcessShapes();
-            //mView.SetPo(file.CameraPosition);
-            
         }
 
 
@@ -277,7 +275,10 @@ namespace ScratchTest
         private void mVectorsCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (!DesignMode)
+            {
                 mView.VectorMode = mVectorsCheckBox.Checked;
+                UpdateOutputSummary();
+            }
         }
 
         private void quickModeCheckBox_CheckedChanged(object sender, EventArgs e)
@@ -287,6 +288,7 @@ namespace ScratchTest
         private void mHiddenLineCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             SetVisibilityMode();
+            UpdateOutputSummary();
         }
 
         private void mMergeFacesCheckBox_CheckedChanged(object sender, EventArgs e)
@@ -302,18 +304,15 @@ namespace ScratchTest
             mView.ShowArcs = mArcCheckBox.Checked = true;
             mVectorsCheckBox.Checked = false;
 
-            //Graphics g = Graphics.FromHwnd(this.Handle);
-            //g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
-
-            // TODO: Pass flag suppressing actual UI render when only generating gcode
             DateTime start = DateTime.Now;
+
             ViewSupport.Drawing.ReDraw();
+
             Debug.WriteLine("Drawing.ReDraw, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
 
             txtOutput.Text = ViewSupport.DrawOptions.Gcode.sbGcode.ToString();
 
             UpdateOutputSummary();
-            //Invalidate();
         }
 
 
@@ -322,9 +321,7 @@ namespace ScratchTest
             ViewSupport.GCodeInfo gcode = ViewSupport.DrawOptions.Gcode;
             string gcodeText = gcode.sbGcode.ToString();
             float arcDurSecs = 2;   // TODO: Update based on actual run and/or proper math taking distance/feed into account.
-            //mView.GenerateArcs();
             txtOutputSummary.Text = $"Arcs = {gcode.ArcCount}, Gcode = {gcodeText.Length / 1024}kb, EstHrs = {(gcode.ArcCount * arcDurSecs) / 3600}";
-
         }
 
     }

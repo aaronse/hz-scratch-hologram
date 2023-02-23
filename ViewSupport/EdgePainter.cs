@@ -22,6 +22,8 @@ namespace ViewSupport
 
         private static long s_edgeHits = 0;
 
+        private static long s_skippedEdgeCount = 0;
+
         private static HashSet<string> s_drawnEdges = new HashSet<string>();
 
 
@@ -33,10 +35,17 @@ namespace ViewSupport
             s_drawnEdges.Clear();
             s_coordHits = 0;
             s_edgeHits = 0;
+            s_skippedEdgeCount = 0;
 
+            // Calculate Edge visibility, so we know which full edges, or edge sections to draw/arc.
+            if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
+            {
+                TraverseEdges(theme);
+            }
+
+            // Show Arcs, after visibility sections have been computed.
             if (DrawOptions.ShowArcs)
             {
-
                 foreach (IndexedFaceSet ifs in ShapeList)
                     foreach (Edge e in ifs.Edges)
                         DrawArcs(theme, g, e, DrawOptions.Gcode, drawnCoords);
@@ -44,9 +53,6 @@ namespace ViewSupport
 
             if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
             {
-                //recalculate the visibility for each Edge so we know which ones to draw.
-                TraverseEdges(theme);
-
                 foreach (EdgeSection es in s_visibleEdgeSections)
                     DrawEdgeSection(theme, g, es);
             }
@@ -57,7 +63,7 @@ namespace ViewSupport
                         DrawEdge(theme, g, e);
             }
 
-            System.Diagnostics.Debug.WriteLine($"gcode.ArcCount={DrawOptions.Gcode.ArcCount}, s_coordHits={s_coordHits}, s_edgeHits={s_edgeHits}");
+            System.Diagnostics.Debug.WriteLine($"gcode.ArcCount={DrawOptions.Gcode.ArcCount}, s_coordHits={s_coordHits}, s_edgeHits={s_edgeHits}, s_skippedEdgeCount={s_skippedEdgeCount}");
         }
 
         private static void DrawEdge(ThemeInfo theme, Graphics g, Edge e)
@@ -99,10 +105,10 @@ namespace ViewSupport
                 // Draw Edge as vector Line
                 g.DrawLine(pPen, startPoint, endPoint);
             }
-            else
+
+            // TODO:P2 Consider implementing flag to conditionally render light points
             {
                 // Draw Edge as Points along a vector
-
                 Brush pBrush = 
                     (DrawOptions.ViewMode == ViewMode.RedBlue) 
                     ? theme.RedBlueModePointBrush 
@@ -126,6 +132,14 @@ namespace ViewSupport
         /// </summary>
         private static void DrawArcs(ThemeInfo theme, Graphics g, Edge e, GCodeInfo gcode, HashSet<string> drawnCoords)
         {
+            // Skip Edges without any visible sections
+            // Also tried !es.Visible but observed arcs for hidden points being unexpectedly rendered.
+            if (!e.EdgeSections.Any(es => s_visibleEdgeSections.Contains(es))) 
+            {
+                s_skippedEdgeCount++;
+                return;
+            }
+
             List<Coord> points = e.GetPoints(DrawOptions.ViewPointsPerUnitLength, true);
             foreach (Coord c in points)
             {
@@ -139,6 +153,16 @@ namespace ViewSupport
                 Rectangle arcRect = Transformer.GetArcSquare(c);
                 float startAngle = c.Z - ViewContext.N_ViewCoordinates > 0 ? 0 : 180;
                 g.DrawArc(theme.ArcPen, arcRect, startAngle, 180);
+
+                if (Global.DebugMode)
+                    surface.DrawString(
+                        e.EdgeID.ToString(),
+                        new Font("Arial", 8f, FontStyle.Regular),
+                        theme.ArcTextBrush,
+                        new PointF(
+                            arcRect.X + arcRect.Width / 2,
+                            arcRect.Y + ((startAngle == 0) ? arcRect.Height : 0)));
+
 
                 if (DrawOptions.ShowGcode)
                 {
