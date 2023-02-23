@@ -1,0 +1,9 @@
+<scene render="true" bboxcenter="0,0,0" bboxsize="-1,-1,-1" pickmode="idBuf" dopickpass="true">
+            <viewpoint position="0 0 10" fieldofview="0.785398" orientation="0,0,0,0" centerofrotation="0,0,0" znear="-1" zfar="-1"></viewpoint>
+              <shape render="true" bboxcenter="0,0,0" bboxsize="-1,-1,-1" ispickable="true">
+                <appearance sorttype="auto" alphaclipthreshold="0.1">
+                    <material diffusecolor="0.603 0.894 0.909" ambientintensity="0.2" emissivecolor="0,0,0" shininess="0.2" specularcolor="0,0,0"></material>
+                </appearance>
+                <box def="box" solid="true" ccw="true" usegeocache="true" lit="true" size="2,2,2"></box>
+             </shape>
+          <matrixtransform render="true" bboxcenter="0,0,0" bboxsize="-1,-1,-1" matrix="1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1"><inline render="false" bboxcenter="0,0,0" bboxsize="-1,-1,-1" url="" load="true" namespacename=""></inline></matrixtransform><matrixtransform render="true" bboxcenter="0,0,0" bboxsize="-1,-1,-1" matrix="1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1"><inline render="false" bboxcenter="0,0,0" bboxsize="-1,-1,-1" url="" load="true" namespacename=""></inline></matrixtransform></scene>
