@@ -168,8 +168,14 @@ namespace ViewSupport
         //}
 
         /// <summary>Redraws the current ViewPrimitives list onto the off screen buffer. Calling Blit() will blit it to the supplied graphics object. Returns true if the redraw occurred successfully.</summary>
-        public static bool ReDraw()
+        public static bool ReDraw(bool isRendering)
         {
+            DrawOptions drawOptions = new DrawOptions()
+            {
+                IsRendering = isRendering,
+                Graphics = mOffScreenGraphics
+            };
+
             //if (Enabled && NextRedraw != RedrawTypeRequired.None)
             if (NextRedraw != RedrawTypeRequired.None)
             {
@@ -187,31 +193,34 @@ namespace ViewSupport
                     Shapes.Refresh(DrawOptions.SwitchBackFront, true);
                 }
 
-                ThemeInfo theme;
                 switch (DrawOptions.ViewMode)
                 {
                     case ViewMode.Normal:
-                        theme = ThemeInfo.LightTheme;
+                        drawOptions.Theme = ThemeInfo.LightTheme;
 
-                        mOffScreenGraphics.Clear(theme.BackgroundColor);
-                        DrawNormal(theme, mOffScreenGraphics);
+                        mOffScreenGraphics.Clear(drawOptions.Theme.BackgroundColor);
+                        DrawNormal(drawOptions);
                         break;
                     case ViewMode.Dark:
-                        theme = ThemeInfo.DarkTheme;
+                        drawOptions.Theme = ThemeInfo.DarkTheme;
 
-                        mOffScreenGraphics.Clear(theme.BackgroundColor);
-                        DrawNormal(theme, mOffScreenGraphics);
+                        mOffScreenGraphics.Clear(drawOptions.Theme.BackgroundColor);
+                        DrawNormal(drawOptions);
                         break;
                     case ViewMode.RedBlue:
-                        DrawRedBlue(ThemeInfo.LightTheme, mOffScreenGraphics);
+                        drawOptions.Theme = ThemeInfo.LightTheme;
+
+                        DrawRedBlue(drawOptions);
                         break;
                     case ViewMode.Stereoscopic:
+                        drawOptions.Theme = ThemeInfo.LightTheme;
                         mOffScreenGraphics.Clear(Color.White);
-                        DrawStereoscopic(ThemeInfo.LightTheme, mOffScreenGraphics);
+                        DrawStereoscopic(drawOptions);
                         break;
                     case ViewMode.Print:
+                        drawOptions.Theme = ThemeInfo.LightTheme;
                         mOffScreenGraphics.Clear(Color.White);
-                        DrawPrint(ThemeInfo.LightTheme, mOffScreenGraphics);
+                        DrawPrint(drawOptions);
                         break;
                 }
 
@@ -239,7 +248,7 @@ namespace ViewSupport
             if (SceneChanged != null && DoDraw)
                 SceneChanged();
         }
-        private static void DrawNormal(ThemeInfo theme, Graphics g)
+        private static void DrawNormal(DrawOptions options)
         {
             //if (DrawOptions.ShowArcs)
             //    ViewPrimitives.DrawArcs(g);
@@ -247,7 +256,7 @@ namespace ViewSupport
             if (Shapes.Count > 0)
             {
                 EdgePainter.ShapeList = Shapes;
-                EdgePainter.Draw(theme, g);
+                EdgePainter.Draw(options);
             }
 
             
@@ -278,7 +287,7 @@ namespace ViewSupport
             //}
         }
 
-        private static void DrawRedBlue(ThemeInfo theme, Graphics g)
+        private static void DrawRedBlue(DrawOptions options)
         {
             bool buShowArcs = DrawOptions.ShowArcs;
             DrawOptions.ShowArcs = false;
@@ -304,31 +313,31 @@ namespace ViewSupport
                 //The rightBitmap will be blitted onto g after the left image is drawn onto g
                 Bitmap rightBitmap = new Bitmap(ViewContext.CanvasSize.Width, ViewContext.CanvasSize.Height);
                 Graphics rightGraphics = Graphics.FromImage(rightBitmap);
+                DrawOptions rightOptions = options.Clone();
+                rightOptions.Graphics = rightGraphics;
 
                 rightGraphics.Clear(rightColor);
-                g.Clear(leftColor);
+                options.Graphics.Clear(leftColor);
 
                 ViewContext.StereoscopicMode = StereoscopicMode.Left; 
                 Shapes.Refresh(DrawOptions.SwitchBackFront, true);
                     
-                DrawNormal(theme, g);
+                DrawNormal(options);
 
                 ViewContext.StereoscopicMode = StereoscopicMode.Right;
                 Shapes.Refresh(DrawOptions.SwitchBackFront, true);
                     
-                DrawNormal(theme, rightGraphics);
+                DrawNormal(rightOptions);
                 ViewContext.StereoscopicMode = StereoscopicMode.NonStereoscopic;
 
                 Shapes.Refresh(DrawOptions.SwitchBackFront, true);
                     
-
-
-                g.DrawImage(rightBitmap, new Rectangle(0, 0, rightBitmap.Width, rightBitmap.Height), 0, 0, rightBitmap.Width, rightBitmap.Height, GraphicsUnit.Pixel, ia);
+                options.Graphics.DrawImage(rightBitmap, new Rectangle(0, 0, rightBitmap.Width, rightBitmap.Height), 0, 0, rightBitmap.Width, rightBitmap.Height, GraphicsUnit.Pixel, ia);
             }
 
             DrawOptions.ShowArcs = buShowArcs;
         }
-        private static void DrawStereoscopic(ThemeInfo theme, Graphics g)
+        private static void DrawStereoscopic(DrawOptions options)
         {
             //because we're shrinking the drawing, we need to increase the point size.
             DrawOptions.PointWidth *= 1.5;
@@ -336,35 +345,36 @@ namespace ViewSupport
 
             //offset the first direction (default left)
             if (DrawOptions.SwitchLeftRight)
-                TranslateGraphicsRight(g);
+                TranslateGraphicsRight(options);
             else
-                TranslateGraphicsLeft(g);
+                TranslateGraphicsLeft(options);
 
             ViewContext.StereoscopicMode = StereoscopicMode.Left;
             Shapes.Refresh(DrawOptions.SwitchBackFront, true);
-            DrawNormal(theme, g);
+            DrawNormal(options);
 
             //now offset the other direction (default right)
             if (DrawOptions.SwitchLeftRight)
-                TranslateGraphicsLeft(g);
+                TranslateGraphicsLeft(options);
             else
-                TranslateGraphicsRight(g);
+                TranslateGraphicsRight(options);
 
             ViewContext.StereoscopicMode = StereoscopicMode.Right;
             Shapes.Refresh(DrawOptions.SwitchBackFront, true);
-            DrawNormal(theme, g);
+            DrawNormal(options);
 
             //reset the ViewAngle and graphics transform
             ViewContext.StereoscopicMode = StereoscopicMode.NonStereoscopic;
             Shapes.Refresh(DrawOptions.SwitchBackFront, true);
-            g.ResetTransform();
-            g.ResetClip();
+            options.Graphics.ResetTransform();
+            options.Graphics.ResetClip();
             //set the point size back to where it was.
             DrawOptions.PointWidth /= 1.5;
         }
 
-        private static void TranslateGraphicsLeft(Graphics g)
+        private static void TranslateGraphicsLeft(DrawOptions options)
         {
+            Graphics g = options.Graphics;
             Size canvasSize = ViewContext.CanvasSize;
             g.ResetTransform();
             g.ResetClip();
@@ -372,8 +382,9 @@ namespace ViewSupport
             ShrinkGraphics(g);
             g.TranslateTransform(-canvasSize.Width / 4, 0, MatrixOrder.Append);
         }
-        private static void TranslateGraphicsRight(Graphics g)
+        private static void TranslateGraphicsRight(DrawOptions options)
         {
+            Graphics g = options.Graphics;
             Size canvasSize = ViewContext.CanvasSize;
             g.ResetTransform();
             g.ResetClip();
@@ -391,9 +402,9 @@ namespace ViewSupport
         }
 
 
-        private static void DrawPrint(ThemeInfo theme, Graphics g)
+        private static void DrawPrint(DrawOptions options)
         {
-            DrawNormal(theme, g);
+            DrawNormal(options);
 
             foreach (IndexedFaceSet ifs in EdgePainter.ShapeList)
             {
@@ -401,11 +412,12 @@ namespace ViewSupport
                 {
                     Rectangle r = Transformer.GetArcSquare(e.StartVertex.ViewCoord_ZeroAngle);
                     Point center = new Point(r.X + (int)(r.Width / 2), r.Y + (int)(r.Height / 2));
-                    g.FillEllipse(Brushes.Black, new Rectangle(center.X - 1, center.Y - 1, 3, 3));
+                    if (options.IsRendering)
+                    {
+                        options.Graphics.FillEllipse(Brushes.Black, new Rectangle(center.X - 1, center.Y - 1, 3, 3));
+                    }
                 }
             }
-
-
 
             //if (ShowArcs)
             //{
@@ -560,10 +572,6 @@ namespace ViewSupport
         //    //}
         //}
 
-        
-
-
-
 
 
         #region Helper Functions
@@ -582,9 +590,12 @@ namespace ViewSupport
         //    return RectangleF.FromLTRB(ps[0].X, ps[0].Y, ps[1].X, ps[1].Y);
         //}
 
-        public static void DrawPoint(Graphics g, Point p, Brush b, int pointSize)
+        public static void DrawPoint(DrawOptions options, Point p, Brush b, int pointSize)
         {
-            g.FillEllipse(b, p.X - (int)(DrawOptions.PointWidth / 2), p.Y - (int)(DrawOptions.PointWidth / 2), pointSize, pointSize);
+            if (options.IsRendering)
+            {
+                options.Graphics.FillEllipse(b, p.X - (int)(DrawOptions.PointWidth / 2), p.Y - (int)(DrawOptions.PointWidth / 2), pointSize, pointSize);
+            }
         }
         #endregion
 
@@ -599,7 +610,7 @@ namespace ViewSupport
             if (DoDraw)
             {
                 if (NextRedraw != RedrawTypeRequired.None)
-                    ReDraw();
+                    ReDraw(true);
 
                 g.ResetTransform();
                 if (DrawOptions.RotateCanvas)

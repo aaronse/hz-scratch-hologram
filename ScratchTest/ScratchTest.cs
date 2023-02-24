@@ -34,12 +34,14 @@ namespace ScratchTest
             mView.SwitchLeftRight = mSwitchCheckBox.Checked;
             TrySetPointWidth();
             SetUpFileList(@".\..\..\..\Data"); // C:\Projects(NAS)\HoloZens\scratchhologram\Data");
- //           SetUpFileList(@"C:\Program Files\Blender Foundation\Blender");
-            //begin drawing
-            //mView.DrawingEnabled = true;
+                                               //           SetUpFileList(@"C:\Program Files\Blender Foundation\Blender");
+                                               //begin drawing
+                                               //mView.DrawingEnabled = true;
+
+            mView.Paint += MView_Paint;
         }
 
-
+ 
         public void SetVisibilityMode()
         {
             mView.VisibilityMode = mHiddenLineCheckBox.Checked ? ViewSupport.VisibilityMode.HiddenLine : ViewSupport.VisibilityMode.Transparent;
@@ -50,7 +52,10 @@ namespace ScratchTest
         private void mArcSweepAngleTrack_Scroll(object sender, EventArgs e)
         {
             if(!DesignMode)
+            {
                 mView.ArcSweepAngle = mArcSweepAngleTrack.Value;
+                UpdateOutputSummary();
+            } 
         }
 
         private void mViewAngleTrack_Scroll(object sender, EventArgs e)
@@ -65,7 +70,10 @@ namespace ScratchTest
         private void mViewAngleTrack_ValueChanged(object sender, EventArgs e)
         {
             if (!DesignMode)
+            {
                 mView.ViewAngle = mViewAngleTrack.Value;
+                UpdateOutputSummary();
+            }
         }
 
         private void mLineResolutionTrack_Scroll(object sender, EventArgs e)
@@ -302,11 +310,10 @@ namespace ScratchTest
         private void mGenerateButton_Click(object sender, EventArgs e)
         {
             mView.ShowArcs = mArcCheckBox.Checked = true;
-            mVectorsCheckBox.Checked = false;
-
+           
             DateTime start = DateTime.Now;
 
-            ViewSupport.Drawing.ReDraw();
+            ViewSupport.Drawing.ReDraw(false);
 
             Debug.WriteLine("Drawing.ReDraw, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
 
@@ -321,9 +328,31 @@ namespace ScratchTest
             ViewSupport.GCodeInfo gcode = ViewSupport.DrawOptions.Gcode;
             string gcodeText = gcode.sbGcode.ToString();
             float arcDurSecs = 2;   // TODO: Update based on actual run and/or proper math taking distance/feed into account.
-            txtOutputSummary.Text = $"Arcs = {gcode.ArcCount}, Gcode = {gcodeText.Length / 1024}kb, EstHrs = {(gcode.ArcCount * arcDurSecs) / 3600}";
+            string summary = "";
+
+            if (gcode.ArcCount > 0)
+            {
+                summary = $"Arcs = {gcode.ArcCount}, Gcode = {gcodeText.Length / 1024}kb, EstHrs = {(gcode.ArcCount * arcDurSecs) / 3600.0:F2}";
+            }
+
+            summary += $"{((summary.Length > 0) ? ", " :"")}Cam = {ViewContext.Po.ToString(3)}:{ViewContext.Pr.ToString(3)}";
+
+            txtOutputSummary.Text = summary;
         }
 
+        private void mArcSegmentsCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!DesignMode)
+            {
+                mView.ShowArcSegments = mArcSegmentsCheckbox.Checked;
+                UpdateOutputSummary();
+            }
+        }
+
+        private void MView_Paint(object sender, PaintEventArgs e)
+        {
+            UpdateOutputSummary();
+        }
     }
 
     

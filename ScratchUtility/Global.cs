@@ -82,15 +82,15 @@ namespace ScratchUtility
                 testPoint.Y <= startPoint.Y && testPoint.Y >= endPoint.Y);
         }
 
-        public static List<double> GetReferenceAngles(double Increment, double ArcSweepAngle)
+        public static List<double> GetReferenceAngles(double increment, double arcSweepAngle)
         {
             List<double> angles = new List<double>();
-            double startAngle = -ArcSweepAngle / 2;
-            double endAngle = ArcSweepAngle / 2;
+            double startAngle = -arcSweepAngle / 2;
+            double endAngle = arcSweepAngle / 2;
 
             angles.Add(startAngle);
 
-            for (double angle = startAngle + Increment; angle < endAngle; angle += Increment)
+            for (double angle = startAngle + increment; angle < endAngle; angle += increment)
             {
                 angles.Add(angle);
             }

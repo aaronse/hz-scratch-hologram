@@ -13,7 +13,8 @@ namespace ViewSupport
     /// <summary>A static class used to paint Edges of IndexedFacesets according to the settings specified in DrawOptions.</summary>
     internal static class EdgePainter
     {
-        private static Graphics surface;
+        // TODO: Remove
+        //private static Graphics surface;
         internal static List<EdgeSection> s_visibleEdgeSections { get; set; }
 
         public static ShapeList ShapeList { get; set; }
@@ -27,9 +28,8 @@ namespace ViewSupport
         private static HashSet<string> s_drawnEdges = new HashSet<string>();
 
 
-        internal static void Draw(ThemeInfo theme, Graphics g)
+        internal static void Draw(DrawOptions options)
         {
-            surface = g;
             DrawOptions.Gcode.Clear();
             HashSet<string> drawnCoords = new HashSet<string>();
             s_drawnEdges.Clear();
@@ -40,7 +40,7 @@ namespace ViewSupport
             // Calculate Edge visibility, so we know which full edges, or edge sections to draw/arc.
             if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
             {
-                TraverseEdges(theme);
+                TraverseEdges(options);
             }
 
             // Show Arcs, after visibility sections have been computed.
@@ -48,35 +48,35 @@ namespace ViewSupport
             {
                 foreach (IndexedFaceSet ifs in ShapeList)
                     foreach (Edge e in ifs.Edges)
-                        DrawArcs(theme, g, e, DrawOptions.Gcode, drawnCoords);
+                        DrawArcs(options, e, DrawOptions.Gcode, drawnCoords);
             }
 
             if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
             {
                 foreach (EdgeSection es in s_visibleEdgeSections)
-                    DrawEdgeSection(theme, g, es);
+                    DrawEdgeSection(options, es);
             }
             else
             {
                 foreach (IndexedFaceSet ifs in ShapeList)
                     foreach (Edge e in ifs.Edges)
-                        DrawEdge(theme, g, e);
+                        DrawEdge(options, e);
             }
 
             System.Diagnostics.Debug.WriteLine($"gcode.ArcCount={DrawOptions.Gcode.ArcCount}, s_coordHits={s_coordHits}, s_edgeHits={s_edgeHits}, s_skippedEdgeCount={s_skippedEdgeCount}");
         }
 
-        private static void DrawEdge(ThemeInfo theme, Graphics g, Edge e)
+        private static void DrawEdge(DrawOptions options, Edge e)
         {
-            DrawEdgePart(theme, g, e, e.StartVertex.ViewCoord, e.EndVertex.ViewCoord);
+            DrawEdgePart(options, e, e.StartVertex.ViewCoord, e.EndVertex.ViewCoord);
         }
-        private static void DrawEdgeSection(ThemeInfo theme, Graphics g, EdgeSection es)
+        private static void DrawEdgeSection(DrawOptions options, EdgeSection es)
         {
-            DrawEdgePart(theme, g, es.Edge, es.StartCoord, es.EndCoord);
+            DrawEdgePart(options, es.Edge, es.StartCoord, es.EndCoord);
         }
 
 
-        private static void DrawEdgePart(ThemeInfo theme, Graphics g, Edge e, Coord startCoord, Coord endCoord)
+        private static void DrawEdgePart(DrawOptions options, Edge e, Coord startCoord, Coord endCoord)
         {
             Point startPoint = startCoord.ToPointD().ToPoint();
             Point endPoint = endCoord.ToPointD().ToPoint();
@@ -91,7 +91,7 @@ namespace ViewSupport
                 return;
             }
 
-            Pen pPen = theme.VectorPen;
+            Pen pPen = options.Theme.VectorPen;
             Color backupColor = pPen.Color;
             Color actualColor = 
                 (DrawOptions.ViewMode == ViewMode.RedBlue && ViewContext.StereoscopicMode != StereoscopicMode.NonStereoscopic) 
@@ -100,10 +100,10 @@ namespace ViewSupport
 
             pPen.Color = actualColor;
 
-            if (DrawOptions.VectorMode)
+            if (options.IsRendering && DrawOptions.VectorMode)
             {
                 // Draw Edge as vector Line
-                g.DrawLine(pPen, startPoint, endPoint);
+                options.Graphics.DrawLine(pPen, startPoint, endPoint);
             }
 
             // TODO:P2 Consider implementing flag to conditionally render light points
@@ -111,16 +111,16 @@ namespace ViewSupport
                 // Draw Edge as Points along a vector
                 Brush pBrush = 
                     (DrawOptions.ViewMode == ViewMode.RedBlue) 
-                    ? theme.RedBlueModePointBrush 
-                    : theme.PointBrush;
+                    ? options.Theme.RedBlueModePointBrush 
+                    : options.Theme.PointBrush;
 
                 foreach (Coord c in e.GetPoints(DrawOptions.ViewPointsPerUnitLength, false))
                 {
                     PointD p = c.ToPointD();
-
+                    
                     //Draw the point if visible
-                    if (DrawOptions.VisibilityMode == VisibilityMode.Transparent || Global.IsBetween(p, startCoord.ToPointD(), endCoord.ToPointD()))
-                        Drawing.DrawPoint(g, p.ToPoint(), pBrush, (int)DrawOptions.PointWidth);
+                    if ((DrawOptions.VisibilityMode == VisibilityMode.Transparent || Global.IsBetween(p, startCoord.ToPointD(), endCoord.ToPointD())))
+                        Drawing.DrawPoint(options, p.ToPoint(), pBrush, (int)DrawOptions.PointWidth);
                 }
             }
             pPen.Color = backupColor;
@@ -130,7 +130,7 @@ namespace ViewSupport
         /// <summary>
         /// Draw Arcs not already drawn
         /// </summary>
-        private static void DrawArcs(ThemeInfo theme, Graphics g, Edge e, GCodeInfo gcode, HashSet<string> drawnCoords)
+        private static void DrawArcs(DrawOptions options, Edge e, GCodeInfo gcode, HashSet<string> drawnCoords)
         {
             // Skip Edges without any visible sections
             // Also tried !es.Visible but observed arcs for hidden points being unexpectedly rendered.
@@ -152,13 +152,16 @@ namespace ViewSupport
 
                 Rectangle arcRect = Transformer.GetArcSquare(c);
                 float startAngle = c.Z - ViewContext.N_ViewCoordinates > 0 ? 0 : 180;
-                g.DrawArc(theme.ArcPen, arcRect, startAngle, 180);
+                if (options.IsRendering)
+                {
+                    options.Graphics.DrawArc(options.Theme.ArcPen, arcRect, startAngle, 180);
+                }
 
-                if (Global.DebugMode)
-                    surface.DrawString(
+                if (options.IsRendering && Global.DebugMode)
+                    options.Graphics.DrawString(
                         e.EdgeID.ToString(),
                         new Font("Arial", 8f, FontStyle.Regular),
-                        theme.ArcTextBrush,
+                        options.Theme.ArcTextBrush,
                         new PointF(
                             arcRect.X + arcRect.Width / 2,
                             arcRect.Y + ((startAngle == 0) ? arcRect.Height : 0)));
@@ -187,7 +190,7 @@ namespace ViewSupport
 
 
 
-        internal static void TraverseEdges(ThemeInfo theme)
+        internal static void TraverseEdges(DrawOptions options)
         {
             s_visibleEdgeSections = new List<EdgeSection>();
             
@@ -197,7 +200,7 @@ namespace ViewSupport
             {
                 foreach (Edge e in ifs.Edges)
                 {
-                    ProcessEdge(theme, e);
+                    ProcessEdge(options, e);
                 }
             }
         }
@@ -205,7 +208,7 @@ namespace ViewSupport
 
 
         /// <summary>Splits the edge up into sections with constant visibility by determining if and where it intersects any of the ShapeList's Silhouette Edges.</summary>
-        internal static void ProcessEdge(ThemeInfo theme, Edge e)
+        internal static void ProcessEdge(DrawOptions options, Edge e)
         {
             foreach (Intersection inter in e.FaceIntersections)
             {
@@ -239,7 +242,7 @@ namespace ViewSupport
                             double distanceFromStart = (intersectionPoint - e.StartVertex.ViewCoord).Length / e.Length_ViewCoordinates;
                             intersections.Add(new Intersection(e, distanceFromStart));
                             if (Global.DebugMode)
-                                surface.FillEllipse(Brushes.Red, new Rectangle((int)intersectionPoint.X - 5, (int)intersectionPoint.Y - 5, 10, 10));
+                                options.Graphics.FillEllipse(Brushes.Red, new Rectangle((int)intersectionPoint.X - 5, (int)intersectionPoint.Y - 5, 10, 10));
                         }
                     }
                 }
@@ -258,7 +261,7 @@ namespace ViewSupport
                 foreach (Intersection si in orderedIntersections)
                 {
                     es = new EdgeSection(e, lastCoord, si.IntersectionPoint_ViewCoordinates);
-                    ComputeVisibility(theme, es);
+                    ComputeVisibility(options, es);
                     e.EdgeSections.Add(es);
                     if (es.Visible)
                         s_visibleEdgeSections.Add(es);
@@ -268,7 +271,7 @@ namespace ViewSupport
                 Debug.Assert(lastCoord != e.EndVertex.ViewCoord, "Should we skip zero length Edge?");
             
                 es = new EdgeSection(e, lastCoord, e.EndVertex.ViewCoord);
-                ComputeVisibility(theme, es);
+                ComputeVisibility(options, es);
                 e.EdgeSections.Add(es);
                 if (es.Visible)
                     s_visibleEdgeSections.Add(es);
@@ -276,15 +279,15 @@ namespace ViewSupport
         }
 
         /// <summary>Appropriately sets the Visible property of the specified EdgeSection.</summary>
-        private static void ComputeVisibility(ThemeInfo theme, EdgeSection es)
+        private static void ComputeVisibility(DrawOptions options, EdgeSection es)
         {
             Coord edgeMidPoint = (es.StartCoord + es.EndCoord) / 2; //test visibility of the midpoint of the EdgeSection
 
             if (Global.DebugMode)
-                surface.DrawString(
+                options.Graphics.DrawString(
                     es.Edge.EdgeID.ToString() + " (" + count.ToString() + ")",
                     new Font("Arial", 8f, FontStyle.Regular),
-                    theme.RedBlueModePointBrush,
+                    options.Theme.RedBlueModePointBrush,
                     edgeMidPoint.ToPointF());
             count++;
 

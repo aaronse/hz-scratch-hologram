@@ -77,17 +77,26 @@ namespace ScratchUtility
             //}
         }
 
+        private static Coord DefaultPr = new Coord(0.937, 8.290, 0.472); //- 2.73627666282242, 10.7455851580629, 0.390871853913602);
+
         public static void ResetCamera()
         {
-            //Po = new Coord(10, 15, 10);
-            //Pr = new Coord(0, 4, 0);
-            Po = new Coord(12,6,12);
-            Pr = new Coord(0,1.5,0);
+            {
+
+                    Po = new Coord(0.900, 9.008, 23.978);
+                //                Po = new Coord(-2.77383459647962, 11.4634343811063, 23.8969699335059);
+                ResetPr();
+                CurrentScale = 0.72399931092549252; // 0.37152612399485396;
+            }
+
             LookUpVector = new Coord(0, 1, 0);
-            CurrentScale = 1.6;
             Zf = 25;
         }
 
+        public static void ResetPr()
+        {
+            Pr = new Coord(DefaultPr.X, DefaultPr.Y, DefaultPr.Z);
+        }
 
         internal static void RecalculateMatrix()
         {

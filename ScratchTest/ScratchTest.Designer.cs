@@ -61,7 +61,8 @@
             this.txtOutput = new System.Windows.Forms.TextBox();
             this.mGcodeCheckBox = new System.Windows.Forms.CheckBox();
             this.txtOutputSummary = new System.Windows.Forms.TextBox();
-            this.mView = new ScratchView.View();
+            this.mArcSegmentsCheckbox = new System.Windows.Forms.CheckBox();
+            this.mView = new ScratchView.ViewControl();
             ((System.ComponentModel.ISupportInitialize)(this.mViewAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mArcSweepAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mLineResolutionTrack)).BeginInit();
@@ -76,11 +77,11 @@
             this.mViewAngleTrack.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mViewAngleTrack.Location = new System.Drawing.Point(17, 15);
-            this.mViewAngleTrack.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mViewAngleTrack.Margin = new System.Windows.Forms.Padding(4);
             this.mViewAngleTrack.Maximum = 90;
             this.mViewAngleTrack.Minimum = -90;
             this.mViewAngleTrack.Name = "mViewAngleTrack";
-            this.mViewAngleTrack.Size = new System.Drawing.Size(1000, 56);
+            this.mViewAngleTrack.Size = new System.Drawing.Size(993, 56);
             this.mViewAngleTrack.TabIndex = 1;
             this.mViewAngleTrack.TickStyle = System.Windows.Forms.TickStyle.None;
             this.mViewAngleTrack.Scroll += new System.EventHandler(this.mViewAngleTrack_Scroll);
@@ -91,7 +92,7 @@
             // 
             this.mArcSweepAngleTrack.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.mArcSweepAngleTrack.Location = new System.Drawing.Point(1028, 97);
-            this.mArcSweepAngleTrack.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mArcSweepAngleTrack.Margin = new System.Windows.Forms.Padding(4);
             this.mArcSweepAngleTrack.Maximum = 180;
             this.mArcSweepAngleTrack.Name = "mArcSweepAngleTrack";
             this.mArcSweepAngleTrack.Orientation = System.Windows.Forms.Orientation.Vertical;
@@ -105,8 +106,8 @@
             // 
             this.mArcCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.mArcCheckBox.AutoSize = true;
-            this.mArcCheckBox.Location = new System.Drawing.Point(1030, 15);
-            this.mArcCheckBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mArcCheckBox.Location = new System.Drawing.Point(1023, 9);
+            this.mArcCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.mArcCheckBox.Name = "mArcCheckBox";
             this.mArcCheckBox.Size = new System.Drawing.Size(51, 21);
             this.mArcCheckBox.TabIndex = 3;
@@ -118,7 +119,7 @@
             // 
             this.mPointSizeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.mPointSizeTextBox.Location = new System.Drawing.Point(1044, 729);
-            this.mPointSizeTextBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mPointSizeTextBox.Margin = new System.Windows.Forms.Padding(4);
             this.mPointSizeTextBox.Name = "mPointSizeTextBox";
             this.mPointSizeTextBox.Size = new System.Drawing.Size(36, 22);
             this.mPointSizeTextBox.TabIndex = 5;
@@ -130,7 +131,7 @@
             this.mLineResolutionTrack.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mLineResolutionTrack.Location = new System.Drawing.Point(17, 615);
-            this.mLineResolutionTrack.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mLineResolutionTrack.Margin = new System.Windows.Forms.Padding(4);
             this.mLineResolutionTrack.Maximum = 1000;
             this.mLineResolutionTrack.Minimum = 1;
             this.mLineResolutionTrack.Name = "mLineResolutionTrack";
@@ -144,7 +145,7 @@
             // 
             this.mNormalRadioButton.AutoSize = true;
             this.mNormalRadioButton.Location = new System.Drawing.Point(12, 52);
-            this.mNormalRadioButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mNormalRadioButton.Margin = new System.Windows.Forms.Padding(4);
             this.mNormalRadioButton.Name = "mNormalRadioButton";
             this.mNormalRadioButton.Size = new System.Drawing.Size(74, 21);
             this.mNormalRadioButton.TabIndex = 8;
@@ -157,7 +158,7 @@
             // 
             this.mRedBlueRadioButton.AutoSize = true;
             this.mRedBlueRadioButton.Location = new System.Drawing.Point(12, 80);
-            this.mRedBlueRadioButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mRedBlueRadioButton.Margin = new System.Windows.Forms.Padding(4);
             this.mRedBlueRadioButton.Name = "mRedBlueRadioButton";
             this.mRedBlueRadioButton.Size = new System.Drawing.Size(87, 21);
             this.mRedBlueRadioButton.TabIndex = 9;
@@ -169,7 +170,7 @@
             // 
             this.mStereoscopicRadioButton.AutoSize = true;
             this.mStereoscopicRadioButton.Location = new System.Drawing.Point(12, 108);
-            this.mStereoscopicRadioButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mStereoscopicRadioButton.Margin = new System.Windows.Forms.Padding(4);
             this.mStereoscopicRadioButton.Name = "mStereoscopicRadioButton";
             this.mStereoscopicRadioButton.Size = new System.Drawing.Size(111, 21);
             this.mStereoscopicRadioButton.TabIndex = 10;
@@ -181,7 +182,7 @@
             // 
             this.mPrintRadioButton.AutoSize = true;
             this.mPrintRadioButton.Location = new System.Drawing.Point(12, 135);
-            this.mPrintRadioButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mPrintRadioButton.Margin = new System.Windows.Forms.Padding(4);
             this.mPrintRadioButton.Name = "mPrintRadioButton";
             this.mPrintRadioButton.Size = new System.Drawing.Size(58, 21);
             this.mPrintRadioButton.TabIndex = 11;
@@ -205,8 +206,8 @@
             // 
             this.mDebugCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.mDebugCheckBox.AutoSize = true;
-            this.mDebugCheckBox.Location = new System.Drawing.Point(1031, 43);
-            this.mDebugCheckBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mDebugCheckBox.Location = new System.Drawing.Point(1023, 52);
+            this.mDebugCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.mDebugCheckBox.Name = "mDebugCheckBox";
             this.mDebugCheckBox.Size = new System.Drawing.Size(72, 21);
             this.mDebugCheckBox.TabIndex = 15;
@@ -218,7 +219,7 @@
             // 
             this.zf.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.zf.Location = new System.Drawing.Point(1032, 454);
-            this.zf.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.zf.Margin = new System.Windows.Forms.Padding(4);
             this.zf.Name = "zf";
             this.zf.Size = new System.Drawing.Size(55, 22);
             this.zf.TabIndex = 21;
@@ -252,7 +253,7 @@
             this.zfTrackBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.zfTrackBar.Location = new System.Drawing.Point(1032, 325);
-            this.zfTrackBar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.zfTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.zfTrackBar.Maximum = 10000;
             this.zfTrackBar.Name = "zfTrackBar";
             this.zfTrackBar.Orientation = System.Windows.Forms.Orientation.Vertical;
@@ -267,7 +268,7 @@
             this.mSwitchCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.mSwitchCheckBox.AutoSize = true;
             this.mSwitchCheckBox.Location = new System.Drawing.Point(953, 674);
-            this.mSwitchCheckBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mSwitchCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.mSwitchCheckBox.Name = "mSwitchCheckBox";
             this.mSwitchCheckBox.Size = new System.Drawing.Size(135, 21);
             this.mSwitchCheckBox.TabIndex = 26;
@@ -290,7 +291,7 @@
             // 
             this.mEyesTrackBar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.mEyesTrackBar.Location = new System.Drawing.Point(1032, 510);
-            this.mEyesTrackBar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mEyesTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.mEyesTrackBar.Maximum = 40;
             this.mEyesTrackBar.Name = "mEyesTrackBar";
             this.mEyesTrackBar.Orientation = System.Windows.Forms.Orientation.Vertical;
@@ -309,9 +310,9 @@
             this.groupBox1.Controls.Add(this.mStereoscopicRadioButton);
             this.groupBox1.Controls.Add(this.mPrintRadioButton);
             this.groupBox1.Location = new System.Drawing.Point(668, 623);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
             this.groupBox1.Size = new System.Drawing.Size(129, 171);
             this.groupBox1.TabIndex = 30;
             this.groupBox1.TabStop = false;
@@ -322,7 +323,7 @@
             this.mDarkRadioButton.AutoSize = true;
             this.mDarkRadioButton.Checked = true;
             this.mDarkRadioButton.Location = new System.Drawing.Point(12, 23);
-            this.mDarkRadioButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mDarkRadioButton.Margin = new System.Windows.Forms.Padding(4);
             this.mDarkRadioButton.Name = "mDarkRadioButton";
             this.mDarkRadioButton.Size = new System.Drawing.Size(59, 21);
             this.mDarkRadioButton.TabIndex = 7;
@@ -339,9 +340,9 @@
             this.groupBox2.Controls.Add(this.mHiddenLineCheckBox);
             this.groupBox2.Controls.Add(this.mVectorsCheckBox);
             this.groupBox2.Location = new System.Drawing.Point(807, 655);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
             this.groupBox2.Size = new System.Drawing.Size(124, 139);
             this.groupBox2.TabIndex = 31;
             this.groupBox2.TabStop = false;
@@ -353,7 +354,7 @@
             this.mMergeFacesCheckBox.Checked = true;
             this.mMergeFacesCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mMergeFacesCheckBox.Location = new System.Drawing.Point(9, 71);
-            this.mMergeFacesCheckBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mMergeFacesCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.mMergeFacesCheckBox.Name = "mMergeFacesCheckBox";
             this.mMergeFacesCheckBox.Size = new System.Drawing.Size(112, 21);
             this.mMergeFacesCheckBox.TabIndex = 39;
@@ -367,7 +368,7 @@
             this.quickModeCheckBox.Checked = true;
             this.quickModeCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.quickModeCheckBox.Location = new System.Drawing.Point(9, 97);
-            this.quickModeCheckBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.quickModeCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.quickModeCheckBox.Name = "quickModeCheckBox";
             this.quickModeCheckBox.Size = new System.Drawing.Size(105, 21);
             this.quickModeCheckBox.TabIndex = 23;
@@ -381,7 +382,7 @@
             this.mHiddenLineCheckBox.Checked = true;
             this.mHiddenLineCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mHiddenLineCheckBox.Location = new System.Drawing.Point(9, 20);
-            this.mHiddenLineCheckBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mHiddenLineCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.mHiddenLineCheckBox.Name = "mHiddenLineCheckBox";
             this.mHiddenLineCheckBox.Size = new System.Drawing.Size(106, 21);
             this.mHiddenLineCheckBox.TabIndex = 3;
@@ -395,7 +396,7 @@
             this.mVectorsCheckBox.Checked = true;
             this.mVectorsCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mVectorsCheckBox.Location = new System.Drawing.Point(9, 46);
-            this.mVectorsCheckBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mVectorsCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.mVectorsCheckBox.Name = "mVectorsCheckBox";
             this.mVectorsCheckBox.Size = new System.Drawing.Size(78, 21);
             this.mVectorsCheckBox.TabIndex = 2;
@@ -408,7 +409,7 @@
             this.mSwitchBackFrontCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.mSwitchBackFrontCheckBox.AutoSize = true;
             this.mSwitchBackFrontCheckBox.Location = new System.Drawing.Point(953, 702);
-            this.mSwitchBackFrontCheckBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mSwitchBackFrontCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.mSwitchBackFrontCheckBox.Name = "mSwitchBackFrontCheckBox";
             this.mSwitchBackFrontCheckBox.Size = new System.Drawing.Size(135, 21);
             this.mSwitchBackFrontCheckBox.TabIndex = 32;
@@ -427,7 +428,7 @@
             // 
             this.mOpenButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.mOpenButton.Location = new System.Drawing.Point(17, 644);
-            this.mOpenButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mOpenButton.Margin = new System.Windows.Forms.Padding(4);
             this.mOpenButton.Name = "mOpenButton";
             this.mOpenButton.Size = new System.Drawing.Size(100, 28);
             this.mOpenButton.TabIndex = 33;
@@ -441,7 +442,7 @@
             this.mFilesComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.mFilesComboBox.FormattingEnabled = true;
             this.mFilesComboBox.Location = new System.Drawing.Point(128, 644);
-            this.mFilesComboBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mFilesComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.mFilesComboBox.Name = "mFilesComboBox";
             this.mFilesComboBox.Size = new System.Drawing.Size(204, 24);
             this.mFilesComboBox.TabIndex = 34;
@@ -451,7 +452,7 @@
             // 
             this.mGenerateButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.mGenerateButton.Location = new System.Drawing.Point(17, 679);
-            this.mGenerateButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mGenerateButton.Margin = new System.Windows.Forms.Padding(4);
             this.mGenerateButton.Name = "mGenerateButton";
             this.mGenerateButton.Size = new System.Drawing.Size(156, 28);
             this.mGenerateButton.TabIndex = 35;
@@ -464,7 +465,7 @@
             this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtOutput.Location = new System.Drawing.Point(341, 677);
-            this.txtOutput.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.txtOutput.Margin = new System.Windows.Forms.Padding(4);
             this.txtOutput.Multiline = true;
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -478,7 +479,7 @@
             this.mGcodeCheckBox.Checked = true;
             this.mGcodeCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mGcodeCheckBox.Location = new System.Drawing.Point(181, 685);
-            this.mGcodeCheckBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.mGcodeCheckBox.Margin = new System.Windows.Forms.Padding(4);
             this.mGcodeCheckBox.Name = "mGcodeCheckBox";
             this.mGcodeCheckBox.Size = new System.Drawing.Size(127, 21);
             this.mGcodeCheckBox.TabIndex = 37;
@@ -491,13 +492,24 @@
             // 
             this.txtOutputSummary.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtOutputSummary.Enabled = false;
             this.txtOutputSummary.Location = new System.Drawing.Point(341, 647);
-            this.txtOutputSummary.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.txtOutputSummary.Margin = new System.Windows.Forms.Padding(4);
             this.txtOutputSummary.Name = "txtOutputSummary";
             this.txtOutputSummary.ReadOnly = true;
             this.txtOutputSummary.Size = new System.Drawing.Size(308, 22);
             this.txtOutputSummary.TabIndex = 38;
+            // 
+            // mArcSegmentsCheckbox
+            // 
+            this.mArcSegmentsCheckbox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.mArcSegmentsCheckbox.AutoSize = true;
+            this.mArcSegmentsCheckbox.Location = new System.Drawing.Point(1023, 31);
+            this.mArcSegmentsCheckbox.Name = "mArcSegmentsCheckbox";
+            this.mArcSegmentsCheckbox.Size = new System.Drawing.Size(87, 21);
+            this.mArcSegmentsCheckbox.TabIndex = 39;
+            this.mArcSegmentsCheckbox.Text = "Arc Segs";
+            this.mArcSegmentsCheckbox.UseVisualStyleBackColor = true;
+            this.mArcSegmentsCheckbox.CheckedChanged += new System.EventHandler(this.mArcSegmentsCheckbox_CheckedChanged);
             // 
             // mView
             // 
@@ -507,15 +519,16 @@
             this.mView.ArcAngleResolution = 10F;
             this.mView.ArcSweepAngle = 90F;
             this.mView.BackColor = System.Drawing.Color.White;
-            this.mView.Location = new System.Drawing.Point(17, 78);
+            this.mView.Location = new System.Drawing.Point(17, 51);
             this.mView.Margin = new System.Windows.Forms.Padding(5);
             this.mView.Name = "mView";
             this.mView.PaddingPercent = 0.1D;
             this.mView.PointWidth = 5D;
             this.mView.RotateCanvas = false;
             this.mView.ShowArcs = true;
+            this.mView.ShowArcSegments = false;
             this.mView.ShowGCode = false;
-            this.mView.Size = new System.Drawing.Size(1000, 530);
+            this.mView.Size = new System.Drawing.Size(993, 557);
             this.mView.StereoscopicDisparityAngle = 8D;
             this.mView.StereoscopicMode = ScratchUtility.StereoscopicMode.NonStereoscopic;
             this.mView.SwitchBackFront = false;
@@ -532,6 +545,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1104, 809);
+            this.Controls.Add(this.mArcSegmentsCheckbox);
             this.Controls.Add(this.txtOutputSummary);
             this.Controls.Add(this.mGcodeCheckBox);
             this.Controls.Add(this.txtOutput);
@@ -556,7 +570,7 @@
             this.Controls.Add(this.mArcCheckBox);
             this.Controls.Add(this.mArcSweepAngleTrack);
             this.Controls.Add(this.mViewAngleTrack);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "ScratchTest";
             this.Text = "Scratch Test";
             ((System.ComponentModel.ISupportInitialize)(this.mViewAngleTrack)).EndInit();
@@ -593,7 +607,7 @@
         private System.Windows.Forms.CheckBox mSwitchCheckBox;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TrackBar mEyesTrackBar;
-        private ScratchView.View mView;
+        private ScratchView.ViewControl mView;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.CheckBox mSwitchBackFrontCheckBox;
@@ -609,6 +623,7 @@
         private System.Windows.Forms.TextBox txtOutputSummary;
         private System.Windows.Forms.RadioButton mDarkRadioButton;
         private System.Windows.Forms.CheckBox mMergeFacesCheckBox;
+        private System.Windows.Forms.CheckBox mArcSegmentsCheckbox;
     }
 }
 

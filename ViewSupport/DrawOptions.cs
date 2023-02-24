@@ -1,8 +1,9 @@
-﻿using System;
+﻿using ScratchUtility;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
-using ScratchUtility;
+using System;
 
 namespace ViewSupport
 {
@@ -30,6 +31,7 @@ namespace ViewSupport
         private static bool mSwitchBackFront = false;
         private static double mPointWidth = 5; 
         private static bool mShowArcs = true;
+        private static bool mShowArcSegments = false;
         private static bool mShowGcode = false;
         private static GCodeInfo mGcode = null;
         private static bool mVectorMode = true;
@@ -110,6 +112,21 @@ namespace ViewSupport
                 if (mShowArcs == value)
                     return;
                 mShowArcs = value;
+                FireOptionChangedEvent();
+            }
+        }
+
+        public static bool ShowArcSegments
+        {
+            get
+            {
+                return mShowArcSegments;
+            }
+            set
+            {
+                if (mShowArcSegments == value)
+                    return;
+                mShowArcSegments = value;
                 FireOptionChangedEvent();
             }
         }
@@ -308,10 +325,32 @@ namespace ViewSupport
             }
         }
 
+        // Will likely transition properties to instance instead of static below...
+        // - Easier to managed/encapsulate state, determine where set.
+        // - Easier to test, parallelize and scale
+
+        public bool IsRendering { get; set; }
+        public ThemeInfo Theme { get; set; }
+        public Graphics Graphics { get; set; }
 
 
         #endregion
 
 
+        #region Methods
+
+        public DrawOptions Clone()
+        {
+            DrawOptions clone = new DrawOptions()
+            {
+                IsRendering = this.IsRendering,
+                Theme = this.Theme,
+                Graphics = this.Graphics
+            };
+
+            return clone;
+        }
+
+        #endregion
     }
 }

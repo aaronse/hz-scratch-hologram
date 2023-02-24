@@ -1,6 +1,6 @@
 ﻿namespace ScratchView
 {
-    partial class View
+    partial class ViewControl
     {
         /// <summary>
         /// Required designer variable.

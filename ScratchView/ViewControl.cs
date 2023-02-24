@@ -16,14 +16,14 @@ using ScratchUtility;
 namespace ScratchView
 {
 
-    public partial class View : UserControl
+    public partial class ViewControl : UserControl
     {
         private double mPaddingPercent = .1;
 
         private Point mLastMousePosition = Drawing.NullPoint;
 
 
-        public View()
+        public ViewControl()
         {
             InitializeComponent();
 
@@ -85,6 +85,8 @@ namespace ScratchView
         public float ArcAngleResolution { get { return DrawOptions.ArcAngleResolution; } set { DrawOptions.ArcAngleResolution = value; } }
         public double PointWidth { get { return DrawOptions.PointWidth; } set { DrawOptions.PointWidth = value; } }
         public bool ShowArcs { get { return DrawOptions.ShowArcs; } set { DrawOptions.ShowArcs = value; } }
+
+        public bool ShowArcSegments { get { return DrawOptions.ShowArcSegments; } set { DrawOptions.ShowArcSegments = value; } }
         public bool ShowGCode { get { return DrawOptions.ShowGcode; } set { DrawOptions.ShowGcode = value; } }
         public bool VectorMode { get { return DrawOptions.VectorMode; } set { DrawOptions.VectorMode = value; } }
         public VisibilityMode VisibilityMode { get { return DrawOptions.VisibilityMode; } set { DrawOptions.VisibilityMode = value; } }
@@ -328,7 +330,7 @@ namespace ScratchView
         public void PreProcessShapes()
         {
             Drawing.PreProcessShapes();
-            ViewContext.Pr = new Coord(0, 0, 0);
+            ViewContext.ResetPr();
             Drawing.DoDraw = true;
         }
     }

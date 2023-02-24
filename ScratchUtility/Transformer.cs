@@ -82,18 +82,31 @@ namespace ScratchUtility
 
         public static Coord GetArcCoord(Coord locationAtZeroAngle)
         {
-            //Find the Center Point of the arc:
-            //X value is at this ViewPoint's X value because when the ViewPoint is drawn at 0 angle, it appears at the apex of the arc.
-            //Y value is either shifted up or down from that point depending on whether or not the point is in front of or behind the canvas. The amount shifted is directly proportional to the distance to the canvas.
-            //if in front of the canvas, we want the arc u-shaped (with Location.Y at the bottom of the arc), so the center is Location.Y - Distance (Distance will be positive if in front of canvas)
-            //if behind the canvas, we want the arc n-shaped (with Location.Y at the top of the arc), so the center is Location.Y + Math.Abs(Distance), or Location.Y - Distance (because distance is negative if behind canvas)
-            // either way, the Y value of the arc center is at Location.Y - DistanceFromCanvas.
+            // Find the Center Point of the arc:
+            // - X value is at this ViewPoint's X value because when the ViewPoint is drawn at 0
+            //   angle, it appears at the apex of the arc.
+            // - Y value is either shifted up or down from that point depending on whether or not
+            //   the point is in front of or behind the canvas. The amount shifted is directly
+            //   proportional to the distance to the canvas.
+            // - if in front of the canvas, we want the arc u-shaped (with Location.Y at the
+            //   bottom of the arc), so the center is Location.Y - Distance (Distance will
+            //   be positive if in front of canvas)
+            // - if behind the canvas, we want the arc n-shaped (with Location.Y at the top of the
+            //   arc), so the center is Location.Y + Math.Abs(Distance), or Location.Y - Distance
+            //   (because distance is negative if behind canvas) either way, the Y value of the
+            //   arc center is at Location.Y - DistanceFromCanvas.
             double distanceFromCanvas = locationAtZeroAngle.Z - ViewContext.N_ViewCoordinates;
             PointD center = new PointD(locationAtZeroAngle.X, locationAtZeroAngle.Y - distanceFromCanvas / 2);
 
             PointD withOriginAtZero = locationAtZeroAngle.ToPointD() - center;
-            //it doesn't matter whether we're doing an upside-down or rightside-up arc - because we're rotating about the center point - and it will be above or below us depending - we'll end up at the right place.
-            return new Coord(withOriginAtZero.X * ViewContext.CosViewAngle - withOriginAtZero.Y * ViewContext.SinViewAngle + center.X, withOriginAtZero.X * ViewContext.SinViewAngle + withOriginAtZero.Y * ViewContext.CosViewAngle + center.Y, locationAtZeroAngle.Z);
+
+            // it doesn't matter whether we're doing an upside-down or rightside-up arc - because
+            // we're rotating about the center point - and it will be above or below us depending
+            // - we'll end up at the right place.
+            return new Coord(
+            withOriginAtZero.X * ViewContext.CosViewAngle - withOriginAtZero.Y * ViewContext.SinViewAngle + center.X,
+            withOriginAtZero.X * ViewContext.SinViewAngle + withOriginAtZero.Y * ViewContext.CosViewAngle + center.Y, 
+            locationAtZeroAngle.Z);
         }
 
         public static Rectangle GetArcSquare(Coord locationAtZeroAngle)
