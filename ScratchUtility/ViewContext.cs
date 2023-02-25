@@ -27,6 +27,9 @@ namespace ScratchUtility
 
     public static class ViewContext
     {
+        public const int MinViewAngle = -90;
+        public const int MaxViewAngle = 90;
+
         //public bool DrawingEnabled { get; set; }
 
         /// <summary>Gets and sets a value indicating tne closest the user can get to the point of reference when zooming in. After getting this close, Pr moves away from the user, causing the user to "fly around" instead of just zooming.</summary>
@@ -51,8 +54,14 @@ namespace ScratchUtility
         private static double mViewAngle = 0;
 
         //Cache the trig values used to find the ArcPoint so we don't calculate the same values for each ViewPoint being drawn.
-        public static double SinViewAngle { get; private set; }
-        public static double CosViewAngle { get; private set; }
+        public static double SinViewAngle { 
+            get; 
+            private set; 
+        }
+        public static double CosViewAngle { 
+            get; 
+            private set; 
+        }
 
         public static bool SlowNavigation { get; set; }
 
@@ -82,9 +91,8 @@ namespace ScratchUtility
         public static void ResetCamera()
         {
             {
-
-                    Po = new Coord(0.900, 9.008, 23.978);
-                //                Po = new Coord(-2.77383459647962, 11.4634343811063, 23.8969699335059);
+                // Debug Camera position to help save time during Dev inner loop...
+                Po = new Coord(0.900, 9.008, 23.978);
                 ResetPr();
                 CurrentScale = 0.72399931092549252; // 0.37152612399485396;
             }
@@ -96,6 +104,13 @@ namespace ScratchUtility
         public static void ResetPr()
         {
             Pr = new Coord(DefaultPr.X, DefaultPr.Y, DefaultPr.Z);
+        }
+
+        // Return hash of the current camera view orientation.  Used by callers to determine
+        // whether they should use or rebuild cached data.
+        public static string GetViewHash()
+        {
+            return $"{Po}:{Pr}:{CurrentScale}:{LookUpVector}:{Zf}";
         }
 
         internal static void RecalculateMatrix()

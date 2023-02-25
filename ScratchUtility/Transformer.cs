@@ -104,9 +104,9 @@ namespace ScratchUtility
             // we're rotating about the center point - and it will be above or below us depending
             // - we'll end up at the right place.
             return new Coord(
-            withOriginAtZero.X * ViewContext.CosViewAngle - withOriginAtZero.Y * ViewContext.SinViewAngle + center.X,
-            withOriginAtZero.X * ViewContext.SinViewAngle + withOriginAtZero.Y * ViewContext.CosViewAngle + center.Y, 
-            locationAtZeroAngle.Z);
+                withOriginAtZero.X * ViewContext.CosViewAngle - withOriginAtZero.Y * ViewContext.SinViewAngle + center.X,
+                withOriginAtZero.X * ViewContext.SinViewAngle + withOriginAtZero.Y * ViewContext.CosViewAngle + center.Y, 
+                locationAtZeroAngle.Z);
         }
 
         public static Rectangle GetArcSquare(Coord locationAtZeroAngle)

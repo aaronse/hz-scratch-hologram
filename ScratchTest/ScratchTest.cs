@@ -83,7 +83,6 @@ namespace ScratchTest
                 SetPointsPerUnitLength();
                 UpdateOutputSummary();
             }
-                
         }
 
         private void SetPointsPerUnitLength()
@@ -103,19 +102,27 @@ namespace ScratchTest
         private void mGcodeCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (!DesignMode)
+            {
                 mView.ShowGCode = mGcodeCheckBox.Checked;
+                UpdateOutputSummary();
+            }
         }
 
         private void mDebugCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (!DesignMode)
+            {
                 Global.DebugMode = mDebugCheckBox.Checked;
+                UpdateOutputSummary();
+            }
         }
+
         private void mPointSizeTextBox_TextChanged(object sender, EventArgs e)
         {
             if (!DesignMode)
                 TrySetPointWidth();
         }
+
         private void TrySetPointWidth()
         {
             int size = 0;

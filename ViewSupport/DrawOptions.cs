@@ -57,6 +57,10 @@ namespace ViewSupport
             ToggleVisibilityBasedOnArcAngles = false;
         }
 
+        public DrawOptions()
+        {
+        }
+
         /// <summary>Fires the even that lets listening classes know that an option has changed.</summary>
         private static void FireOptionChangedEvent(RedrawTypeRequired type)
         {
@@ -193,6 +197,8 @@ namespace ViewSupport
                 FireOptionChangedEvent();
             }
         }
+
+        // TODO: Q: What is this used/intended for?
         public static float ArcAngleResolution
         {
             get
@@ -333,6 +339,8 @@ namespace ViewSupport
         public ThemeInfo Theme { get; set; }
         public Graphics Graphics { get; set; }
 
+        public int ViewAngleResolution { get; set; } = 1;
+
 
         #endregion
 
@@ -345,7 +353,8 @@ namespace ViewSupport
             {
                 IsRendering = this.IsRendering,
                 Theme = this.Theme,
-                Graphics = this.Graphics
+                Graphics = this.Graphics,
+                ViewAngleResolution = this.ViewAngleResolution
             };
 
             return clone;

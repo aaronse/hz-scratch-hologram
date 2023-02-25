@@ -191,6 +191,8 @@ namespace Primitives
 
             List<Coord> points = new List<Coord>(numPoints);
 
+            // Get Points along edge for current view angle.  Zero view angle points returned for
+            // arcs and debug labels.
             Coord start = zeroAngle ? StartVertex.ViewCoord_ZeroAngle : StartVertex.ViewCoord;
             Coord end = zeroAngle ? EndVertex.ViewCoord_ZeroAngle : EndVertex.ViewCoord;
 
