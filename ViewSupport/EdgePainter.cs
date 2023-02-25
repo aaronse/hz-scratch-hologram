@@ -124,7 +124,7 @@ namespace ViewSupport
                 options.Graphics.DrawLine(pPen, startPoint, endPoint);
             }
 
-            // TODO:P2 Consider implementing flag to conditionally render light points
+            if (options.IsRendering && DrawOptions.PointsMode)
             {
                 // Draw Edge as Points along a vector
                 Brush pBrush = 
@@ -533,7 +533,7 @@ namespace ViewSupport
             // 'Merge faces', i.e. hide redundant edge inbetween two adjacent faces with the same normal?
             if (DrawOptions.MergeFaces)
             {
-                if (es.Edge.CreatorFace.NormalVector.Equals(es.Edge.OtherFace.NormalVector, Global.NormalToleranceDecimalPlaces))
+                if (es.Edge.OtherFace != null && es.Edge.CreatorFace.NormalVector.Equals(es.Edge.OtherFace.NormalVector, Global.NormalToleranceDecimalPlaces))
                 {
                     es.Visible = false;
                     return;

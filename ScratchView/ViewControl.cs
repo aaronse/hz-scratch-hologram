@@ -89,6 +89,7 @@ namespace ScratchView
         public bool ShowArcSegments { get { return DrawOptions.ShowArcSegments; } set { DrawOptions.ShowArcSegments = value; } }
         public bool ShowGCode { get { return DrawOptions.ShowGcode; } set { DrawOptions.ShowGcode = value; } }
         public bool VectorMode { get { return DrawOptions.VectorMode; } set { DrawOptions.VectorMode = value; } }
+        public bool PointsMode { get { return DrawOptions.PointsMode; } set { DrawOptions.PointsMode = value; } }
         public VisibilityMode VisibilityMode { get { return DrawOptions.VisibilityMode; } set { DrawOptions.VisibilityMode = value; } }
         public bool RotateCanvas { get { return DrawOptions.RotateCanvas; } set { DrawOptions.RotateCanvas = value; } }
         public double ViewPointsPerUnitLength { get { return DrawOptions.ViewPointsPerUnitLength; } set { DrawOptions.ViewPointsPerUnitLength = value; } }

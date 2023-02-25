@@ -296,6 +296,15 @@ namespace ScratchTest
             }
         }
 
+        private void mPointsCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!DesignMode)
+            {
+                mView.PointsMode = mPointsCheckbox.Checked;
+                UpdateOutputSummary();
+            }
+        }
+
         private void quickModeCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             ViewSupport.DrawOptions.QuickMode = quickModeCheckBox.Checked;

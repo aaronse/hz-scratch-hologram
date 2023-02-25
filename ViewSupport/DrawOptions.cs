@@ -35,6 +35,7 @@ namespace ViewSupport
         private static bool mShowGcode = false;
         private static GCodeInfo mGcode = null;
         private static bool mVectorMode = true;
+        private static bool mPointsMode = true;
         private static VisibilityMode mVisibilityMode = VisibilityMode.Transparent;
         private static bool mRotateCanvas = false;
         private static bool mQuickMode = true;
@@ -105,6 +106,22 @@ namespace ViewSupport
                 FireOptionChangedEvent();
             }
         }
+
+        public static bool PointsMode
+        {
+            get
+            {
+                return mPointsMode;
+            }
+            set
+            {
+                if (mPointsMode == value)
+                    return;
+                mPointsMode = value;
+                FireOptionChangedEvent();
+            }
+        }
+
         public static bool ShowArcs
         {
             get
