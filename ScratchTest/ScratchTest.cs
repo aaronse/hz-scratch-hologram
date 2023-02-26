@@ -39,6 +39,8 @@ namespace ScratchTest
                                                //mView.DrawingEnabled = true;
 
             mView.Paint += MView_Paint;
+
+            ApplyTheme();
         }
 
  
@@ -151,9 +153,17 @@ namespace ScratchTest
                     else if (mStereoscopicRadioButton.Checked)
                         mView.ViewMode = ViewSupport.ViewMode.Stereoscopic;
                     else if (mDarkRadioButton.Checked)
+                    {
+                        ViewSupport.ThemeInfo.Current = ViewSupport.ThemeInfo.DarkTheme;
                         mView.ViewMode = ViewSupport.ViewMode.Dark;
+                        ApplyTheme();
+                    }
                     else
+                    {
+                        ViewSupport.ThemeInfo.Current = ViewSupport.ThemeInfo.LightTheme;
                         mView.ViewMode = ViewSupport.ViewMode.Normal;
+                        ApplyTheme();
+                    }
                 }
             }
         }
@@ -379,7 +389,19 @@ namespace ScratchTest
         {
             mExportSvgDialog.ShowDialog();
         }
-        
+
+
+        private void ApplyTheme()
+        {
+            foreach(Control control in this.Controls)
+            {
+                control.ForeColor = ViewSupport.ThemeInfo.Current.TextColor;
+                control.BackColor = ViewSupport.ThemeInfo.Current.WindowBackColor;
+            }
+
+            this.ForeColor = ViewSupport.ThemeInfo.Current.TextColor;
+            this.BackColor = ViewSupport.ThemeInfo.Current.WindowBackColor;
+        }
     }
 
 

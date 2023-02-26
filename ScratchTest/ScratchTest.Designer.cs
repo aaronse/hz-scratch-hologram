@@ -506,7 +506,7 @@
             this.mView.ArcAngleResolution = 10F;
             this.mView.ArcSweepAngle = 90F;
             themeInfo1.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
-            themeInfo1.WindowBackGroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
+            themeInfo1.WindowBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
             this.mView.BackColor = themeInfo1.BackgroundColor;
             this.mView.Location = new System.Drawing.Point(13, 41);
             this.mView.Margin = new System.Windows.Forms.Padding(4);

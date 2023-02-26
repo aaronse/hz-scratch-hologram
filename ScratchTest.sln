@@ -17,6 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileParser", "FileParser\Fi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DB342B15-B37B-4853-B6DC-A0023887D919}"
 	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
 		Data\teapot.ori.x3d = Data\teapot.ori.x3d
 	EndProjectSection
 EndProject
