@@ -369,7 +369,18 @@ namespace ScratchTest
         {
             UpdateOutputSummary();
         }
+
+        private void mExportSvgDialog_FileOk(object sender, CancelEventArgs e)
+        {
+            Debug.WriteLine("Export to " + mExportSvgDialog.FileName);
+        }
+
+        private void btnExportSvg_Click(object sender, EventArgs  e)
+        {
+            mExportSvgDialog.ShowDialog();
+        }
+        
     }
 
-    
+
 }

@@ -27,12 +27,72 @@ namespace ViewSupport
 
         private static HashSet<string> s_drawnEdges = new HashSet<string>();
 
-        private static Dictionary<string, ArcInfo> s_holoVisibleArcs = null;
+        private static Dictionary<string, ArcInfo> s_edgePointVisibleArcs = null;
 
         // Hash representing computed arc content, used to shortcut/avoid compute when minor rendering computation needed.
         private static string s_holoVisibleHash = null;
 
         private static Font s_debugFont = new Font("Arial", 8f, FontStyle.Regular);
+
+        internal class ArcInfo
+        {
+            internal ArcInfo()
+            {
+
+            }
+
+            internal Edge Edge { get; set; }
+            internal Coord ZeroCoord { get; set; }
+            internal List<EdgeSection> EdgeSections { get; set; }
+
+            // TODO:P2 Optimize memory, if ViewAngleResolution likely to remain more than 1, then 1) Make VisibleAngles array smaller and change options.ViewAngleResolution increments here to just ++
+            internal BitArray VisibleAngles { get; set; } = new BitArray(181);
+
+            public override string ToString()
+            {
+                int[] bitBuckets = new int[18];
+                for(int i = 0; i < VisibleAngles.Length; i++)
+                {
+                    if (i / 10 > bitBuckets.Length) break;
+                    if (this.VisibleAngles[i]) bitBuckets[i / 10]++;
+                }
+
+                StringBuilder sb = new StringBuilder();
+
+                sb.Append($"EdgeId: {this.Edge?.EdgeID}, zc: {this.ZeroCoord.ToString(2)}, es: {this.EdgeSections?.Count}, va: ");
+
+                for (int i = 0; i < bitBuckets.Length; i++)
+                {
+                    if (bitBuckets[i] == 0)
+                    {
+                        sb.Append(".");
+                    }
+                    else
+                    {
+                        sb.Append(bitBuckets[i] > 9 ? "X" : bitBuckets[i].ToString());
+                    }
+                }
+
+                return sb.ToString();
+            }
+        }
+
+        public class ArcSegInfo
+        {
+            public ArcSegInfo()
+            {
+            }
+
+            public Rectangle ArcRect { get; set; }
+            public float StartAngle { get; set; }
+            public int SweepAngle { get; set; }
+
+            public override string ToString()
+            {
+                return $"StartAngle: {StartAngle}, SweepAngle: {SweepAngle}, ArcRect: {{{ArcRect}";
+            }
+        }
+
 
         internal static void Draw(DrawOptions options)
         {
@@ -59,7 +119,8 @@ namespace ViewSupport
             // Show Arcs, after visibility sections have been computed.
             if (DrawOptions.ShowArcSegments)
             {
-                DrawArcSegments(options, DrawOptions.Gcode);
+                List<ArcSegInfo> arcSegs = new List<ArcSegInfo>();
+                DrawArcSegments(options, arcSegs);
             }
             else if (DrawOptions.ShowArcs)
             {
@@ -183,137 +244,90 @@ namespace ViewSupport
                                 arcRect.X + arcRect.Width / 2,
                                 arcRect.Y + ((startAngle == 0) ? arcRect.Height : 0)));
                 }
-
-                if (DrawOptions.ShowGcode)
-                {
-                    // TODO:... int plungeRate = 3; plungeRate, Angle, Elipsis for distortion correction...
-                    int rapidXY = 4000;
-                    int zLift = 4;
-                    float toolDepth = 0.25f;
-                    float x1 = (startAngle == 0) ? arcRect.Left : arcRect.Right;
-                    float y1 = arcRect.Top + arcRect.Height / 2;
-                    float x2 = (startAngle == 0) ? arcRect.Right : arcRect.Left;
-                    float y2 = arcRect.Top + arcRect.Height / 2;
-                    float r = arcRect.Width / 2;
-                    StringBuilder sbGcode = gcode.sbGcode;
-                    gcode.ArcCount++;
-                    sbGcode.AppendLine($"G0 X{x1} Y{y1} F{rapidXY}");   // Rapid to arc start
-                    sbGcode.AppendLine($"G0 Z{toolDepth}");             // Z Plunge
-                    sbGcode.AppendLine($"G2 X{x2} Y{y2} R{r}");         // Arc Move, Clockwise
-                    sbGcode.AppendLine($"G0 Z{zLift}");                 // Z Lift
-                }
             }
         }
 
-        public class ArcSegInfo
+        private static void DrawArcSegments(DrawOptions options, List<ArcSegInfo> arcSegs)
         {
-            public ArcSegInfo ()
-            {
-            }
-
-            public Rectangle ArcRect { get; set; }
-            public float StartAngle { get; set; } 
-            public int SweepAngle { get; set; }
-        }
-
-        private static void DrawArcSegments(DrawOptions options, GCodeInfo gcode)
-        {
-            List<ArcSegInfo> arcSegs = new List<ArcSegInfo>();
-
-            foreach (var arcInfo in s_holoVisibleArcs.Values)
+            foreach (var arcInfo in s_edgePointVisibleArcs.Values)
             {
                 Edge e = arcInfo.Edge;
-            
-                List<Coord> points = e.GetPoints(DrawOptions.ViewPointsPerUnitLength, true);
-                foreach (Coord c in points)
+
+                var c = arcInfo.ZeroCoord;
+
+                if (e.EdgeID == 2) Debug.WriteLine(arcInfo.ToString());
+
+                Rectangle arcRect = Transformer.GetArcSquare(c);
+                float startAngle = c.Z - ViewContext.N_ViewCoordinates > 0 ? 0 : 180;
+
+                if (options.IsRendering && DrawOptions.ShowArcs)
                 {
-                    // TODO: Check whether (!drawnCoords.Add(coordHash)) return...
+                    // Intentionally drawing full arc here to help verify Arc Segment logic.
+                    // Eventually, should have just one implementation, so, remove this, or
+                    // the old DrawArc code, when bug free... 
+                    options.Graphics.DrawArc(options.Theme.ArcPen, arcRect, startAngle, 180);
 
-                    if (options.IsRendering)
+                    if (Global.DebugMode)
                     {
-                        Rectangle arcRect = Transformer.GetArcSquare(c);
-                        float startAngle = c.Z - ViewContext.N_ViewCoordinates > 0 ? 0 : 180;
+                        options.Graphics.DrawString(
+                            "A " + e.EdgeID.ToString(),
+                            s_debugFont,
+                            options.Theme.ArcTextBrush,
+                            new PointF(
+                                arcRect.X + arcRect.Width / 2,
+                                arcRect.Y + ((startAngle == 0) ? arcRect.Height : 0)));
+                    }
+                }
 
-                        if (DrawOptions.ShowArcs)
+                var visibleAngles = arcInfo.VisibleAngles;
+
+                for (int i = 0; i < visibleAngles.Count;) //i+= options.ViewAngleResolution
+                {
+                    // Find first visible
+                    while (i < visibleAngles.Length && !visibleAngles[i]) i += options.ViewAngleResolution;
+
+                    // Find last visible
+                    int j = i; 
+                    while (j < visibleAngles.Length - 1 && visibleAngles[j]) j += options.ViewAngleResolution;
+
+                    // Arc i to max(i, j - 1), providing i found a visible
+                    if (i < visibleAngles.Length && visibleAngles[i])
+                    {
+                        int arcSegStart = i;
+                        int arcSegEnd = Math.Max(i, j - options.ViewAngleResolution);
+
+                        // Add Arc segment to data structure to delay renderering
+                        // until after ALL simple (not visibility sensitive) 180deg
+                        // arcs drawn
+                        arcSegs.Add(new ArcSegInfo()
                         {
-                            // Intentionally drawing full arc here to help verify Arc Segment logic.
-                            // Eventually, should have just one implementation, so, remove this, or
-                            // the old DrawArc code, when bug free... 
-                            options.Graphics.DrawArc(options.Theme.ArcPen, arcRect, startAngle, 180);
-                        }
-
-                        //for (int iterAngle = 0; iterAngle < 180; iterAngle += options.ViewAngleResolution)
-                        //int startAngle = arcInfo.VisibleAngles[0];
-                        var visibleAngles = arcInfo.VisibleAngles;
-
-                        // TODO: Optimize memory, if ViewAngleResolution likely to remain more than 1, then 1) Make VisibleAngles array smaller and change options.ViewAngleResolution increments here to just ++
-                        //if (Global.DebugMode)
-                        {
-                            for (int i = 0; i < visibleAngles.Count;) //i+= options.ViewAngleResolution
-                            {
-                                // Find first visible
-                                while (i < visibleAngles.Length && !visibleAngles[i]) i += options.ViewAngleResolution;
-
-                                // Find last visible
-                                int j = i; 
-                                while (j < visibleAngles.Length - 1 && visibleAngles[j]) j += options.ViewAngleResolution;
-
-                                // Arc i to max(i, j - 1), providing i found a visible
-                                if (i < visibleAngles.Length && visibleAngles[i])
-                                {
-                                    int arcSegStart = i;
-                                    int arcSegEnd = Math.Max(i, j - options.ViewAngleResolution);
-
-                                    // Add Arc segment to data structure to delay renderering
-                                    // until after ALL simple (not visibility sensitive) 180deg
-                                    // arcs drawn
-                                    arcSegs.Add(new ArcSegInfo()
-                                    {
-                                        ArcRect = arcRect,
-                                        StartAngle = startAngle + arcSegStart,
-                                        SweepAngle = arcSegEnd - arcSegStart
-                                    });
-                                }
-
-                                // Advance i
-                                i = Math.Max(j, i + options.ViewAngleResolution);
-                            }
-                        }
+                            ArcRect = arcRect,
+                            StartAngle = startAngle + arcSegStart,
+                            SweepAngle = arcSegEnd - arcSegStart
+                        });
                     }
 
-                    //if (Global.DebugMode)
-                    //    options.Graphics.DrawString(
-                    //        e.EdgeID.ToString(),
-                    //        s_debugFont,
-                    //        options.Theme.ArcTextBrush,
-                    //        new PointF(
-                    //            arcRect.X + arcRect.Width / 2,
-                    //            arcRect.Y + ((startAngle == 0) ? arcRect.Height : 0)));
-                    //}
+                    // Advance i
+                    i = Math.Max(j, i + options.ViewAngleResolution);
                 }
             }
 
-            foreach(var arcSeg in arcSegs)
+            // TODO:... int plungeRate = 3; plungeRate, Angle, Elipsis for distortion correction...
+            //int rapidXY = 4000;
+            //int zLift = 4;
+            //float toolDepth = 0.25f;
+
+            if (options.IsRendering)
             {
-                options.Graphics.DrawArc(
-                    options.Theme.ArcPenHighlight,
-                    arcSeg.ArcRect,
-                    arcSeg.StartAngle,
-                    arcSeg.SweepAngle);
+                foreach (var arcSeg in arcSegs)
+                {
+                    options.Graphics.DrawArc(
+                        options.Theme.ArcPenHighlight,
+                        arcSeg.ArcRect,
+                        arcSeg.StartAngle,
+                        arcSeg.SweepAngle);
+                }
             }
-        }
-
-        internal class ArcInfo
-        {
-            internal ArcInfo()
-            {
-
-            }
-
-            internal Edge Edge { get; set; }
-            internal Coord ZeroCoord { get; set; }
-            internal List<EdgeSection> EdgeSections { get; set; }
-            internal BitArray VisibleAngles { get; set; } = new BitArray(181);
         }
 
         // TODO: PERF improve algorithms, reduce repeated/unrequired work, implement Async multi core compute
@@ -326,7 +340,7 @@ namespace ViewSupport
                 return;
             }
 
-            s_holoVisibleArcs =
+            s_edgePointVisibleArcs =
                 new Dictionary<string, ArcInfo>(StringComparer.OrdinalIgnoreCase);
 
             DateTime start = DateTime.Now;
@@ -368,16 +382,16 @@ namespace ViewSupport
                         {
                             string pointHash = es.Edge.EdgeID + ":" + zeroCoords[i].ToString();
 
-                            if (!s_holoVisibleArcs.ContainsKey(pointHash))
+                            if (!s_edgePointVisibleArcs.ContainsKey(pointHash))
                             {
-                                s_holoVisibleArcs[pointHash] = new ArcInfo()
+                                s_edgePointVisibleArcs[pointHash] = new ArcInfo()
                                 {
                                     Edge = es.Edge,
                                     ZeroCoord = zeroCoords[i],
                                 };
                             }
 
-                            s_holoVisibleArcs[pointHash].VisibleAngles[iterAngle + -ViewContext.MinViewAngle] = true;
+                            s_edgePointVisibleArcs[pointHash].VisibleAngles[iterAngle + -ViewContext.MinViewAngle] = true;
                         }
                     }
                 }
@@ -446,8 +460,8 @@ namespace ViewSupport
                         {
                             double distanceFromStart = (intersectionPoint - e.StartVertex.ViewCoord).Length / e.Length_ViewCoordinates;
                             intersections.Add(new Intersection(e, distanceFromStart));
-                            if (Global.DebugMode)
-                                options.Graphics.FillEllipse(Brushes.Red, new Rectangle((int)intersectionPoint.X - 5, (int)intersectionPoint.Y - 5, 10, 10));
+                            if (options.IsRendering && Global.DebugMode)
+                                options.Graphics.FillEllipse(Brushes.Orange, new Rectangle((int)intersectionPoint.X - 5, (int)intersectionPoint.Y - 5, 10, 10));
                         }
                     }
                 }
@@ -489,7 +503,7 @@ namespace ViewSupport
         {
             Coord edgeMidPoint = (es.StartCoord + es.EndCoord) / 2; //test visibility of the midpoint of the EdgeSection
 
-            if (Global.DebugMode)
+            if (options.IsRendering && Global.DebugMode)
                 options.Graphics.DrawString(
                     es.Edge.EdgeID.ToString() + " (" + count.ToString() + ")",
                     s_debugFont,
@@ -543,7 +557,7 @@ namespace ViewSupport
             es.Visible = true;
         }
 
-   
+  
         private static bool SilhouetteEdgeExistsAtVertex(Vertex v)
         {
             foreach (Edge e in v.Edges)

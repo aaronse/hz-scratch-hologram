@@ -8,8 +8,13 @@ namespace ViewSupport
 {
     public class ThemeInfo
     {
+        static ThemeInfo()
+        {
+        }
+
         public static ThemeInfo LightTheme = new ThemeInfo()
         {
+            WindowBackGroundColor = System.Drawing.SystemColors.Control,
             BackgroundColor = Color.White,
             ArcPen = new Pen(Color.Gray),
             ArcPenHighlight = new Pen(Color.LimeGreen, 1f),
@@ -17,10 +22,11 @@ namespace ViewSupport
             VectorPen = new Pen(Color.Blue),
             PointBrush = Brushes.Blue,
             RedBlueModePointBrush = Brushes.Black,  // Can't be Blue
-    };
+        };
 
         public static ThemeInfo DarkTheme = new ThemeInfo()
         {
+            WindowBackGroundColor = Color.FromArgb(96, 96, 96), // Color.FromArgb(45, 45, 48),
             BackgroundColor = Color.FromArgb(30, 30, 30),
             ArcPen = new Pen(Color.DarkGray),
             ArcPenHighlight = new Pen(Color.FromArgb(96, 128, 255)),  // new Pen(Color.LimeGreen, 1f),
@@ -30,6 +36,9 @@ namespace ViewSupport
             RedBlueModePointBrush = Brushes.White
         };
 
+        public static ThemeInfo Current = DarkTheme;
+
+        public Color WindowBackGroundColor { get; set; }
         public Color BackgroundColor { get; set; }
         public Pen ArcPen { get; set; }
         public Pen ArcPenHighlight { get; set; }
