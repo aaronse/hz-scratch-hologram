@@ -70,7 +70,7 @@ namespace ViewSupport
                                 {
                                     if(ifc.ContainsPoint2D_ModelingCoordinates(c))
                                     {
-                                        double distanceFromStart = (c - e.StartVertex.ModelingCoord).Length / e.Length_ModelingCoordinates;
+                                        double distanceFromStart = (c - e.StartVertex.ModelingCoord).CalcLength() / e.Length_ModelingCoordinates;
 
                                         e.FaceIntersections.Add(new Intersection(e, distanceFromStart));
                                     }

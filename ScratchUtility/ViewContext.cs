@@ -119,7 +119,7 @@ namespace ScratchUtility
             {
                 if (CanvasSize.Width > 0 && CanvasSize.Height > 0)
                 {
-                    Matrix n = N.UnitVector.ToVectorCol(false);
+                    Matrix n = N.CalcUnitVector().ToVectorCol(false);
 
                     Matrix V = LookUpVector.ToVectorCol(false);
                     //if (n.Equals(V / V.Norm)) // we're going to cross-product n and V, so they can't be pointing in the same direction. Move V just a bit
@@ -270,9 +270,10 @@ namespace ScratchUtility
             get { return mLookUpVector; }
             set
             {
-                if (mLookUpVector == value.UnitVector)
+                var newUnitVector = value.CalcUnitVector();
+                if (mLookUpVector == newUnitVector)
                     return;
-                mLookUpVector = value.UnitVector;
+                mLookUpVector = newUnitVector;
                 RecalculateMatrix();
             }
         }
@@ -405,11 +406,11 @@ namespace ScratchUtility
             //    zoomAmount = 1.5;
 
             //multiply N's unit vector by zoomAmount to get the length along N that the new Po will be at
-            Coord n = N.UnitVector;
+            Coord n = N.CalcUnitVector();
             n *= zoomAmount;
 
-            if ((N - n).Length < 1.5) //allow Po to be a minimum of 1.5 modeling units from Pr.
-                Po = (Pr + N.UnitVector);
+            if ((N - n).CalcLength() < 1.5) //allow Po to be a minimum of 1.5 modeling units from Pr.
+                Po = (Pr + N.CalcUnitVector());
             else
                 Po = (Po - n);
         }
@@ -422,7 +423,7 @@ namespace ScratchUtility
             //move Po toward Pr (in along N)
 
             //multiply N's unit vector by zoomAmount to get the length along N that the new Po will be at
-            Coord n = N.UnitVector;
+            Coord n = N.CalcUnitVector();
             n *= flyAmount;
 
             //n is now of the right magnitude. we need to get it back onto the N line, so add Pr's coordinates
@@ -446,7 +447,7 @@ namespace ScratchUtility
             Coord newPo = Transformer.WindowToModel(newPoLocation_ViewCoordinates);
 
             //newPo is in the right spot, but its N vector is now too long. Make the N vector the same size as the old N vector.
-            Coord newN = (newPo - Pr).UnitVector * N.Length;
+            Coord newN = (newPo - Pr).CalcUnitVector() * N.CalcLength();
 
             //now put Po on that new vector.
             Po = Pr + newN;
@@ -459,7 +460,7 @@ namespace ScratchUtility
             Coord newPr = Transformer.WindowToModel(newPrLocation_ViewCoordinates);
 
             //newPr is in the right spot, but its N vector is a different size. Make the N vector the same size as the old N vector.
-            Coord newN = (Po - newPr).UnitVector * N.Length;
+            Coord newN = (Po - newPr).CalcUnitVector() * N.CalcLength();
 
             //now put Po on that new vector.
             Pr = newN + Po;

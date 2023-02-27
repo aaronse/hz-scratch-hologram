@@ -24,15 +24,9 @@ namespace ViewSupport
 
         internal static ShapeList Shapes { get; private set; }
 
-        // TODO: Remove
-        //internal static Brush PointBrush { get; set; }
         internal static Brush PointBrush_BehindCanvas { get; set; }
         internal static Brush PointBrush_InFrontOfCanvas { get; set; }
-        // TODO: Remove
-        // internal static Brush RedBlueModePointBrush { get; set; }
 
-        // TODO: Remove dead code
-        //internal static Pen VectorPen { get; set; }
 
         public static Point NullPoint { get { return new Point(int.MaxValue, int.MaxValue); } }
 
@@ -49,9 +43,6 @@ namespace ViewSupport
             
             PointBrush_BehindCanvas = Brushes.DarkViolet;
             PointBrush_InFrontOfCanvas = Brushes.Blue;
-            
-            // TODO: Remove
-            //RedBlueModePointBrush = Brushes.Black;
             
             mOffScreenBitmap = new Bitmap(10, 10);
             mOffScreenGraphics = Graphics.FromImage(mOffScreenBitmap);
@@ -131,22 +122,6 @@ namespace ViewSupport
             }
         }
 
-        // TODO: Remove dead code
-        //public static float VectorWidth
-        //{
-        //    get
-        //    {
-        //        if (VectorPen != null)
-        //            return VectorPen.Width;
-        //        else
-        //            return 0;
-        //    }
-        //    set
-        //    {
-        //        if (VectorPen != null)
-        //            VectorPen.Width = value;
-        //    }
-        //}
 #endregion
 
 

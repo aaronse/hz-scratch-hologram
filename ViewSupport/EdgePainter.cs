@@ -8,13 +8,16 @@ using System.Linq;
 using System.Text;
 using System;
 
+// TODO:P1 Refactor, compute and rendering into separate tasks
+
 namespace ViewSupport
 {
     /// <summary>A static class used to paint Edges of IndexedFacesets according to the settings specified in DrawOptions.</summary>
-    internal static class EdgePainter
+    public static class EdgePainter
     {
-        // TODO: Remove
-        //private static Graphics surface;
+
+        private static int _debugMaxEdgeId = -1;
+
         internal static List<EdgeSection> s_visibleEdgeSections { get; set; }
         
         public static ShapeList ShapeList { get; set; }
@@ -34,6 +37,10 @@ namespace ViewSupport
 
         private static Font s_debugFont = new Font("Arial", 8f, FontStyle.Regular);
 
+        private static List<ArcSegInfo> s_arcSegs;
+
+        public static List<ArcSegInfo> ArcSegments { get { return s_arcSegs; } set { s_arcSegs = value; } }
+
         internal class ArcInfo
         {
             internal ArcInfo()
@@ -45,7 +52,11 @@ namespace ViewSupport
             internal Coord ZeroCoord { get; set; }
             internal List<EdgeSection> EdgeSections { get; set; }
 
-            // TODO:P2 Optimize memory, if ViewAngleResolution likely to remain more than 1, then 1) Make VisibleAngles array smaller and change options.ViewAngleResolution increments here to just ++
+            // Using bit array to represent angles this Edge point is visible.  The bitarray has
+            // been useful during dev/debugging to understand major errors, and rounding errors.
+            // 
+            // TODO:P2 Memory optimization, assuming but haven't confirmed ~23 bytes used. If
+            // memory pressure than consider tuning if most arcs can be represented in less space.
             internal BitArray VisibleAngles { get; set; } = new BitArray(181);
 
             public override string ToString()
@@ -83,21 +94,21 @@ namespace ViewSupport
             {
             }
 
+            public int EdgeId { get; set; }
+            public Coord ZeroCoord { get; set; }
             public Rectangle ArcRect { get; set; }
             public float StartAngle { get; set; }
             public int SweepAngle { get; set; }
 
             public override string ToString()
             {
-                return $"StartAngle: {StartAngle}, SweepAngle: {SweepAngle}, ArcRect: {{{ArcRect}";
+                return $"{{ edgeId: {EdgeId}, zc: {{ x: {Math.Round(ZeroCoord.X, 3)}, y: {Math.Round(ZeroCoord.Y, 3)} }}, startAngle: {StartAngle}, sweepAngle: {SweepAngle}, arcRect: {{x:{ArcRect.X}, y:{ArcRect.Y}, width:{ArcRect.Width}, height:{ArcRect.Height} }} }}";
             }
         }
 
 
         internal static void Draw(DrawOptions options)
         {
-            DrawOptions.Gcode.Clear();
-
             HashSet<string> drawnCoords = new HashSet<string>();
             s_drawnEdges.Clear();
             s_coordHits = 0;
@@ -119,14 +130,19 @@ namespace ViewSupport
             // Show Arcs, after visibility sections have been computed.
             if (DrawOptions.ShowArcSegments)
             {
-                List<ArcSegInfo> arcSegs = new List<ArcSegInfo>();
-                DrawArcSegments(options, arcSegs);
+                s_arcSegs = new List<ArcSegInfo>();
+                DrawArcSegments(options, s_arcSegs);
             }
             else if (DrawOptions.ShowArcs)
             {
                 foreach (IndexedFaceSet ifs in ShapeList)
                     foreach (Edge e in ifs.Edges)
-                        DrawArcs(options, e, DrawOptions.Gcode, drawnCoords);
+                    {
+                        if (_debugMaxEdgeId == -1 || e.EdgeID <= _debugMaxEdgeId)   // Debug limit # of edges
+                        {
+                            DrawArcs(options, e, drawnCoords);
+                        }
+                    }
             }
 
             if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
@@ -138,10 +154,15 @@ namespace ViewSupport
             {
                 foreach (IndexedFaceSet ifs in ShapeList)
                     foreach (Edge e in ifs.Edges)
-                        DrawEdge(options, e);
+                    {
+                        if (_debugMaxEdgeId == -1 || e.EdgeID <= _debugMaxEdgeId)   // Debug limit # of edges
+                        {
+                            DrawEdge(options, e);
+                        }
+                    }
             }
 
-            System.Diagnostics.Debug.WriteLine($"gcode.ArcCount={DrawOptions.Gcode.ArcCount}, s_coordHits={s_coordHits}, s_edgeHits={s_edgeHits}, s_skippedEdgeCount={s_skippedEdgeCount}");
+            System.Diagnostics.Debug.WriteLine($"s_arcSegs.ArcCount={s_arcSegs?.Count}, s_coordHits={s_coordHits}, s_edgeHits={s_edgeHits}, s_skippedEdgeCount={s_skippedEdgeCount}");
         }
 
         private static void DrawEdge(DrawOptions options, Edge e)
@@ -209,7 +230,7 @@ namespace ViewSupport
         /// <summary>
         /// Draw Arcs not already drawn
         /// </summary>
-        private static void DrawArcs(DrawOptions options, Edge e, GCodeInfo gcode, HashSet<string> drawnCoords)
+        private static void DrawArcs(DrawOptions options, Edge e, HashSet<string> drawnCoords)
         {
             // Skip Edges without any visible sections
             // Also tried !es.Visible but observed arcs for hidden points being unexpectedly rendered.
@@ -237,7 +258,7 @@ namespace ViewSupport
 
                     if (Global.DebugMode)
                         options.Graphics.DrawString(
-                            e.EdgeID.ToString(),
+                            "A" + e.EdgeID.ToString(),
                             s_debugFont,
                             options.Theme.ArcTextBrush,
                             new PointF(
@@ -281,7 +302,7 @@ namespace ViewSupport
 
                 var visibleAngles = arcInfo.VisibleAngles;
 
-                for (int i = 0; i < visibleAngles.Count;) //i+= options.ViewAngleResolution
+                for (int i = 0; i < visibleAngles.Count;)
                 {
                     // Find first visible
                     while (i < visibleAngles.Length && !visibleAngles[i]) i += options.ViewAngleResolution;
@@ -301,6 +322,8 @@ namespace ViewSupport
                         // arcs drawn
                         arcSegs.Add(new ArcSegInfo()
                         {
+                            EdgeId = e.EdgeID,
+                            ZeroCoord = c,
                             ArcRect = arcRect,
                             StartAngle = startAngle + arcSegStart,
                             SweepAngle = arcSegEnd - arcSegStart
@@ -311,11 +334,6 @@ namespace ViewSupport
                     i = Math.Max(j, i + options.ViewAngleResolution);
                 }
             }
-
-            // TODO:... int plungeRate = 3; plungeRate, Angle, Elipsis for distortion correction...
-            //int rapidXY = 4000;
-            //int zLift = 4;
-            //float toolDepth = 0.25f;
 
             if (options.IsRendering)
             {
@@ -333,7 +351,9 @@ namespace ViewSupport
         // TODO: PERF improve algorithms, reduce repeated/unrequired work, implement Async multi core compute
         internal static void MultiViewAngleTravese(DrawOptions renderOptions)
         {
-            if (s_holoVisibleHash == ViewContext.GetViewHash())
+            string viewModelHash = ViewContext.GetViewHash() + ":" + DrawOptions.GetViewHash();
+
+            if (s_holoVisibleHash == viewModelHash)
             {
                 Debug.WriteLine("MultiViewAngleTravese, cache hit, durMs=0");
 
@@ -404,7 +424,7 @@ namespace ViewSupport
             ShapeList.Refresh(DrawOptions.SwitchBackFront, false);
 
             // Mark computed arcs based on current view orientation's hash
-            s_holoVisibleHash = ViewContext.GetViewHash();
+            s_holoVisibleHash = viewModelHash;
 
             Debug.WriteLine("MultiViewAngleTravese, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds);
         }
@@ -419,7 +439,10 @@ namespace ViewSupport
             {
                 foreach (Edge e in ifs.Edges)
                 {
-                    ProcessEdge(options, e);
+                    if (_debugMaxEdgeId == -1 || e.EdgeID <= _debugMaxEdgeId)   // Debug limit # of edges
+                    {
+                        ProcessEdge(options, e);
+                    }
                 }
             }
         }
@@ -431,8 +454,8 @@ namespace ViewSupport
         {
             foreach (Intersection inter in e.FaceIntersections)
             {
-                //surface.FillEllipse(Brushes.Black, new Rectangle((int)inter.IntersectionPoint_ViewCoordinates.X - 5, (int)inter.IntersectionPoint_ViewCoordinates.Y - 5, 10, 10));
-                //surface.DrawString(ScratchUtility.Transformer.WindowToModel(inter.IntersectionPoint_ViewCoordinates).ToString(2), new Font("Arial", 8f, FontStyle.Regular), Brushes.Magenta, (float)inter.IntersectionPoint_ViewCoordinates.X - 5, (float)inter.IntersectionPoint_ViewCoordinates.Y - 5);
+                //options.Graphics.FillEllipse(Brushes.Black, new Rectangle((int)inter.IntersectionPoint_ViewCoordinates.X - 5, (int)inter.IntersectionPoint_ViewCoordinates.Y - 5, 10, 10));
+                //options.Graphics.DrawString(ScratchUtility.Transformer.WindowToModel(inter.IntersectionPoint_ViewCoordinates).ToString(2), new Font("Arial", 8f, FontStyle.Regular), Brushes.Magenta, (float)inter.IntersectionPoint_ViewCoordinates.X - 5, (float)inter.IntersectionPoint_ViewCoordinates.Y - 5);
             }
 
             Global.Print("Processing Edge " + e.StartVertex.VertexIndex + " to " + e.EndVertex.VertexIndex);
@@ -458,7 +481,7 @@ namespace ViewSupport
 
                         if (e.IntersectsBehind(edgeToCheck, out intersectionPoint))
                         {
-                            double distanceFromStart = (intersectionPoint - e.StartVertex.ViewCoord).Length / e.Length_ViewCoordinates;
+                            double distanceFromStart = (intersectionPoint - e.StartVertex.ViewCoord).CalcLength() / e.Length_ViewCoordinates;
                             intersections.Add(new Intersection(e, distanceFromStart));
                             if (options.IsRendering && Global.DebugMode)
                                 options.Graphics.FillEllipse(Brushes.Orange, new Rectangle((int)intersectionPoint.X - 5, (int)intersectionPoint.Y - 5, 10, 10));
@@ -472,7 +495,7 @@ namespace ViewSupport
                 //Separate the Edge into the appropriate EdgeSections ordered by increasing distance from the e.StartVertex.
                 IOrderedEnumerable<Intersection> orderedIntersections = 
                     intersections.OrderBy<Intersection, double>(
-                        c => (c.IntersectionPoint_ViewCoordinates - e.StartVertex.ViewCoord).Length);
+                        c => (c.IntersectionPoint_ViewCoordinates - e.StartVertex.ViewCoord).CalcLength());
 
                 e.EdgeSections.Clear();
                 Coord lastCoord = e.StartVertex.ViewCoord;

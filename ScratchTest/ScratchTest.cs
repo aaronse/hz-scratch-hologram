@@ -333,32 +333,17 @@ namespace ScratchTest
             }
         }
 
-        private void mGenerateButton_Click(object sender, EventArgs e)
-        {
-            mView.ShowArcs = mArcCheckBox.Checked = true;
-           
-            DateTime start = DateTime.Now;
-
-            ViewSupport.Drawing.ReDraw(false);
-
-            Debug.WriteLine("Drawing.ReDraw, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
-
-            txtOutput.Text = ViewSupport.DrawOptions.Gcode.sbGcode.ToString();
-
-            UpdateOutputSummary();
-        }
-
 
         private void UpdateOutputSummary()
         {
-            ViewSupport.GCodeInfo gcode = ViewSupport.DrawOptions.Gcode;
-            string gcodeText = gcode.sbGcode.ToString();
+            var arcSegs = ViewSupport.EdgePainter.ArcSegments;
             float arcDurSecs = 2;   // TODO: Update based on actual run and/or proper math taking distance/feed into account.
             string summary = "";
 
-            if (gcode.ArcCount > 0)
+            if (arcSegs != null && arcSegs.Count > 0)
             {
-                summary = $"Arcs = {gcode.ArcCount}, Gcode = {gcodeText.Length / 1024}kb, EstHrs = {(gcode.ArcCount * arcDurSecs) / 3600.0:F2}";
+                summary = $"Arcs = {arcSegs.Count}, EstHrs = {(arcSegs.Count * arcDurSecs) / 3600.0:F2}";
+                // TODO: Implement GCODE Size estimator... Was... Gcode = {gcodeText.Length / 1024}kb...
             }
 
             summary += $"{((summary.Length > 0) ? ", " :"")}Cam = {ViewContext.Po.ToString(3)}:{ViewContext.Pr.ToString(3)}";
@@ -380,6 +365,25 @@ namespace ScratchTest
             UpdateOutputSummary();
         }
 
+
+        private void mGenerateButton_Click(object sender, EventArgs e)
+        {
+            mView.ShowArcs = mArcCheckBox.Checked = true;
+
+            DateTime start = DateTime.Now;
+
+            ViewSupport.Drawing.ReDraw(false);
+
+            Debug.WriteLine("Drawing.ReDraw, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
+
+            ViewSupport.SvgSerializer svgSerializer = new ViewSupport.SvgSerializer();
+            var svgText = svgSerializer.Serialize(ViewSupport.EdgePainter.ArcSegments);
+            txtOutput.Text = svgText.ToString();
+
+            UpdateOutputSummary();
+        }
+
+
         private void mExportSvgDialog_FileOk(object sender, CancelEventArgs e)
         {
             Debug.WriteLine("Export to " + mExportSvgDialog.FileName);
@@ -387,7 +391,39 @@ namespace ScratchTest
 
         private void btnExportSvg_Click(object sender, EventArgs  e)
         {
-            mExportSvgDialog.ShowDialog();
+            ViewSupport.SvgSerializer svgSerializer = new ViewSupport.SvgSerializer();
+            var svgText = svgSerializer.Serialize(ViewSupport.EdgePainter.ArcSegments);
+
+
+            var arcSegs = ViewSupport.EdgePainter.ArcSegments;
+            //StringBuilder sbArcsJson = new StringBuilder();
+            //if (arcSegs != null)
+            //{
+            //    sbArcsJson.AppendLine("[");
+            //    for (int i = 0; i < arcSegs.Count; i++)
+            //    {
+            //        var arcSeg = arcSegs[i];
+            //        if (i > 0) sbArcsJson.Append(", ");
+            //        sbArcsJson.AppendLine(arcSeg.ToString());
+            //    }
+            //    sbArcsJson.AppendLine("]");
+            //}
+
+
+            //if (mExportSvgDialog.ShowDialog() == DialogResult.OK)
+            {
+                string svgFilePath = "c:\\Users\\aaron\\Documents\\test.svg";
+                //string svgFilePath = mExportSvgDialog.FileName;
+
+                File.WriteAllText(svgFilePath, svgText.ToString());
+
+                //string arcsFilePath = Path.ChangeExtension(svgFilePath, "alt.json");
+                //File.WriteAllText(arcsFilePath, sbArcsJson.ToString());
+
+                string arcsFilePath = Path.ChangeExtension(svgFilePath, "json");
+                string arcSegsJson = Newtonsoft.Json.JsonConvert.SerializeObject(arcSegs);
+                File.WriteAllText(arcsFilePath, arcSegsJson.Replace(",{", ",\r\n{"));
+            }
         }
 
 
@@ -401,6 +437,18 @@ namespace ScratchTest
 
             this.ForeColor = ViewSupport.ThemeInfo.Current.TextColor;
             this.BackColor = ViewSupport.ThemeInfo.Current.WindowBackColor;
+        }
+
+        private void btnImportArcs_Click(object sender, EventArgs e)
+        {
+            ViewSupport.SvgSerializer svgSerializer = new ViewSupport.SvgSerializer();
+
+            string filePath = "C:\\Users\\aaron\\Documents\\test.2.json";
+            var arcSegs = svgSerializer.DeSerializeJson(filePath);
+
+            ViewSupport.EdgePainter.ArcSegments = arcSegs;
+
+            UpdateOutputSummary();
         }
     }
 

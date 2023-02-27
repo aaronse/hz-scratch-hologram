@@ -234,13 +234,13 @@ namespace ScratchView
         }
         private void Orbit(PointD deltaMousePosition)
         {
-            Coord newPoLocation_ViewCoordinates = new Coord((deltaMousePosition.X * ViewContext.N.Length / 2) + (Width / 2), (deltaMousePosition.Y * ViewContext.N.Length / 2) + (Height / 2), 0);
+            Coord newPoLocation_ViewCoordinates = new Coord((deltaMousePosition.X * ViewContext.N.CalcLength() / 2) + (Width / 2), (deltaMousePosition.Y * ViewContext.N.CalcLength() / 2) + (Height / 2), 0);
             ViewContext.Orbit(newPoLocation_ViewCoordinates);
         }
         private void LookAround(PointD deltaMousePosition)
         {
             //deltaMousePosition will be a small increment.
-            Coord newPrLocation_ViewCoordinates = new Coord((deltaMousePosition.X * ViewContext.N.Length / 2) + (Width / 2), (deltaMousePosition.Y * ViewContext.N.Length / 2) + (Height / 2), 0);
+            Coord newPrLocation_ViewCoordinates = new Coord((deltaMousePosition.X * ViewContext.N.CalcLength() / 2) + (Width / 2), (deltaMousePosition.Y * ViewContext.N.CalcLength() / 2) + (Height / 2), 0);
             ViewContext.LookAround(newPrLocation_ViewCoordinates);
         }
 

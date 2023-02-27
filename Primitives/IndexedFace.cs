@@ -101,7 +101,7 @@ namespace Primitives
             get
             {
                 Coord axisUnitVector = NormalVector;
-                Coord perpendicularUnitVector = axisUnitVector.CrossProduct((Vertices[1].ModelingCoord - Vertices[0].ModelingCoord).UnitVector); //parallel to plane
+                Coord perpendicularUnitVector = axisUnitVector.CrossProduct((Vertices[1].ModelingCoord - Vertices[0].ModelingCoord).CalcUnitVector()); //parallel to plane
 
                 PointF[] fs = new PointF[Vertices.Count];
                 byte[] ts = new byte[Vertices.Count];
@@ -176,7 +176,7 @@ namespace Primitives
         public bool ContainsPoint2D_ModelingCoordinates(Coord c)
         {
             Coord axisUnitVector = NormalVector;
-            Coord perpendicularUnitVector = axisUnitVector.CrossProduct((Vertices[1].ModelingCoord - Vertices[0].ModelingCoord).UnitVector); //parallel to plane
+            Coord perpendicularUnitVector = axisUnitVector.CrossProduct((Vertices[1].ModelingCoord - Vertices[0].ModelingCoord).CalcUnitVector()); //parallel to plane
 
             GraphicsPath g = GraphicsPath_ModelingCoordinates;
             PointF cTransformed = Transformer.ViewFromAxis(c, axisUnitVector, perpendicularUnitVector);
@@ -204,7 +204,7 @@ namespace Primitives
             int c = Vertices.Count;
             mNormalVector_ModelingCoordinates += (Vertices[c - 1].ModelingCoord - Vertices[c - 2].ModelingCoord).CrossProduct(Vertices[0].ModelingCoord - Vertices[c - 2].ModelingCoord);
             mNormalVector_ModelingCoordinates += (Vertices[c - 1].ModelingCoord - Vertices[0].ModelingCoord).CrossProduct(Vertices[1].ModelingCoord - Vertices[0].ModelingCoord);
-            mNormalVector_ModelingCoordinates /= mNormalVector_ModelingCoordinates.Length;
+            mNormalVector_ModelingCoordinates /= mNormalVector_ModelingCoordinates.CalcLength();
         }
         /// <summary>Sets the NormalVector to reflect the current view of the IndexedFace on the screen. Automatically called from Refresh().</summary>
         internal void UpdateNormalVector()
@@ -218,7 +218,7 @@ namespace Primitives
             int c = Vertices.Count;
             mNormalVector += (Vertices[c - 1].ViewCoord - Vertices[c - 2].ViewCoord).CrossProduct(Vertices[0].ViewCoord - Vertices[c - 2].ViewCoord);
             mNormalVector += (Vertices[c - 1].ViewCoord - Vertices[0].ViewCoord).CrossProduct(Vertices[1].ViewCoord - Vertices[0].ViewCoord);
-            mNormalVector /= mNormalVector.Length;
+            mNormalVector /= mNormalVector.CalcLength();
 
             if (!mNormalVector.IsValid())
             {

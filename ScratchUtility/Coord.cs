@@ -6,6 +6,8 @@ using System.Drawing;
 
 namespace ScratchUtility
 {
+    // TODO:P2 Very tempting to start caching computed state from Calc... methods.  But, should
+    // instead Profile perf to see what's *REALLY* happening...
     public struct Coord
     {
         public double X { get; set; }
@@ -140,14 +142,18 @@ namespace ScratchUtility
 
         }
 
-        public double Length
+        // Was .Length property, changed to method since it's doing work and the property cannot be
+        // serialized.  Intentionally making computationally expensive 'getters' methods to help
+        // hint to callers about the CPU cost.
+        public double CalcLength()
         {
-            get { return Math.Sqrt(X * X + Y * Y + Z * Z); }
+            return Math.Sqrt(X * X + Y * Y + Z * Z);
         }
-        /// <summary>Gets a unit vector in the direction of this Coord.</summary>
-        public Coord UnitVector
+
+        // <summary>Gets a unit vector in the direction of this Coord.</summary>
+        public Coord CalcUnitVector()
         {
-            get { return this / Length; }
+            return this / CalcLength();
         }
 
         /// <summary>Returns the Cross Product of this and rhs.</summary>

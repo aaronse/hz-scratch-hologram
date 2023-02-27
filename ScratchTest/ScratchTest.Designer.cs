@@ -30,7 +30,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            ViewSupport.ThemeInfo themeInfo1 = new ViewSupport.ThemeInfo();
             this.mViewAngleTrack = new System.Windows.Forms.TrackBar();
             this.mArcSweepAngleTrack = new System.Windows.Forms.TrackBar();
             this.mArcCheckBox = new System.Windows.Forms.CheckBox();
@@ -66,9 +65,10 @@
             this.mGcodeCheckBox = new System.Windows.Forms.CheckBox();
             this.txtOutputSummary = new System.Windows.Forms.TextBox();
             this.mArcSegmentsCheckbox = new System.Windows.Forms.CheckBox();
-            this.mView = new ScratchView.ViewControl();
             this.btnExportSvg = new System.Windows.Forms.Button();
             this.mExportSvgDialog = new System.Windows.Forms.SaveFileDialog();
+            this.btnImportArcs = new System.Windows.Forms.Button();
+            this.mView = new ScratchView.ViewControl();
             ((System.ComponentModel.ISupportInitialize)(this.mViewAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mArcSweepAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mLineResolutionTrack)).BeginInit();
@@ -86,7 +86,7 @@
             this.mViewAngleTrack.Maximum = 90;
             this.mViewAngleTrack.Minimum = -90;
             this.mViewAngleTrack.Name = "mViewAngleTrack";
-            this.mViewAngleTrack.Size = new System.Drawing.Size(823, 45);
+            this.mViewAngleTrack.Size = new System.Drawing.Size(823, 56);
             this.mViewAngleTrack.TabIndex = 1;
             this.mViewAngleTrack.TickStyle = System.Windows.Forms.TickStyle.None;
             this.mViewAngleTrack.Scroll += new System.EventHandler(this.mViewAngleTrack_Scroll);
@@ -100,7 +100,7 @@
             this.mArcSweepAngleTrack.Maximum = 180;
             this.mArcSweepAngleTrack.Name = "mArcSweepAngleTrack";
             this.mArcSweepAngleTrack.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.mArcSweepAngleTrack.Size = new System.Drawing.Size(45, 162);
+            this.mArcSweepAngleTrack.Size = new System.Drawing.Size(56, 162);
             this.mArcSweepAngleTrack.TabIndex = 2;
             this.mArcSweepAngleTrack.TickStyle = System.Windows.Forms.TickStyle.None;
             this.mArcSweepAngleTrack.Value = 180;
@@ -110,9 +110,9 @@
             // 
             this.mArcCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.mArcCheckBox.AutoSize = true;
-            this.mArcCheckBox.Location = new System.Drawing.Point(841, 7);
+            this.mArcCheckBox.Location = new System.Drawing.Point(837, 7);
             this.mArcCheckBox.Name = "mArcCheckBox";
-            this.mArcCheckBox.Size = new System.Drawing.Size(42, 17);
+            this.mArcCheckBox.Size = new System.Drawing.Size(46, 19);
             this.mArcCheckBox.TabIndex = 3;
             this.mArcCheckBox.Text = "Arc";
             this.mArcCheckBox.UseVisualStyleBackColor = true;
@@ -136,7 +136,7 @@
             this.mLineResolutionTrack.Maximum = 1000;
             this.mLineResolutionTrack.Minimum = 1;
             this.mLineResolutionTrack.Name = "mLineResolutionTrack";
-            this.mLineResolutionTrack.Size = new System.Drawing.Size(561, 45);
+            this.mLineResolutionTrack.Size = new System.Drawing.Size(561, 56);
             this.mLineResolutionTrack.TabIndex = 6;
             this.mLineResolutionTrack.TickStyle = System.Windows.Forms.TickStyle.None;
             this.mLineResolutionTrack.Value = 100;
@@ -147,7 +147,7 @@
             this.mNormalRadioButton.AutoSize = true;
             this.mNormalRadioButton.Location = new System.Drawing.Point(9, 42);
             this.mNormalRadioButton.Name = "mNormalRadioButton";
-            this.mNormalRadioButton.Size = new System.Drawing.Size(58, 17);
+            this.mNormalRadioButton.Size = new System.Drawing.Size(69, 19);
             this.mNormalRadioButton.TabIndex = 8;
             this.mNormalRadioButton.TabStop = true;
             this.mNormalRadioButton.Text = "Normal";
@@ -159,7 +159,7 @@
             this.mRedBlueRadioButton.AutoSize = true;
             this.mRedBlueRadioButton.Location = new System.Drawing.Point(9, 65);
             this.mRedBlueRadioButton.Name = "mRedBlueRadioButton";
-            this.mRedBlueRadioButton.Size = new System.Drawing.Size(71, 17);
+            this.mRedBlueRadioButton.Size = new System.Drawing.Size(79, 19);
             this.mRedBlueRadioButton.TabIndex = 9;
             this.mRedBlueRadioButton.Text = "Red/Blue";
             this.mRedBlueRadioButton.UseVisualStyleBackColor = true;
@@ -170,7 +170,7 @@
             this.mStereoscopicRadioButton.AutoSize = true;
             this.mStereoscopicRadioButton.Location = new System.Drawing.Point(9, 88);
             this.mStereoscopicRadioButton.Name = "mStereoscopicRadioButton";
-            this.mStereoscopicRadioButton.Size = new System.Drawing.Size(87, 17);
+            this.mStereoscopicRadioButton.Size = new System.Drawing.Size(99, 19);
             this.mStereoscopicRadioButton.TabIndex = 10;
             this.mStereoscopicRadioButton.Text = "Stereoscopic";
             this.mStereoscopicRadioButton.UseVisualStyleBackColor = true;
@@ -181,7 +181,7 @@
             this.mPrintRadioButton.AutoSize = true;
             this.mPrintRadioButton.Location = new System.Drawing.Point(9, 110);
             this.mPrintRadioButton.Name = "mPrintRadioButton";
-            this.mPrintRadioButton.Size = new System.Drawing.Size(46, 17);
+            this.mPrintRadioButton.Size = new System.Drawing.Size(53, 19);
             this.mPrintRadioButton.TabIndex = 11;
             this.mPrintRadioButton.TabStop = true;
             this.mPrintRadioButton.Text = "Print";
@@ -194,7 +194,7 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(782, 716);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(54, 13);
+            this.label1.Size = new System.Drawing.Size(61, 15);
             this.label1.TabIndex = 12;
             this.label1.Text = "Point dia :";
             // 
@@ -202,9 +202,9 @@
             // 
             this.mDebugCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.mDebugCheckBox.AutoSize = true;
-            this.mDebugCheckBox.Location = new System.Drawing.Point(841, 42);
+            this.mDebugCheckBox.Location = new System.Drawing.Point(833, 42);
             this.mDebugCheckBox.Name = "mDebugCheckBox";
-            this.mDebugCheckBox.Size = new System.Drawing.Size(58, 17);
+            this.mDebugCheckBox.Size = new System.Drawing.Size(66, 19);
             this.mDebugCheckBox.TabIndex = 15;
             this.mDebugCheckBox.Text = "Debug";
             this.mDebugCheckBox.UseVisualStyleBackColor = true;
@@ -226,7 +226,7 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(849, 63);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(31, 13);
+            this.label2.Size = new System.Drawing.Size(33, 15);
             this.label2.TabIndex = 23;
             this.label2.Text = "Arcs:";
             // 
@@ -236,7 +236,7 @@
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(847, 248);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(20, 13);
+            this.label3.Size = new System.Drawing.Size(20, 15);
             this.label3.TabIndex = 24;
             this.label3.Text = "Zf:";
             // 
@@ -248,7 +248,7 @@
             this.zfTrackBar.Maximum = 10000;
             this.zfTrackBar.Name = "zfTrackBar";
             this.zfTrackBar.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.zfTrackBar.Size = new System.Drawing.Size(45, 219);
+            this.zfTrackBar.Size = new System.Drawing.Size(56, 219);
             this.zfTrackBar.TabIndex = 25;
             this.zfTrackBar.TickStyle = System.Windows.Forms.TickStyle.None;
             this.zfTrackBar.Value = 2500;
@@ -258,9 +258,9 @@
             // 
             this.mSwitchCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.mSwitchCheckBox.AutoSize = true;
-            this.mSwitchCheckBox.Location = new System.Drawing.Point(785, 668);
+            this.mSwitchCheckBox.Location = new System.Drawing.Point(774, 666);
             this.mSwitchCheckBox.Name = "mSwitchCheckBox";
-            this.mSwitchCheckBox.Size = new System.Drawing.Size(109, 17);
+            this.mSwitchCheckBox.Size = new System.Drawing.Size(120, 19);
             this.mSwitchCheckBox.TabIndex = 26;
             this.mSwitchCheckBox.Text = "Switch Left/Right";
             this.mSwitchCheckBox.UseVisualStyleBackColor = true;
@@ -272,7 +272,7 @@
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(850, 516);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(33, 13);
+            this.label4.Size = new System.Drawing.Size(36, 15);
             this.label4.TabIndex = 27;
             this.label4.Text = "Eyes:";
             // 
@@ -283,7 +283,7 @@
             this.mEyesTrackBar.Maximum = 40;
             this.mEyesTrackBar.Name = "mEyesTrackBar";
             this.mEyesTrackBar.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.mEyesTrackBar.Size = new System.Drawing.Size(45, 128);
+            this.mEyesTrackBar.Size = new System.Drawing.Size(56, 128);
             this.mEyesTrackBar.TabIndex = 28;
             this.mEyesTrackBar.TickStyle = System.Windows.Forms.TickStyle.None;
             this.mEyesTrackBar.Value = 10;
@@ -310,7 +310,7 @@
             this.mDarkRadioButton.Checked = true;
             this.mDarkRadioButton.Location = new System.Drawing.Point(9, 19);
             this.mDarkRadioButton.Name = "mDarkRadioButton";
-            this.mDarkRadioButton.Size = new System.Drawing.Size(48, 17);
+            this.mDarkRadioButton.Size = new System.Drawing.Size(54, 19);
             this.mDarkRadioButton.TabIndex = 7;
             this.mDarkRadioButton.TabStop = true;
             this.mDarkRadioButton.Text = "Dark";
@@ -339,7 +339,7 @@
             this.mPointsCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mPointsCheckbox.Location = new System.Drawing.Point(7, 38);
             this.mPointsCheckbox.Name = "mPointsCheckbox";
-            this.mPointsCheckbox.Size = new System.Drawing.Size(55, 17);
+            this.mPointsCheckbox.Size = new System.Drawing.Size(63, 19);
             this.mPointsCheckbox.TabIndex = 40;
             this.mPointsCheckbox.Text = "Points";
             this.mPointsCheckbox.UseVisualStyleBackColor = true;
@@ -352,7 +352,7 @@
             this.mMergeFacesCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mMergeFacesCheckBox.Location = new System.Drawing.Point(7, 80);
             this.mMergeFacesCheckBox.Name = "mMergeFacesCheckBox";
-            this.mMergeFacesCheckBox.Size = new System.Drawing.Size(88, 17);
+            this.mMergeFacesCheckBox.Size = new System.Drawing.Size(101, 19);
             this.mMergeFacesCheckBox.TabIndex = 39;
             this.mMergeFacesCheckBox.Text = "Merge Faces";
             this.mMergeFacesCheckBox.UseVisualStyleBackColor = true;
@@ -365,7 +365,7 @@
             this.quickModeCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.quickModeCheckBox.Location = new System.Drawing.Point(7, 101);
             this.quickModeCheckBox.Name = "quickModeCheckBox";
-            this.quickModeCheckBox.Size = new System.Drawing.Size(84, 17);
+            this.quickModeCheckBox.Size = new System.Drawing.Size(95, 19);
             this.quickModeCheckBox.TabIndex = 23;
             this.quickModeCheckBox.Text = "Quick Mode";
             this.quickModeCheckBox.UseVisualStyleBackColor = true;
@@ -378,7 +378,7 @@
             this.mHiddenLineCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mHiddenLineCheckBox.Location = new System.Drawing.Point(7, 59);
             this.mHiddenLineCheckBox.Name = "mHiddenLineCheckBox";
-            this.mHiddenLineCheckBox.Size = new System.Drawing.Size(83, 17);
+            this.mHiddenLineCheckBox.Size = new System.Drawing.Size(96, 19);
             this.mHiddenLineCheckBox.TabIndex = 3;
             this.mHiddenLineCheckBox.Text = "Hidden Line";
             this.mHiddenLineCheckBox.UseVisualStyleBackColor = true;
@@ -391,7 +391,7 @@
             this.mVectorsCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mVectorsCheckBox.Location = new System.Drawing.Point(7, 17);
             this.mVectorsCheckBox.Name = "mVectorsCheckBox";
-            this.mVectorsCheckBox.Size = new System.Drawing.Size(62, 17);
+            this.mVectorsCheckBox.Size = new System.Drawing.Size(69, 19);
             this.mVectorsCheckBox.TabIndex = 2;
             this.mVectorsCheckBox.Text = "Vectors";
             this.mVectorsCheckBox.UseVisualStyleBackColor = true;
@@ -401,9 +401,9 @@
             // 
             this.mSwitchBackFrontCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.mSwitchBackFrontCheckBox.AutoSize = true;
-            this.mSwitchBackFrontCheckBox.Location = new System.Drawing.Point(785, 690);
+            this.mSwitchBackFrontCheckBox.Location = new System.Drawing.Point(774, 688);
             this.mSwitchBackFrontCheckBox.Name = "mSwitchBackFrontCheckBox";
-            this.mSwitchBackFrontCheckBox.Size = new System.Drawing.Size(109, 17);
+            this.mSwitchBackFrontCheckBox.Size = new System.Drawing.Size(120, 19);
             this.mSwitchBackFrontCheckBox.TabIndex = 32;
             this.mSwitchBackFrontCheckBox.Text = "Swith Back/Front";
             this.mSwitchBackFrontCheckBox.UseVisualStyleBackColor = true;
@@ -445,7 +445,7 @@
             this.mGenerateButton.Name = "mGenerateButton";
             this.mGenerateButton.Size = new System.Drawing.Size(117, 23);
             this.mGenerateButton.TabIndex = 35;
-            this.mGenerateButton.Text = "Generate GCODE";
+            this.mGenerateButton.Text = "Generate SVG";
             this.mGenerateButton.UseVisualStyleBackColor = true;
             this.mGenerateButton.Click += new System.EventHandler(this.mGenerateButton_Click);
             // 
@@ -466,9 +466,9 @@
             this.mGcodeCheckBox.AutoSize = true;
             this.mGcodeCheckBox.Checked = true;
             this.mGcodeCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.mGcodeCheckBox.Location = new System.Drawing.Point(136, 677);
+            this.mGcodeCheckBox.Location = new System.Drawing.Point(136, 675);
             this.mGcodeCheckBox.Name = "mGcodeCheckBox";
-            this.mGcodeCheckBox.Size = new System.Drawing.Size(100, 17);
+            this.mGcodeCheckBox.Size = new System.Drawing.Size(114, 19);
             this.mGcodeCheckBox.TabIndex = 37;
             this.mGcodeCheckBox.Text = "compute gcode";
             this.mGcodeCheckBox.UseVisualStyleBackColor = true;
@@ -489,14 +489,42 @@
             // 
             this.mArcSegmentsCheckbox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.mArcSegmentsCheckbox.AutoSize = true;
-            this.mArcSegmentsCheckbox.Location = new System.Drawing.Point(841, 25);
+            this.mArcSegmentsCheckbox.Location = new System.Drawing.Point(833, 25);
             this.mArcSegmentsCheckbox.Margin = new System.Windows.Forms.Padding(2);
             this.mArcSegmentsCheckbox.Name = "mArcSegmentsCheckbox";
-            this.mArcSegmentsCheckbox.Size = new System.Drawing.Size(69, 17);
+            this.mArcSegmentsCheckbox.Size = new System.Drawing.Size(77, 19);
             this.mArcSegmentsCheckbox.TabIndex = 39;
             this.mArcSegmentsCheckbox.Text = "Arc Segs";
             this.mArcSegmentsCheckbox.UseVisualStyleBackColor = true;
             this.mArcSegmentsCheckbox.CheckedChanged += new System.EventHandler(this.mArcSegmentsCheckbox_CheckedChanged);
+            // 
+            // btnExportSvg
+            // 
+            this.btnExportSvg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnExportSvg.Location = new System.Drawing.Point(113, 700);
+            this.btnExportSvg.Name = "btnExportSvg";
+            this.btnExportSvg.Size = new System.Drawing.Size(90, 23);
+            this.btnExportSvg.TabIndex = 40;
+            this.btnExportSvg.Text = "Export SVG";
+            this.btnExportSvg.UseVisualStyleBackColor = true;
+            this.btnExportSvg.Click += new System.EventHandler(this.btnExportSvg_Click);
+            // 
+            // mExportSvgDialog
+            // 
+            this.mExportSvgDialog.Filter = "(*.svg)|*.svg|All files (*.*)|*.*\"";
+            this.mExportSvgDialog.InitialDirectory = "C:\\Users\\aaron\\Documents";
+            this.mExportSvgDialog.Title = "Select an SVG file";
+            this.mExportSvgDialog.FileOk += new System.ComponentModel.CancelEventHandler(this.mExportSvgDialog_FileOk);
+            // 
+            // btnImportArcs
+            // 
+            this.btnImportArcs.Location = new System.Drawing.Point(12, 701);
+            this.btnImportArcs.Name = "btnImportArcs";
+            this.btnImportArcs.Size = new System.Drawing.Size(95, 23);
+            this.btnImportArcs.TabIndex = 41;
+            this.btnImportArcs.Text = "Import Arcs";
+            this.btnImportArcs.UseVisualStyleBackColor = true;
+            this.btnImportArcs.Click += new System.EventHandler(this.btnImportArcs_Click);
             // 
             // mView
             // 
@@ -505,9 +533,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mView.ArcAngleResolution = 10F;
             this.mView.ArcSweepAngle = 90F;
-            themeInfo1.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
-            themeInfo1.WindowBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
-            this.mView.BackColor = themeInfo1.BackgroundColor;
+            this.mView.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
             this.mView.Location = new System.Drawing.Point(13, 41);
             this.mView.Margin = new System.Windows.Forms.Padding(4);
             this.mView.Name = "mView";
@@ -530,30 +556,13 @@
             this.mView.ViewPointsPerUnitLength = 0D;
             this.mView.VisibilityMode = ViewSupport.VisibilityMode.Transparent;
             // 
-            // btnExportSvg
-            // 
-            this.btnExportSvg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnExportSvg.Location = new System.Drawing.Point(12, 701);
-            this.btnExportSvg.Name = "btnExportSvg";
-            this.btnExportSvg.Size = new System.Drawing.Size(90, 23);
-            this.btnExportSvg.TabIndex = 40;
-            this.btnExportSvg.Text = "Export SVG";
-            this.btnExportSvg.UseVisualStyleBackColor = true;
-            this.btnExportSvg.Click += new System.EventHandler(this.btnExportSvg_Click);
-            // 
-            // mExportSvgDialog
-            // 
-            this.mExportSvgDialog.Filter = "(*.svg)|*.svg|All files (*.*)|*.*\"";
-            this.mExportSvgDialog.InitialDirectory = "C:\\Users\\aaron\\Documents";
-            this.mExportSvgDialog.Title = "Select an SVG file";
-            this.mExportSvgDialog.FileOk += new System.ComponentModel.CancelEventHandler(this.mExportSvgDialog_FileOk);
-            // 
             // ScratchTest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
             this.ClientSize = new System.Drawing.Size(906, 777);
+            this.Controls.Add(this.btnImportArcs);
             this.Controls.Add(this.btnExportSvg);
             this.Controls.Add(this.mArcSegmentsCheckbox);
             this.Controls.Add(this.txtOutputSummary);
@@ -636,6 +645,7 @@
         private System.Windows.Forms.CheckBox mArcSegmentsCheckbox;
         private System.Windows.Forms.CheckBox mPointsCheckbox;
         private System.Windows.Forms.Button btnExportSvg;
+        private System.Windows.Forms.Button btnImportArcs;
     }
 }
 

@@ -114,14 +114,14 @@ namespace Primitives
         {
             get
             {
-                return (EndVertex.ModelingCoord - StartVertex.ModelingCoord).Length;
+                return (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcLength();
             }
         }
         public double Length_ViewCoordinates
         {
             get
             {
-                return (EndVertex.ViewCoord - StartVertex.ViewCoord).Length;
+                return (EndVertex.ViewCoord - StartVertex.ViewCoord).CalcLength();
             }
         }
 
@@ -134,8 +134,8 @@ namespace Primitives
             intersectionPoint = new Coord();
 
             //no intersection if the lines are parallel
-            Coord thisUnit = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).UnitVector;
-            Coord silhouetteUnit = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).UnitVector;
+            Coord thisUnit = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();
+            Coord silhouetteUnit = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).CalcUnitVector();
             if (thisUnit == silhouetteUnit || thisUnit == -1 * silhouetteUnit)
                 return false;
 

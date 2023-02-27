@@ -33,7 +33,6 @@ namespace ViewSupport
         private static bool mShowArcs = true;
         private static bool mShowArcSegments = false;
         private static bool mShowGcode = false;
-        private static GCodeInfo mGcode = null;
         private static bool mVectorMode = true;
         private static bool mPointsMode = true;
         private static VisibilityMode mVisibilityMode = VisibilityMode.Transparent;
@@ -181,24 +180,6 @@ namespace ViewSupport
             }
         }
 
-        public static GCodeInfo Gcode
-        {
-            get { 
-                if (mGcode == null)
-                {
-                    mGcode = new GCodeInfo();
-                }
-
-                return mGcode; 
-            }
-            set
-            {
-                if (mGcode == value) return;
-
-                mGcode = value;
-                FireOptionChangedEvent();
-            }
-        }
 
         public static double PointWidth
         {
@@ -303,13 +284,6 @@ namespace ViewSupport
         }
 
 
-        // TODO: Remove dead code
-        //public static float VectorWidth
-        //{
-        //    get { return Drawing.VectorWidth; }
-        //    set { Drawing.VectorWidth = value; }
-        //}
-
         public static double ViewPointsPerUnitLength
         {
             get { return mViewPointsPerUnitLength; }
@@ -375,6 +349,11 @@ namespace ViewSupport
             };
 
             return clone;
+        }
+
+        public static string GetViewHash()
+        {
+            return $"{ViewPointsPerUnitLength}";
         }
 
         #endregion
