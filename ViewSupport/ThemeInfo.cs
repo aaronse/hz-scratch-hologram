@@ -24,6 +24,8 @@ namespace ViewSupport
             VectorPen = new Pen(Color.Blue),
             PointBrush = Brushes.Blue,
             RedBlueModePointBrush = Brushes.Black,  // Can't be Blue
+            SelectedColor = Color.Red,
+            SelectedPen = new Pen(Color.Red, 1f)
         };
 
         public static ThemeInfo DarkTheme = new ThemeInfo()
@@ -37,7 +39,9 @@ namespace ViewSupport
             ArcTextBrush = Brushes.LightGray,
             VectorPen = new Pen(Color.LightBlue),
             PointBrush = Brushes.LightGray,
-            RedBlueModePointBrush = Brushes.White
+            RedBlueModePointBrush = Brushes.White,
+            SelectedColor = Color.MediumPurple,
+            SelectedPen = new Pen(Color.Red, 1f)
         };
 
         public static ThemeInfo Current = DarkTheme;
@@ -55,5 +59,9 @@ namespace ViewSupport
         public Brush RedBlueModePointBrush { get; set; }
 
         public Brush ArcTextBrush { get; set; }
+
+        public Color SelectedColor { get; set; }
+
+        public Pen SelectedPen { get; set; }
     }
 }

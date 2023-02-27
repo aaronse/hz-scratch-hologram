@@ -39,6 +39,7 @@ namespace ViewSupport
         private static bool mRotateCanvas = false;
         private static bool mQuickMode = true;
         private static bool mMergeFaces = true;
+        private static string mSelectedItemExpr = null;
 
         //Options requiring recalculation of viewpoints
         private static double mViewPointsPerUnitLength = 0;
@@ -180,6 +181,17 @@ namespace ViewSupport
             }
         }
 
+        public static string SelectedItemExpr
+        {
+            get { return mSelectedItemExpr; }
+            set
+            {
+                if (mSelectedItemExpr == value)
+                    return;
+                mSelectedItemExpr = value;
+                FireOptionChangedEvent();
+            }
+        }
 
         public static double PointWidth
         {

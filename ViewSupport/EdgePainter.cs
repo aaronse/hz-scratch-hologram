@@ -9,6 +9,8 @@ using System.Text;
 using System;
 
 // TODO:P1 Refactor, compute and rendering into separate tasks
+// TODO:P1 Perf/Bug, observed too many segments per arc, unexpected gaps.  Action: Check Arc Seg logic, determine why unexpected gaps?  Fix.
+// TODO:P1 Debug, implement Edge/Face selection highlighting...  Requires mapping Mouse XY coord to projected coords, searching for closest.  Changing currently selected.
 
 namespace ViewSupport
 {
@@ -40,6 +42,8 @@ namespace ViewSupport
         private static List<ArcSegInfo> s_arcSegs;
 
         public static List<ArcSegInfo> ArcSegments { get { return s_arcSegs; } set { s_arcSegs = value; } }
+
+        private static int _selectedId = 0;
 
         internal class ArcInfo
         {
@@ -114,6 +118,12 @@ namespace ViewSupport
             s_coordHits = 0;
             s_edgeHits = 0;
             s_skippedEdgeCount = 0;
+
+            // Any item(s) selected?
+            if (!int.TryParse(DrawOptions.SelectedItemExpr, out _selectedId))
+            {
+                _selectedId = 0;
+            }
 
             // Compute arc segments by computing Edge/Vertex visibility for *EVERY* viewable angle.
             if (DrawOptions.ShowArcSegments)
@@ -254,7 +264,14 @@ namespace ViewSupport
                 float startAngle = c.Z - ViewContext.N_ViewCoordinates > 0 ? 0 : 180;
                 if (options.IsRendering)
                 {
-                    options.Graphics.DrawArc(options.Theme.ArcPen, arcRect, startAngle, 180);
+                    if (_selectedId == e.EdgeID)
+                    {
+                        options.Graphics.DrawArc(options.Theme.SelectedPen, arcRect, startAngle, 180);
+                    }
+                    else
+                    {
+                        options.Graphics.DrawArc(options.Theme.ArcPen, arcRect, startAngle, 180);
+                    }
 
                     if (Global.DebugMode)
                         options.Graphics.DrawString(
@@ -276,8 +293,6 @@ namespace ViewSupport
 
                 var c = arcInfo.ZeroCoord;
 
-                if (e.EdgeID == 2) Debug.WriteLine(arcInfo.ToString());
-
                 Rectangle arcRect = Transformer.GetArcSquare(c);
                 float startAngle = c.Z - ViewContext.N_ViewCoordinates > 0 ? 0 : 180;
 
@@ -287,17 +302,17 @@ namespace ViewSupport
                     // Eventually, should have just one implementation, so, remove this, or
                     // the old DrawArc code, when bug free... 
                     options.Graphics.DrawArc(options.Theme.ArcPen, arcRect, startAngle, 180);
+                }
 
-                    if (Global.DebugMode)
-                    {
-                        options.Graphics.DrawString(
-                            "A " + e.EdgeID.ToString(),
-                            s_debugFont,
-                            options.Theme.ArcTextBrush,
-                            new PointF(
-                                arcRect.X + arcRect.Width / 2,
-                                arcRect.Y + ((startAngle == 0) ? arcRect.Height : 0)));
-                    }
+                if (options.IsRendering && Global.DebugMode)
+                {
+                    options.Graphics.DrawString(
+                        "A " + e.EdgeID.ToString(),
+                        s_debugFont,
+                        options.Theme.ArcTextBrush,
+                        new PointF(
+                            arcRect.X + arcRect.Width / 2,
+                            arcRect.Y + ((startAngle == 0) ? arcRect.Height : 0)));
                 }
 
                 var visibleAngles = arcInfo.VisibleAngles;
@@ -334,16 +349,27 @@ namespace ViewSupport
                     i = Math.Max(j, i + options.ViewAngleResolution);
                 }
             }
-
+            
             if (options.IsRendering)
             {
                 foreach (var arcSeg in arcSegs)
                 {
-                    options.Graphics.DrawArc(
-                        options.Theme.ArcPenHighlight,
-                        arcSeg.ArcRect,
-                        arcSeg.StartAngle,
-                        arcSeg.SweepAngle);
+                    if (_selectedId == arcSeg.EdgeId)
+                    {
+                        options.Graphics.DrawArc(
+                            options.Theme.SelectedPen,
+                            arcSeg.ArcRect,
+                            arcSeg.StartAngle,
+                            arcSeg.SweepAngle);
+                    }
+                    else
+                    {
+                        options.Graphics.DrawArc(
+                            options.Theme.ArcPenHighlight,
+                            arcSeg.ArcRect,
+                            arcSeg.StartAngle,
+                            arcSeg.SweepAngle);
+                    }
                 }
             }
         }
@@ -411,7 +437,7 @@ namespace ViewSupport
                                 };
                             }
 
-                            s_edgePointVisibleArcs[pointHash].VisibleAngles[iterAngle + -ViewContext.MinViewAngle] = true;
+                            s_edgePointVisibleArcs[pointHash].VisibleAngles[iterAngle - ViewContext.MinViewAngle] = true;
                         }
                     }
                 }

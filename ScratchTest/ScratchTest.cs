@@ -17,6 +17,8 @@ namespace ScratchTest
 {
     public partial class ScratchTest : Form
     {
+        private bool _handleEvents = true;
+
         public ScratchTest()
         {
             InitializeComponent();
@@ -32,6 +34,7 @@ namespace ScratchTest
             ViewSupport.DrawOptions.QuickMode = quickModeCheckBox.Checked;
             SetVisibilityMode();
             mView.SwitchLeftRight = mSwitchCheckBox.Checked;
+            ViewSupport.DrawOptions.SelectedItemExpr = txtSelectedItem.Text;
             TrySetPointWidth();
             SetUpFileList(@".\..\..\..\Data"); // C:\Projects(NAS)\HoloZens\scratchhologram\Data");
                                                //           SetUpFileList(@"C:\Program Files\Blender Foundation\Blender");
@@ -71,10 +74,16 @@ namespace ScratchTest
 
         private void mViewAngleTrack_ValueChanged(object sender, EventArgs e)
         {
-            if (!DesignMode)
+            if (!DesignMode && _handleEvents)
             {
                 mView.ViewAngle = mViewAngleTrack.Value;
+
+                _handleEvents = false;
+
+                txtViewAngle.Text = mViewAngleTrack.Value.ToString();
                 UpdateOutputSummary();
+
+                _handleEvents = true;
             }
         }
 
@@ -449,6 +458,32 @@ namespace ScratchTest
             ViewSupport.EdgePainter.ArcSegments = arcSegs;
 
             UpdateOutputSummary();
+        }
+
+        private void txtSelectedItem_TextChanged(object sender, EventArgs e)
+        {
+            ViewSupport.DrawOptions.SelectedItemExpr = txtSelectedItem.Text;
+        }
+
+        private void txtViewAngle_TextChanged(object sender, EventArgs e)
+        {
+            if (!DesignMode && _handleEvents)
+            {
+                int viewAngle = 0;
+                if (int.TryParse(txtViewAngle.Text, out viewAngle))
+                {
+                    _handleEvents = false;
+
+                    int newVal = Math.Max(-90, Math.Min(90, viewAngle));
+
+                    mView.ViewAngle = newVal;
+                    mViewAngleTrack.Value = newVal;
+
+                    UpdateOutputSummary();
+
+                    _handleEvents = true;
+                }
+            }
         }
     }
 

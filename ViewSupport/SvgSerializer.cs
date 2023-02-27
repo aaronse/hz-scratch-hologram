@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -57,16 +58,15 @@ namespace ViewSupport
 
                 foreach (var arcSeg in arcSegs)
                 {
-                    // DEBUGDEBUG
-                    //if (arcSeg.EdgeId != 60) continue;
+                    // TODO:P1 Should 0 and/or small angle sweep be skipped or merged with close by sweeps?  Maybe 0 or small angle gaps are logic/rounding BUG needing to be fixed?
 
-                    // TODO:P2: Should 0 angle sweep be skipped like this, or included, or is 0 angle a BUG to be fixed?
-                    //if (arcSeg.SweepAngle == 0)
-                    //    continue;
+                    // Massage sweep to minimum of 1 degree.
+                    Debug.Assert(arcSeg.SweepAngle >= 0);
+                    int sweepAngle = Math.Max(1, arcSeg.SweepAngle);
 
                     int sweepFlag = 1;
                     float startRad = (arcSeg.StartAngle * pi) / 180;
-                    float endRad = ((arcSeg.StartAngle + Math.Max(1, arcSeg.SweepAngle)) * pi) / 180;
+                    float endRad = ((arcSeg.StartAngle + sweepAngle) * pi) / 180;
                     float r = arcSeg.ArcRect.Width / 2;
 
                     float cx = arcSeg.ArcRect.X + arcSeg.ArcRect.Width / 2;
@@ -76,7 +76,6 @@ namespace ViewSupport
                     float x2 = cx + (float)(r * Math.Cos(endRad));
                     float y2 = cy + (float)(r * Math.Sin(endRad));
 
-                    
                     if (x1 > maxX) maxX = x1;
                     if (x2 > maxX) maxX = x2;
                     if (y1 > maxY) maxY = y1;
@@ -84,7 +83,6 @@ namespace ViewSupport
 
                     sb.AppendLine($"M {x1} {y1}");
                     sb.AppendLine($"A {r} {r} 0 0 {sweepFlag} {x2} {y2}");
-                    //sb.AppendLine($"L 200 200");
                 }
             }
 

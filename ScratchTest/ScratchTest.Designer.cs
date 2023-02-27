@@ -68,7 +68,10 @@
             this.btnExportSvg = new System.Windows.Forms.Button();
             this.mExportSvgDialog = new System.Windows.Forms.SaveFileDialog();
             this.btnImportArcs = new System.Windows.Forms.Button();
+            this.txtSelectedItem = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.mView = new ScratchView.ViewControl();
+            this.txtViewAngle = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.mViewAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mArcSweepAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mLineResolutionTrack)).BeginInit();
@@ -86,7 +89,7 @@
             this.mViewAngleTrack.Maximum = 90;
             this.mViewAngleTrack.Minimum = -90;
             this.mViewAngleTrack.Name = "mViewAngleTrack";
-            this.mViewAngleTrack.Size = new System.Drawing.Size(823, 56);
+            this.mViewAngleTrack.Size = new System.Drawing.Size(588, 56);
             this.mViewAngleTrack.TabIndex = 1;
             this.mViewAngleTrack.TickStyle = System.Windows.Forms.TickStyle.None;
             this.mViewAngleTrack.Scroll += new System.EventHandler(this.mViewAngleTrack_Scroll);
@@ -526,6 +529,26 @@
             this.btnImportArcs.UseVisualStyleBackColor = true;
             this.btnImportArcs.Click += new System.EventHandler(this.btnImportArcs_Click);
             // 
+            // txtSelectedItem
+            // 
+            this.txtSelectedItem.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSelectedItem.Location = new System.Drawing.Point(728, 14);
+            this.txtSelectedItem.Name = "txtSelectedItem";
+            this.txtSelectedItem.Size = new System.Drawing.Size(100, 20);
+            this.txtSelectedItem.TabIndex = 42;
+            this.txtSelectedItem.Text = "60";
+            this.txtSelectedItem.TextChanged += new System.EventHandler(this.txtSelectedItem_TextChanged);
+            // 
+            // label5
+            // 
+            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(661, 17);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(61, 15);
+            this.label5.TabIndex = 43;
+            this.label5.Text = "Selected :";
+            // 
             // mView
             // 
             this.mView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -556,12 +579,24 @@
             this.mView.ViewPointsPerUnitLength = 0D;
             this.mView.VisibilityMode = ViewSupport.VisibilityMode.Transparent;
             // 
+            // txtViewAngle
+            // 
+            this.txtViewAngle.Location = new System.Drawing.Point(607, 14);
+            this.txtViewAngle.Name = "txtViewAngle";
+            this.txtViewAngle.Size = new System.Drawing.Size(48, 20);
+            this.txtViewAngle.TabIndex = 44;
+            this.txtViewAngle.Text = "0";
+            this.txtViewAngle.TextChanged += new System.EventHandler(this.txtViewAngle_TextChanged);
+            // 
             // ScratchTest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
             this.ClientSize = new System.Drawing.Size(906, 777);
+            this.Controls.Add(this.txtViewAngle);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.txtSelectedItem);
             this.Controls.Add(this.btnImportArcs);
             this.Controls.Add(this.btnExportSvg);
             this.Controls.Add(this.mArcSegmentsCheckbox);
@@ -646,6 +681,9 @@
         private System.Windows.Forms.CheckBox mPointsCheckbox;
         private System.Windows.Forms.Button btnExportSvg;
         private System.Windows.Forms.Button btnImportArcs;
+        private System.Windows.Forms.TextBox txtSelectedItem;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox txtViewAngle;
     }
 }
 
