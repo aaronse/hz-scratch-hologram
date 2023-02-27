@@ -49,9 +49,9 @@ namespace ViewSupport
                 arcSegs.Sort((as1, as2) =>
                     {
                         string as1Hash =
-                            $"{as1.EdgeId:000000}:{Math.Round(as1.ZeroCoord.X, 2):000000}:{Math.Round(as1.ZeroCoord.Y, 2):000000}:{as1.StartAngle}:{as1.SweepAngle}";
+                            $"{as1.EdgeID:000000}:{Math.Round(as1.ZeroCoord.X, 2):000000}:{Math.Round(as1.ZeroCoord.Y, 2):000000}:{as1.StartAngle}:{as1.SweepAngle}";
                         string as2Hash =
-                            $"{as2.EdgeId:000000}:{Math.Round(as2.ZeroCoord.X, 2):000000}:{Math.Round(as2.ZeroCoord.Y, 2):000000}:{as2.StartAngle}:{as2.SweepAngle}";
+                            $"{as2.EdgeID:000000}:{Math.Round(as2.ZeroCoord.X, 2):000000}:{Math.Round(as2.ZeroCoord.Y, 2):000000}:{as2.StartAngle}:{as2.SweepAngle}";
 
                         return as1Hash.CompareTo(as2Hash);
                     });

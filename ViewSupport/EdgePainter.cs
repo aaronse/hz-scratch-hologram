@@ -8,6 +8,9 @@ using System.Linq;
 using System.Text;
 using System;
 
+// TODO:P0 Edge Point, add Edge List
+// TODO:P0 Debug, implement highlighting selected Coord
+// TODO:P0 Perf/Quality, merge small Arcs less than X degrees from each other.  And/Or fix underlying rounding/clipping logic error.
 // TODO:P1 Refactor, compute and rendering into separate tasks
 // TODO:P1 Perf/Bug, observed too many segments per arc, unexpected gaps.  Action: Check Arc Seg logic, determine why unexpected gaps?  Fix.
 // TODO:P1 Debug, implement Edge/Face selection highlighting...  Requires mapping Mouse XY coord to projected coords, searching for closest.  Changing currently selected.
@@ -43,7 +46,7 @@ namespace ViewSupport
 
         public static List<ArcSegInfo> ArcSegments { get { return s_arcSegs; } set { s_arcSegs = value; } }
 
-        private static int _selectedId = 0;
+        private static int _selectedId = -1;
 
         internal class ArcInfo
         {
@@ -52,7 +55,7 @@ namespace ViewSupport
 
             }
 
-            internal Edge Edge { get; set; }
+            internal List<Edge> Edges { get; set; }
             internal Coord ZeroCoord { get; set; }
             internal List<EdgeSection> EdgeSections { get; set; }
 
@@ -73,8 +76,17 @@ namespace ViewSupport
                 }
 
                 StringBuilder sb = new StringBuilder();
+                StringBuilder sbEdgeIDs = new StringBuilder();
+                if (this.Edges != null)
+                {
+                    foreach (var edge in this.Edges.OrderBy(e => e.EdgeID))
+                    {
+                        if (sbEdgeIDs.Length > 0) sbEdgeIDs.Append(",");
+                        sbEdgeIDs.Append(edge.EdgeID);
+                    }
+                }
 
-                sb.Append($"EdgeId: {this.Edge?.EdgeID}, zc: {this.ZeroCoord.ToString(2)}, es: {this.EdgeSections?.Count}, va: ");
+                sb.Append($"EdgeId: {sbEdgeIDs}, zc: {this.ZeroCoord.ToString(2)}, es: {this.EdgeSections?.Count}, va: ");
 
                 for (int i = 0; i < bitBuckets.Length; i++)
                 {
@@ -98,15 +110,32 @@ namespace ViewSupport
             {
             }
 
-            public int EdgeId { get; set; }
+            // Public first EdgeID that gets serialize
+            public int EdgeID { get; set; }
+
+            // Internally used list of Edges, used for debug selected item highlighting
+            internal List<Edge> Edges { get; set; }
+
             public Coord ZeroCoord { get; set; }
             public Rectangle ArcRect { get; set; }
             public float StartAngle { get; set; }
             public int SweepAngle { get; set; }
 
+            public string EdgeIds
+            {
+                get
+                {
+                    if (Edges == null) return null;
+
+                    return Edges.OrderBy(e => e.EdgeID).Aggregate(
+                        "",
+                        (curr, next) => curr + ((curr.Length == 0) ? "" : ",") + next.EdgeID);
+                }
+            }
+
             public override string ToString()
             {
-                return $"{{ edgeId: {EdgeId}, zc: {{ x: {Math.Round(ZeroCoord.X, 3)}, y: {Math.Round(ZeroCoord.Y, 3)} }}, startAngle: {StartAngle}, sweepAngle: {SweepAngle}, arcRect: {{x:{ArcRect.X}, y:{ArcRect.Y}, width:{ArcRect.Width}, height:{ArcRect.Height} }} }}";
+                return $"{{ edgeId: {EdgeID}, zc: {{ x: {Math.Round(ZeroCoord.X, 3)}, y: {Math.Round(ZeroCoord.Y, 3)} }}, startAngle: {StartAngle}, sweepAngle: {SweepAngle}, arcRect: {{x:{ArcRect.X}, y:{ArcRect.Y}, width:{ArcRect.Width}, height:{ArcRect.Height} }} }}";
             }
         }
 
@@ -122,7 +151,7 @@ namespace ViewSupport
             // Any item(s) selected?
             if (!int.TryParse(DrawOptions.SelectedItemExpr, out _selectedId))
             {
-                _selectedId = 0;
+                _selectedId = -1;
             }
 
             // Compute arc segments by computing Edge/Vertex visibility for *EVERY* viewable angle.
@@ -289,7 +318,7 @@ namespace ViewSupport
         {
             foreach (var arcInfo in s_edgePointVisibleArcs.Values)
             {
-                Edge e = arcInfo.Edge;
+                List<Edge> edges = arcInfo.Edges;
 
                 var c = arcInfo.ZeroCoord;
 
@@ -304,10 +333,13 @@ namespace ViewSupport
                     options.Graphics.DrawArc(options.Theme.ArcPen, arcRect, startAngle, 180);
                 }
 
+                var edgeIdsStr = edges?.Aggregate("", (curr, next) => curr + ", " + next.EdgeID);
+
                 if (options.IsRendering && Global.DebugMode)
                 {
+
                     options.Graphics.DrawString(
-                        "A " + e.EdgeID.ToString(),
+                        "A " + edgeIdsStr,
                         s_debugFont,
                         options.Theme.ArcTextBrush,
                         new PointF(
@@ -332,12 +364,20 @@ namespace ViewSupport
                         int arcSegStart = i;
                         int arcSegEnd = Math.Max(i, j - options.ViewAngleResolution);
 
+                        HashSet<int> edgeIds = new HashSet<int>();
+                        foreach (var edge in edges)
+                        {
+                            edgeIds.Add(edge.EdgeID);
+                        }
+                        //var edgeIds = edges?.Aggregate("", (curr, next) => curr + ", " + next.EdgeID);
+
                         // Add Arc segment to data structure to delay renderering
                         // until after ALL simple (not visibility sensitive) 180deg
                         // arcs drawn
                         arcSegs.Add(new ArcSegInfo()
                         {
-                            EdgeId = e.EdgeID,
+                            EdgeID = edges?[0]?.EdgeID ?? 0,
+                            Edges = edges,
                             ZeroCoord = c,
                             ArcRect = arcRect,
                             StartAngle = startAngle + arcSegStart,
@@ -354,7 +394,7 @@ namespace ViewSupport
             {
                 foreach (var arcSeg in arcSegs)
                 {
-                    if (_selectedId == arcSeg.EdgeId)
+                    if (arcSeg.Edges.Any(e => e.EdgeID == _selectedId))
                     {
                         options.Graphics.DrawArc(
                             options.Theme.SelectedPen,
@@ -426,18 +466,29 @@ namespace ViewSupport
                         PointD angledCoord = angledCoords[i].ToPointD();
                         if (Global.IsBetween(angledCoord, es.StartCoord.ToPointD(), es.EndCoord.ToPointD()))
                         {
-                            string pointHash = es.Edge.EdgeID + ":" + zeroCoords[i].ToString();
+                            // NOT using EdgeID in hash since multiple Points for multiple edges
+                            // could be at the same X,Y,Z point.  We want to render one or more
+                            // points as a single arc.
+                            string pointHash = zeroCoords[i].ToString();
 
-                            if (!s_edgePointVisibleArcs.ContainsKey(pointHash))
+                            ArcInfo arcInfo = null;
+                            if (!s_edgePointVisibleArcs.TryGetValue(pointHash, out arcInfo))
                             {
-                                s_edgePointVisibleArcs[pointHash] = new ArcInfo()
+                                s_edgePointVisibleArcs[pointHash] = arcInfo = new ArcInfo()
                                 {
-                                    Edge = es.Edge,
+                                    Edges = new List<Edge>() { es.Edge },
                                     ZeroCoord = zeroCoords[i],
                                 };
                             }
+                            else
+                            {
+                                if (!arcInfo.Edges.Contains(es.Edge))
+                                {
+                                    arcInfo.Edges.Add(es.Edge);
+                                }
+                            }
 
-                            s_edgePointVisibleArcs[pointHash].VisibleAngles[iterAngle - ViewContext.MinViewAngle] = true;
+                            arcInfo.VisibleAngles[iterAngle - ViewContext.MinViewAngle] = true;
                         }
                     }
                 }
