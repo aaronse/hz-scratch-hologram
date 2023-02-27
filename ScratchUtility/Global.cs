@@ -9,7 +9,7 @@ namespace ScratchUtility
 
     public static class Global
     {
-        private static double intersectionTolerance = 0;//0.0000001;
+        private static double intersectionTolerance = 0.0000001; // 0;
         public static bool DebugMode { get; set; }
         public static bool DesignMode { get; set; }
 
