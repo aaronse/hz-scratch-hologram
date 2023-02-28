@@ -72,6 +72,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.mView = new ScratchView.ViewControl();
             this.txtViewAngle = new System.Windows.Forms.TextBox();
+            this.txtLineResolution = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.mViewAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mArcSweepAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mLineResolutionTrack)).BeginInit();
@@ -142,7 +143,7 @@
             this.mLineResolutionTrack.Size = new System.Drawing.Size(561, 56);
             this.mLineResolutionTrack.TabIndex = 6;
             this.mLineResolutionTrack.TickStyle = System.Windows.Forms.TickStyle.None;
-            this.mLineResolutionTrack.Value = 100;
+            this.mLineResolutionTrack.Value = 63;
             this.mLineResolutionTrack.Scroll += new System.EventHandler(this.mLineResolutionTrack_Scroll);
             // 
             // mNormalRadioButton
@@ -588,12 +589,20 @@
             this.txtViewAngle.Text = "0";
             this.txtViewAngle.TextChanged += new System.EventHandler(this.txtViewAngle_TextChanged);
             // 
+            // txtLineResolution
+            // 
+            this.txtLineResolution.Location = new System.Drawing.Point(107, 737);
+            this.txtLineResolution.Name = "txtLineResolution";
+            this.txtLineResolution.Size = new System.Drawing.Size(100, 20);
+            this.txtLineResolution.TabIndex = 45;
+            // 
             // ScratchTest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
             this.ClientSize = new System.Drawing.Size(906, 777);
+            this.Controls.Add(this.txtLineResolution);
             this.Controls.Add(this.txtViewAngle);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtSelectedItem);
@@ -626,6 +635,7 @@
             this.Controls.Add(this.mViewAngleTrack);
             this.Name = "ScratchTest";
             this.Text = "Scratchings";
+            this.Load += new System.EventHandler(this.ScratchTest_Load);
             ((System.ComponentModel.ISupportInitialize)(this.mViewAngleTrack)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mArcSweepAngleTrack)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mLineResolutionTrack)).EndInit();
@@ -684,6 +694,7 @@
         private System.Windows.Forms.TextBox txtSelectedItem;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox txtViewAngle;
+        private System.Windows.Forms.TextBox txtLineResolution;
     }
 }
 

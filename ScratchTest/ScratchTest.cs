@@ -42,7 +42,6 @@ namespace ScratchTest
                                                //mView.DrawingEnabled = true;
 
             mView.Paint += MView_Paint;
-
             ApplyTheme();
         }
 
@@ -91,8 +90,13 @@ namespace ScratchTest
         {
             if (!DesignMode)
             {
+                _handleEvents = false; 
+
                 SetPointsPerUnitLength();
+                txtLineResolution.Text = (mLineResolutionTrack.Value / 100.0).ToString();
                 UpdateOutputSummary();
+
+                _handleEvents = true;
             }
         }
 
@@ -484,6 +488,11 @@ namespace ScratchTest
                     _handleEvents = true;
                 }
             }
+        }
+
+        private void ScratchTest_Load(object sender, EventArgs e)
+        {
+
         }
     }
 

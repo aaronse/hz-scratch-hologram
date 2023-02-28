@@ -15,6 +15,10 @@ using System;
 // TODO:P1 Perf/Bug, observed too many segments per arc, unexpected gaps.  Action: Check Arc Seg logic, determine why unexpected gaps?  Fix.
 // TODO:P1 Debug, implement Edge/Face selection highlighting...  Requires mapping Mouse XY coord to projected coords, searching for closest.  Changing currently selected.
 
+// TODO:P0 Perf, set point outside loop. grep... for edgeMidPoint.ToPointD().ToPoint()
+// TODO:P0 Perf, fix: 1) shortcut reduce new Coord alloc, 2) avoid multiple caller depth, grep... private static bool IntersectsWith(Coord normalVector, Coord pointOnFace, Coord point1, Coord point2, out Coord intersectionPoint)
+
+
 namespace ViewSupport
 {
     /// <summary>A static class used to paint Edges of IndexedFacesets according to the settings specified in DrawOptions.</summary>
@@ -349,20 +353,45 @@ namespace ViewSupport
 
                 var visibleAngles = arcInfo.VisibleAngles;
 
+                // Max number of angles to seek/peek ahead of first miss.  Goal being to merge
+                // segments due to logic/rounding issues.  Will potentially merge arcs that
+                // shouldn't be, so, for now we'll a least track and log the hits/merges/assumptions
+                // being made here until if/when upstream logic fixed.
+                var maxVisibleMisses = 5;
+
                 for (int i = 0; i < visibleAngles.Count;)
                 {
                     // Find first visible
                     while (i < visibleAngles.Length && !visibleAngles[i]) i += options.ViewAngleResolution;
 
-                    // Find last visible
-                    int j = i; 
-                    while (j < visibleAngles.Length - 1 && visibleAngles[j]) j += options.ViewAngleResolution;
+
+                    // Find last visible, treat small contiguous gaps as single segement.  Goal is
+                    // to avoid lots of tiny, almost adjacent, segments.   we
+                    // use (k) to peek ahead.  Potentially nudging (j) to keep advancing until
+                    // acceptably long enough segment end is encountered.
+                    int j = i;
+                    int lastVisible = j;
+                    int visibleMisses = 0;
+                    while (j < visibleAngles.Length - 1 && (visibleAngles[j] || visibleMisses < maxVisibleMisses))
+                    {
+                        visibleMisses = (visibleAngles[j]) ? 0 : visibleMisses++;
+
+                        if (visibleAngles[j]) lastVisible = j;
+
+                        j += options.ViewAngleResolution;
+                    }
+
+                    if (visibleMisses < maxVisibleMisses)
+                    {
+                        lastVisible = j;
+                    }
+
 
                     // Arc i to max(i, j - 1), providing i found a visible
                     if (i < visibleAngles.Length && visibleAngles[i])
                     {
                         int arcSegStart = i;
-                        int arcSegEnd = Math.Max(i, j - options.ViewAngleResolution);
+                        int arcSegEnd = Math.Max(i, lastVisible - options.ViewAngleResolution);
 
                         HashSet<int> edgeIds = new HashSet<int>();
                         foreach (var edge in edges)
