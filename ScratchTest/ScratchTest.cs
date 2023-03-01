@@ -40,7 +40,6 @@ namespace ScratchTest
                                                //           SetUpFileList(@"C:\Program Files\Blender Foundation\Blender");
                                                //begin drawing
                                                //mView.DrawingEnabled = true;
-
             mView.Paint += MView_Paint;
             ApplyTheme();
         }

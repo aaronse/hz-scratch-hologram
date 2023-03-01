@@ -561,13 +561,13 @@ namespace ViewSupport
         /// <summary>Splits the edge up into sections with constant visibility by determining if and where it intersects any of the ShapeList's Silhouette Edges.</summary>
         internal static void ProcessEdge(DrawOptions options, Edge e)
         {
-            foreach (Intersection inter in e.FaceIntersections)
-            {
-                //options.Graphics.FillEllipse(Brushes.Black, new Rectangle((int)inter.IntersectionPoint_ViewCoordinates.X - 5, (int)inter.IntersectionPoint_ViewCoordinates.Y - 5, 10, 10));
-                //options.Graphics.DrawString(ScratchUtility.Transformer.WindowToModel(inter.IntersectionPoint_ViewCoordinates).ToString(2), new Font("Arial", 8f, FontStyle.Regular), Brushes.Magenta, (float)inter.IntersectionPoint_ViewCoordinates.X - 5, (float)inter.IntersectionPoint_ViewCoordinates.Y - 5);
-            }
+            //foreach (Intersection inter in e.FaceIntersections)
+            //{
+            //    //options.Graphics.FillEllipse(Brushes.Black, new Rectangle((int)inter.IntersectionPoint_ViewCoordinates.X - 5, (int)inter.IntersectionPoint_ViewCoordinates.Y - 5, 10, 10));
+            //    //options.Graphics.DrawString(ScratchUtility.Transformer.WindowToModel(inter.IntersectionPoint_ViewCoordinates).ToString(2), new Font("Arial", 8f, FontStyle.Regular), Brushes.Magenta, (float)inter.IntersectionPoint_ViewCoordinates.X - 5, (float)inter.IntersectionPoint_ViewCoordinates.Y - 5);
+            //}
 
-            Global.Print("Processing Edge " + e.StartVertex.VertexIndex + " to " + e.EndVertex.VertexIndex);
+            //Global.Print("Processing Edge " + e.StartVertex.VertexIndex + " to " + e.EndVertex.VertexIndex);
             if (e.Type == EdgeType.FrontFacing || e.Type == EdgeType.Silhouette)
             {
                 //initialize the intersections list with the face intersections.
@@ -576,9 +576,10 @@ namespace ViewSupport
 
 
                 //loop through every Silhouette Edge in the ShapeList
+                bool isQuickMode = DrawOptions.QuickMode;
                 foreach (IndexedFaceSet ifs in ShapeList)
                 {
-                    foreach (Edge edgeToCheck in ifs.Edges.Where(silhouetteEdge => !DrawOptions.QuickMode || silhouetteEdge.Type == EdgeType.Silhouette)) //check against all edges if not QuickMode
+                    foreach (Edge edgeToCheck in ifs.Edges.Where(silhouetteEdge => !isQuickMode || silhouetteEdge.Type == EdgeType.Silhouette)) //check against all edges if not QuickMode
                     {
                         if (e == edgeToCheck) //don't compare against itself
                         {
@@ -619,8 +620,6 @@ namespace ViewSupport
                     lastCoord = si.IntersectionPoint_ViewCoordinates;
                 }
 
-                Debug.Assert(lastCoord != e.EndVertex.ViewCoord, "Should we skip zero length Edge?");
-            
                 es = new EdgeSection(e, lastCoord, e.EndVertex.ViewCoord);
                 ComputeVisibility(options, es);
                 e.EdgeSections.Add(es);
@@ -633,6 +632,7 @@ namespace ViewSupport
         /// <summary>Appropriately sets the Visible property of the specified EdgeSection.</summary>
         private static void ComputeVisibility(DrawOptions options, EdgeSection es)
         {
+            // TODO:P0 PERF Add Coord.CalcMidPoint
             Coord edgeMidPoint = (es.StartCoord + es.EndCoord) / 2; //test visibility of the midpoint of the EdgeSection
 
             if (options.IsRendering && Global.DebugMode)
@@ -643,9 +643,10 @@ namespace ViewSupport
                     edgeMidPoint.ToPointF());
             count++;
 
+            bool isQuickMode = DrawOptions.QuickMode;
             foreach (IndexedFaceSet ifs in ShapeList)
             {
-                foreach (IndexedFace face in ifs.IndexedFaces.Where(iface => !iface.IsTransparent && (!DrawOptions.QuickMode || iface.IsFrontFacing))) //if QuickMode, only check against front-facing faces
+                foreach (IndexedFace face in ifs.IndexedFaces.Where(iface => !iface.IsTransparent && (!isQuickMode || iface.IsFrontFacing))) //if QuickMode, only check against front-facing faces
                 {
                     // Edge visible if part of specified face.  Could be Creator or Other face.
                     if (es.Edge.ContainsFace(face)) 
@@ -679,7 +680,9 @@ namespace ViewSupport
             // 'Merge faces', i.e. hide redundant edge inbetween two adjacent faces with the same normal?
             if (DrawOptions.MergeFaces)
             {
-                if (es.Edge.OtherFace != null && es.Edge.CreatorFace.NormalVector.Equals(es.Edge.OtherFace.NormalVector, Global.NormalToleranceDecimalPlaces))
+                if (es.Edge.OtherFace != null && es.Edge.CreatorFace.NormalVector.Equals(
+                    es.Edge.OtherFace.NormalVector, 
+                    Global.NormalToleranceDecimalPlaces))
                 {
                     es.Visible = false;
                     return;

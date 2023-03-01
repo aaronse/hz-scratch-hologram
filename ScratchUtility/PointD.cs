@@ -51,17 +51,20 @@ namespace ScratchUtility
         }
         public static bool operator ==(PointD a, PointD b)
         {
-            // If both are null, or both are same instance, return true.
-            if (System.Object.ReferenceEquals(a, b))
-            {
-                return true;
-            }
+            // TODO: Remove
+            //// If both are null, or both are same instance, return true.
+            //if (System.Object.ReferenceEquals(a, b))
+            //{
+            //    throw new ArgumentException("Fix caller");
+            //    //return true;
+            //}
 
-            // If one is null, but not both, return false.
-            if (((object)a == null) || ((object)b == null))
-            {
-                return false;
-            }
+            //// If one is null, but not both, return false.
+            //if (((object)a == null) || ((object)b == null))
+            //{
+            //    throw new ArgumentException("Fix caller");
+            //    //return false;
+            //}
 
             // Return true if the fields match:
             return a.X == b.X && a.Y == b.Y;
@@ -74,12 +77,14 @@ namespace ScratchUtility
 
         public override bool Equals(object obj)
         {
-            if (obj.GetType() == typeof(PointD))
-            {
-                return this == (PointD)obj;
-            }
-            else
-                return false;
+            throw new ArgumentException("PERF: PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
+
+            //if (obj.GetType() == typeof(PointD))
+            //{
+            //    return this == (PointD)obj;
+            //}
+            //else
+            //    return false;
         }
 
         public override string ToString()

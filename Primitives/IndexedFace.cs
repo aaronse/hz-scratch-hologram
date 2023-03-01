@@ -77,6 +77,8 @@ namespace Primitives
         {
             get
             {
+                // TODO:P0 PERF Cache
+
                 //if (_graphicsPath != null) return _graphicsPath;
 
                 PointF[] fs = new PointF[Vertices.Count];

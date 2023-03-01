@@ -210,13 +210,15 @@ namespace ScratchUtility
         /// <returns>True if the two matricies are identical.</returns>
         public override bool Equals(object obj)
         {
-            Matrix m = (Matrix)obj;
-            if (this.NumRows != m.NumRows) return false;
-            for (int i = 0; i < this.NumRows; i++)
-            {
-                if (!this.GetRow(i).Equals(m.GetRow(i))) return false;
-            }
-            return true;
+            throw new ArgumentException("PERF: PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
+
+            //Matrix m = (Matrix)obj;
+            //if (this.NumRows != m.NumRows) return false;
+            //for (int i = 0; i < this.NumRows; i++)
+            //{
+            //    if (!this.GetRow(i).Equals(m.GetRow(i))) return false;
+            //}
+            //return true;
         }
 
 
@@ -334,33 +336,31 @@ namespace ScratchUtility
                     throw new Exception(message);
                 }
             }
+
+            Matrix m3 = new Matrix(m1.NumRows, m2.NumCols).Fill(0);
+
+            if (m3.NumRows == 1)
+            {
+                //because we know that m1.NumCols = m2.NumRows, we know that a row of m1 * a column of m2 is safe and will return a 1x1 matrix.
+                //to stop the recursion... to multiply a 1x? matrix by a ?x1 matrix, add the products of each cell as though the second matrix were pivotted onto the first.
+                m3[0, 0] = 0;
+                for (int z = 0; z < m1.NumCols; z++)
+                {
+                    m3[0, 0] += m1[0, z] * m2[z, 0];
+                }
+            }
             else
             {
-                Matrix m3 = new Matrix(m1.NumRows, m2.NumCols).Fill(0);
-
-                if (m3.NumRows == 1)
+                for (int i = 0; i < m3.NumRows; i++)
                 {
-                    //because we know that m1.NumCols = m2.NumRows, we know that a row of m1 * a column of m2 is safe and will return a 1x1 matrix.
-                    //to stop the recursion... to multiply a 1x? matrix by a ?x1 matrix, add the products of each cell as though the second matrix were pivotted onto the first.
-                    m3[0, 0] = 0;
-                    for (int z = 0; z < m1.NumCols; z++)
+                    for (int j = 0; j < m3.NumCols; j++)
                     {
-                        m3[0, 0] += m1[0, z] * m2[z, 0];
+                        Matrix single = (m1.ExtractRow(i) * m2.ExtractColumn(j));
+                        m3[i, j] = single[0, 0];
                     }
                 }
-                else
-                {
-                    for (int i = 0; i < m3.NumRows; i++)
-                    {
-                        for (int j = 0; j < m3.NumCols; j++)
-                        {
-                            Matrix single = (m1.ExtractRow(i) * m2.ExtractColumn(j));
-                            m3[i, j] = single[0, 0];
-                        }
-                    }
-                }
-                return m3;
             }
+            return m3;
         }
 
         /// <summary>Returns the Cross Product of this and rhs. Only defined for 3x1 Matrices.</summary>
@@ -409,7 +409,7 @@ namespace ScratchUtility
         /// </summary>
         public int NumCols
         {
-            get { return rows[0].NumValues; }
+            get { return rows[0].GetNumValues(); }
         }
 
         /// <summary>

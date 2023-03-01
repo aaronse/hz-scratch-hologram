@@ -14,12 +14,16 @@ namespace ScratchUtility
         /// </summary>
         double[] values;
 
+        // PERF: Backing field used internally and returned to caller to avoid calling into values
+        private int _numValues;
+
         /// <summary>
         /// Initializes the Row with no values.
         /// </summary>
         public Row()
         {
             values = new double[0];
+            _numValues = 0;
         }
 
         /// <summary>
@@ -29,6 +33,7 @@ namespace ScratchUtility
         public Row(int numValues)
         {
             values = new double[numValues];
+            _numValues = numValues;
             Fill(0.0);
         }
 
@@ -40,6 +45,7 @@ namespace ScratchUtility
         public Row(int numValues, double initialValue)
         {
             values = new double[numValues];
+            _numValues = numValues;
             Fill(initialValue);
         }
 
@@ -49,8 +55,9 @@ namespace ScratchUtility
         /// <param name="rowToCopy">The Row to duplicate.</param>
         public Row(Row rowToCopy)
         {
-            values = new double[rowToCopy.NumValues];
-            for (int i = 0; i < NumValues; i++)
+            _numValues = rowToCopy._numValues;
+            values = new double[_numValues];
+            for (int i = 0; i < _numValues; i++)
             {
                 values[i] = rowToCopy[i];
             }
@@ -63,7 +70,7 @@ namespace ScratchUtility
         /// <returns>This Row.</param>
         public Row Fill(double value)
         {
-            for (int i = 0; i < NumValues; i++)
+            for (int i = 0; i < _numValues; i++)
             {
                 values[i] = value;
             }
@@ -76,13 +83,16 @@ namespace ScratchUtility
         /// <returns>This Row.</param>
         public Row Fill(Row valuesToFillWith)
         {
-            if (this.NumValues != valuesToFillWith.NumValues)
+            if (_numValues != valuesToFillWith._numValues)
+            {
                 throw new Exception("The passed in Row must have the same NumValues as this Row.");
+            }
 
-            for (int i = 0; i < NumValues; i++)
+            for (int i = 0; i < _numValues; i++)
             {
                 values[i] = valuesToFillWith[i];
             }
+
             return this;
         }
 
@@ -110,14 +120,12 @@ namespace ScratchUtility
         /// <returns>The value in the Row at the specified Column index.</returns>
         public double GetValue(int colIndex)
         {
-            if (colIndex < NumValues)
+            if (colIndex >= _numValues)
             {
-                return values[colIndex];
+                throw new IndexOutOfRangeException("An attempt was made to get value " + colIndex + ". The greatest value index of this matrix is " + (_numValues - 1) + ".");
             }
-            else
-            {
-                throw new IndexOutOfRangeException("An attempt was made to get value " + colIndex + ". The greatest value index of this matrix is " + (NumValues - 1) + ".");
-            }
+
+            return values[colIndex];
         }
 
         /// <summary>
@@ -127,14 +135,12 @@ namespace ScratchUtility
         /// <param name="value">The value to set.</param>
         public void SetValue(int colIndex, double value)
         {
-            if (colIndex < NumValues)
+            if (colIndex >= _numValues)
             {
-                values[colIndex] = value;
+                throw new IndexOutOfRangeException("An attempt was made to set value " + colIndex + ". The greatest value index of this matrix is " + (_numValues - 1) + ".");
             }
-            else
-            {
-                throw new IndexOutOfRangeException("An attempt was made to set value " + colIndex + ". The greatest value index of this matrix is " + (NumValues - 1) + ".");
-            }
+
+            values[colIndex] = value;
         }
 
         /// <summary>
@@ -144,13 +150,21 @@ namespace ScratchUtility
         /// <returns>True if the two Rows are identical.</returns>
         public override bool Equals(object obj)
         {
-            Row r = (Row)obj;
-            if (NumValues != r.NumValues) return false;
-            for (int i = 0; i < NumValues; i++)
-            {
-                if (this.GetValue(i) != r.GetValue(i)) return false;
-            }
-            return true;
+            throw new ArgumentException("PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
+
+            //Row r = (Row)obj;   // Cast exception possible, but not observed, so whateverz...
+
+            //if (_numValues != r._numValues)
+            //{
+            //    return false;
+            //}
+
+            //for (int i = 0; i < _numValues; i++)
+            //{
+            //    if (this.values[i] != r.values[i]) return false;
+            //}
+
+            //return true;
         }
 
         /// <summary>
@@ -160,9 +174,9 @@ namespace ScratchUtility
         public override int GetHashCode()
         {
             int hash = 0;
-            foreach (double val in values)
+            for(int i = 0; i < values.Length; i++)
             {
-                hash ^= val.GetHashCode();
+                hash ^= values[i].GetHashCode();
             }
             return hash;
         }
@@ -175,19 +189,18 @@ namespace ScratchUtility
         /// <returns>A Row containing the values of the two Rows added together.</returns>
         public static Row operator +(Row r1, Row r2)
         {
-            if (r1.NumValues != r2.NumValues)
+            if (r1._numValues != r2._numValues)
             {
-                throw new Exception("Added rows must have the same number of values. Left hand row: " + r1.NumValues + " values. Right hand row: " + r2.NumValues + " values.");
+                throw new Exception("Added rows must have the same number of values. Left hand row: " + r1._numValues + " values. Right hand row: " + r2._numValues + " values.");
             }
-            else
+
+            Row r3 = new Row(r1._numValues);
+            for (int i = 0; i < r1._numValues; i++)
             {
-                Row r3 = new Row(r1.NumValues);
-                for (int i = 0; i < r1.NumValues; i++)
-                {
-                    r3[i] = r1[i] + r2[i];
-                }
-                return r3;
+                r3[i] = r1[i] + r2[i];
             }
+
+            return r3;
         }
 
         /// <summary>
@@ -198,14 +211,18 @@ namespace ScratchUtility
         /// <returns>A Row containing the values of the second Row subtracted from the first Row.</returns>
         public static Row operator -(Row r1, Row r2)
         {
-            if (r1.NumValues != r2.NumValues)
+            if (r1._numValues != r2._numValues)
             {
-                throw new Exception("Subtracted rows must have the same number of values. Left hand row: " + r1.NumValues + " values. Right hand row: " + r2.NumValues + " values.");
+                throw new Exception("Subtracted rows must have the same number of values. Left hand row: " + r1._numValues + " values. Right hand row: " + r2._numValues + " values.");
             }
-            else
+
+            Row r3 = new Row(r1._numValues);
+            for (int i = 0; i < r1._numValues; i++)
             {
-                return r1 + (-1 * r2);
+                r3[i] = r1[i] - r2[i];
             }
+
+            return r3;
         }
 
         /// <summary>
@@ -216,11 +233,12 @@ namespace ScratchUtility
         /// <returns>A Row containing each value from the Row multiplied by the scalar.</returns>
         public static Row operator *(Row r, double scalar)
         {
-            Row r2 = new Row(r.NumValues);
-            for (int i = 0; i < r.NumValues; i++)
+            Row r2 = new Row(r._numValues);
+            for (int i = 0; i < r._numValues; i++)
             {
                 r2[i] = r[i] * scalar;
             }
+
             return r2;
         }
 
@@ -243,11 +261,12 @@ namespace ScratchUtility
         /// <returns>A Row containing each value from the Row divided by the scalar.</returns>
         public static Row operator /(Row r, double scalar)
         {
-            Row r2 = new Row(r.NumValues);
-            for (int i = 0; i < r.NumValues; i++)
+            Row r2 = new Row(r._numValues);
+            for (int i = 0; i < r._numValues; i++)
             {
                 r2[i] = r[i] / scalar;
             }
+
             return r2;
         }
 
@@ -263,9 +282,9 @@ namespace ScratchUtility
         /// <summary>
         /// The number of values in the Row.
         /// </summary>
-        public int NumValues
+        public int GetNumValues()
         {
-            get { return values.Length; }
+            return _numValues;
         }
 
         /// <summary>
@@ -292,6 +311,7 @@ namespace ScratchUtility
                 b.Append(val.ToString("N" + decimalPlaces.ToString()));
             }
             b.Append("  ]");
+
             return b.ToString();
         }
 
@@ -303,10 +323,11 @@ namespace ScratchUtility
         public int LengthOfLongestValue(int decimalPlaces)
         {
             int length = 0;
-            foreach (double val in values)
+            for(int i = 0; i < _numValues; i++)
             {
-                length = Math.Max(length, val.ToString("N" + decimalPlaces.ToString()).Length);
+                length = Math.Max(length, values[i].ToString("N" + decimalPlaces.ToString()).Length);
             }
+
             return length;
         }
     }
