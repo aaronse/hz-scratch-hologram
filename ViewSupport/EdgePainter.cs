@@ -8,6 +8,9 @@ using System.Linq;
 using System.Text;
 using System;
 
+// TODO:P0 Implement Face selection.  Needed for Set Z0, and Select Contour.
+// TODO:P0 Implement Contour selection.
+// TODO:P0 Implement Reset Z0
 // TODO:P0 Edge Point, add Edge List
 // TODO:P0 Debug, implement highlighting selected Coord
 // TODO:P0 Perf/Quality, merge small Arcs less than X degrees from each other.  And/Or fix underlying rounding/clipping logic error.
