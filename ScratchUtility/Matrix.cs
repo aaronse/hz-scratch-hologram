@@ -146,14 +146,12 @@ namespace ScratchUtility
         /// <returns>The Row at the specified index.</returns>
         public Row GetRow(int rowIndex)
         {
-            if (rowIndex < NumRows)
-            {
-                return rows[rowIndex];
-            }
-            else
+            if (rowIndex >= NumRows)
             {
                 throw new IndexOutOfRangeException("An attempt was made to get row " + rowIndex + ". The greatest row index of this matrix is " + (NumRows - 1) + ".");
             }
+
+            return rows[rowIndex];
         }
 
         /// <summary>
@@ -163,14 +161,12 @@ namespace ScratchUtility
         /// <param name="row">The Row to set in the Matrix.</param>
         public void SetRow(int rowIndex, Row row)
         {
-            if (rowIndex < NumRows)
-            {
-                rows[rowIndex] = row;
-            }
-            else
+            if (rowIndex >= NumRows)
             {
                 throw new IndexOutOfRangeException("An attempt was made to set row " + rowIndex + ". The greatest row index of this matrix is " + (NumRows - 1) + ".");
             }
+
+            rows[rowIndex] = row;
         }
 
         /// <summary>
@@ -210,7 +206,7 @@ namespace ScratchUtility
         /// <returns>True if the two matricies are identical.</returns>
         public override bool Equals(object obj)
         {
-            throw new ArgumentException("PERF: PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
+            throw new ArgumentException("PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
 
             //Matrix m = (Matrix)obj;
             //if (this.NumRows != m.NumRows) return false;
@@ -248,15 +244,13 @@ namespace ScratchUtility
             {
                 throw new Exception("Added matrices must have the same number of rows and columns. Left hand matrix: " + m1.NumRows + " x " + m1.NumCols + ". Right hand matrix: " + m2.NumRows + " x " + m2.NumCols + ".");
             }
-            else
+
+            Matrix m3 = new Matrix(m1.NumRows, m1.NumCols).Fill(0);
+            for (int i = 0; i < m1.NumRows; i++)
             {
-                Matrix m3 = new Matrix(m1.NumRows, m1.NumCols).Fill(0);
-                for (int i = 0; i < m1.NumRows; i++)
-                {
-                    m3[i] = m1[i] + m2[i];
-                }
-                return m3;
+                m3[i] = m1[i] + m2[i];
             }
+            return m3;
         }
 
         /// <summary>
@@ -271,10 +265,8 @@ namespace ScratchUtility
             {
                 throw new Exception("Subtracted matrices must have the same number of rows and columns. Left hand matrix: " + m1.NumRows + " x " + m1.NumCols + ". Right hand matrix: " + m2.NumRows + " x " + m2.NumCols + ".");
             }
-            else
-            {
-                return m1 + (-1 * m2);
-            }
+
+            return m1 + (-1 * m2);
         }
 
         /// <summary>
@@ -301,6 +293,7 @@ namespace ScratchUtility
             {
                 m2[i] = m[i] * scalar;
             }
+
             return m2;
         }
 
@@ -375,6 +368,7 @@ namespace ScratchUtility
             retVal[0, 0] = this[1, 0] * rhs[2, 0] - this[2, 0] * rhs[1, 0];
             retVal[1, 0] = this[2, 0] * rhs[0, 0] - this[0, 0] * rhs[2, 0];
             retVal[2, 0] = this[0, 0] * rhs[1, 0] - this[1, 0] * rhs[0, 0];
+
             return retVal;
         }
 
@@ -429,7 +423,7 @@ namespace ScratchUtility
         /// <returns>An nx1 Matrix with the values from the specified Column.</returns>
         public Matrix ExtractColumn(int colIndex)
         {
-            Matrix m = new Matrix(NumRows, 1).Fill(0);
+            Matrix m = new Matrix(NumRows, 1);
             for (int i = 0; i < this.NumRows; i++)
             {
                 m[i, 0] = this[i, colIndex];
@@ -443,7 +437,7 @@ namespace ScratchUtility
         /// <returns>A Matrix with the values of this Matrix flipped about the diagonal.</returns>
         public Matrix Transpose()
         {
-            Matrix m = new Matrix(NumCols, NumRows).Fill(0);
+            Matrix m = new Matrix(NumCols, NumRows);
             for (int i = 0; i < m.NumRows; i++)
             {
                 for (int j = 0; j < m.NumCols; j++)
@@ -536,24 +530,23 @@ namespace ScratchUtility
             {
                 throw new Exception("The matrices being augmented must have the same number of rows. Left hand matrix: " + this.NumRows + " rows. Right hand matrix: " + rhs.NumRows + " rows.");
             }
-            else
+
+            Matrix m = new Matrix(this.NumRows, this.NumCols + rhs.NumCols).Fill(0);
+            for (int i = 0; i < m.NumRows; i++)
             {
-                Matrix m = new Matrix(this.NumRows, this.NumCols + rhs.NumCols).Fill(0);
-                for (int i = 0; i < m.NumRows; i++)
+                //fill the left side
+                for (int j = 0; j < this.NumCols; j++)
                 {
-                    //fill the left side
-                    for (int j = 0; j < this.NumCols; j++)
-                    {
-                        m[i, j] = this[i, j];
-                    }
-                    //fill the right side
-                    for (int j = 0; j < rhs.NumCols; j++)
-                    {
-                        m[i, j + this.NumCols] = rhs[i, j];
-                    }
+                    m[i, j] = this[i, j];
                 }
-                return m;
+                //fill the right side
+                for (int j = 0; j < rhs.NumCols; j++)
+                {
+                    m[i, j + this.NumCols] = rhs[i, j];
+                }
             }
+
+            return m;
         }
 
         /// <summary>
@@ -674,7 +667,6 @@ namespace ScratchUtility
             Fill(result);
             return this;
         }
-
 
     }
 }

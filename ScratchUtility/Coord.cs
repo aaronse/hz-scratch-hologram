@@ -10,27 +10,34 @@ namespace ScratchUtility
     // instead Profile perf to see what's *REALLY* happening...
     public struct Coord
     {
-        // PERF: Using fields instead of Properties to avoid  method overhead
-        // TODO: PERF Cache/Hash/Dirty derived?  Are/Should Coord be immutable?
+        // TODO:P0:PERF: Using fields instead of Properties to avoid  method overhead
+        // TODO:P0:PERF: Cache/Hash/Dirty derived?  Are/Should Coord be immutable?
 
-        public double X;
-        public double Y;
-        public double Z;
+        public double X; // { get; private set; }
+        public double Y; // { get; private set; }
+        public double Z; // { get; private set; }
+
+        // private Coord() // TODO:P2: Implement parameterless Struct constructor/initializer when possible in C#10
+        //{
+        //    _length = double.NaN;
+        //}
 
         public Coord(double x, double y, double z)
-            :this()
+            : this()
         {
             X = x;
             Y = y;
             Z = z;
+            _length = double.NaN;
         }
 
         public Coord(double x, double y)
-            :this()
+            : this()
         {
             X = x;
             Y = y;
             Z = 0;
+            _length = double.NaN;
         }
 
         public static Coord operator *(Coord c, double rhs)
@@ -86,7 +93,7 @@ namespace ScratchUtility
 
         public override bool Equals(object obj)
         {
-            throw new ArgumentException("PERF: PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
+            throw new ArgumentException("PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
             //if (obj.GetType() == typeof(Coord))
             //{
             //    return this == (Coord)obj;
@@ -97,7 +104,7 @@ namespace ScratchUtility
 
         public bool Equals(Coord other, int toleranceDecimalPlaces)
         {
-            // TODO: Diff
+            // TODO:P0:PERF: Diff instead of Math.Round calls?
 
             // Return true if the fields match:
             return Math.Round(this.X, toleranceDecimalPlaces) == Math.Round(other.X, toleranceDecimalPlaces) &&
@@ -137,20 +144,28 @@ namespace ScratchUtility
 
         }
 
+        private double _length;
+        private bool _lengthComputed;
+        
         // Was .Length property, changed to method since it's doing work and the property cannot be
         // serialized.  Intentionally making computationally expensive 'getters' methods to help
         // hint to callers about the CPU cost.
         public double CalcLength()
         {
-            // TODO:P0 Cached value?
-            return Math.Sqrt(X * X + Y * Y + Z * Z);
+            if (!_lengthComputed)
+            {
+                _length = Math.Sqrt(X * X + Y * Y + Z * Z);
+                _lengthComputed = true;
+            }
+
+            return _length;
         }
 
         // <summary>Gets a unit vector in the direction of this Coord.</summary>
         public Coord CalcUnitVector()
         {
-            // TODO:P0 Cached value?
-            return this / CalcLength();
+            double len = CalcLength();
+            return new Coord(this.X / len, this.Y / len, this.Z / len);
         }
 
         /// <summary>Returns the Cross Product of this and rhs.</summary>

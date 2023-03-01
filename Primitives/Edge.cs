@@ -83,7 +83,10 @@ namespace Primitives
         {
             if (OtherFace != null)
             {
-                double val = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).DotProduct(CreatorFace.NormalVector.CrossProduct(OtherFace.NormalVector));
+                Coord diff = (EndVertex.ModelingCoord - StartVertex.ModelingCoord);
+                Coord normal = OtherFace.NormalVector;
+                Coord crossProduct = CreatorFace.NormalVector.CrossProduct(normal);
+                double val = diff.DotProduct(crossProduct);
 
                 ConnectionType = Math.Sign(val) == 1 ? ConnectionType.External : ConnectionType.Internal;
             }
@@ -131,7 +134,7 @@ namespace Primitives
         public bool IntersectsBehind(Edge silhouetteEdge, out Coord intersectionPoint)
         {
             //if we return early, we want to return new Coord();
-            intersectionPoint = new Coord();
+            intersectionPoint = new Coord(0, 0, 0);
 
             //no intersection if the lines are parallel
             Coord thisUnit = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();

@@ -13,13 +13,13 @@ using System;
 // TODO:P0 Implement Reset Z0
 // TODO:P0 Edge Point, add Edge List
 // TODO:P0 Debug, implement highlighting selected Coord
-// TODO:P0 Perf/Quality, merge small Arcs less than X degrees from each other.  And/Or fix underlying rounding/clipping logic error.
+// TODO:P0:PERF: or Quality, merge small Arcs less than X degrees from each other.  And/Or fix underlying rounding/clipping logic error.
 // TODO:P1 Refactor, compute and rendering into separate tasks
 // TODO:P1 Perf/Bug, observed too many segments per arc, unexpected gaps.  Action: Check Arc Seg logic, determine why unexpected gaps?  Fix.
 // TODO:P1 Debug, implement Edge/Face selection highlighting...  Requires mapping Mouse XY coord to projected coords, searching for closest.  Changing currently selected.
 
-// TODO:P0 Perf, set point outside loop. grep... for edgeMidPoint.ToPointD().ToPoint()
-// TODO:P0 Perf, fix: 1) shortcut reduce new Coord alloc, 2) avoid multiple caller depth, grep... private static bool IntersectsWith(Coord normalVector, Coord pointOnFace, Coord point1, Coord point2, out Coord intersectionPoint)
+// TODO:P0:PERF: set point outside loop. grep... for edgeMidPoint.ToPointD().ToPoint()
+// TODO:P0:PERF: fix: 1) shortcut reduce new Coord alloc, 2) avoid multiple caller depth, grep... private static bool IntersectsWith(Coord normalVector, Coord pointOnFace, Coord point1, Coord point2, out Coord intersectionPoint)
 
 
 namespace ViewSupport
@@ -446,7 +446,7 @@ namespace ViewSupport
             }
         }
 
-        // TODO: PERF improve algorithms, reduce repeated/unrequired work, implement Async multi core compute
+        // TODO:P0:PERF: improve algorithms, reduce repeated/unrequired work, implement Async multi core compute
         internal static void MultiViewAngleTravese(DrawOptions renderOptions)
         {
             string viewModelHash = ViewContext.GetViewHash() + ":" + DrawOptions.GetViewHash();
@@ -632,7 +632,7 @@ namespace ViewSupport
         /// <summary>Appropriately sets the Visible property of the specified EdgeSection.</summary>
         private static void ComputeVisibility(DrawOptions options, EdgeSection es)
         {
-            // TODO:P0 PERF Add Coord.CalcMidPoint
+            // TODO:P0:PERF: Add Coord.CalcMidPoint
             Coord edgeMidPoint = (es.StartCoord + es.EndCoord) / 2; //test visibility of the midpoint of the EdgeSection
 
             if (options.IsRendering && Global.DebugMode)

@@ -73,26 +73,36 @@ namespace Primitives
 
         private GraphicsPath _graphicsPath = null;
 
+        // Static Array of Point Path Arrays, used to reduce mem/cpu for calculating point visibility within a Path using GDI
+        // PathPointType.Start = 0, PathPointType.Line = 0
+        // Related resources:
+        // - .NET GDI wrapper... http://www.dotnetframework.org/default.aspx/DotNET/DotNET/8@0/untmp/whidbey/REDBITS/ndp/fx/src/CommonUI/System/Drawing/Advanced/GraphicsPath@cs/1/GraphicsPath@cs
+        // - Underlying GDI methods... GdipIsVisiblePathPoint PtInRegion
+        private static byte[][] s_pathPointTypeArrays = new byte[][]
+        {
+            new byte[] {},
+            new byte[] { 0 },
+            new byte[] { 0, 1 },
+            new byte[] { 0, 1, 1 },
+            new byte[] { 0, 1, 1, 1 },
+        };
+
+        // TODO:P1:PERF: Profile 3%
         public GraphicsPath GraphicsPath
         {
             get
             {
-                // TODO:P0 PERF Cache
-
-                //if (_graphicsPath != null) return _graphicsPath;
+                if (_graphicsPath != null) return _graphicsPath;
 
                 PointF[] fs = new PointF[Vertices.Count];
-                byte[] ts = new byte[Vertices.Count];
                 for (int i = 0; i < Vertices.Count; i++)
                 {
                     fs[i] = Vertices[i].ViewCoord.ToPointF();
-                    ts[i] = (byte)PathPointType.Line;
                 }
-                ts[0] = (byte)PathPointType.Start;
-                GraphicsPath g = new GraphicsPath(fs, ts);
+                GraphicsPath g = new GraphicsPath(fs, s_pathPointTypeArrays[Vertices.Count]);
                 g.CloseAllFigures();
 
-                //_graphicsPath = g;
+                _graphicsPath = g;
 
                 return g;
             }
@@ -137,17 +147,11 @@ namespace Primitives
         /// <summary>Returns true if the supplied Coord is contained within the on-screen projection of this IndexedFace. All Z values are ignored.</summary>
         public bool ContainsPoint2D(Coord c)
         {
-            using (GraphicsPath g = this.GraphicsPath)
-            {
-                //using (Pen p = new Pen(Color.Black, 2f))
-                {
-                    //return g.IsVisible(c.ToPointF()) || g.IsOutlineVisible(c.ToPointF(), p);
-                    _count++;
+            GraphicsPath g = this.GraphicsPath;
+            _count++;
 
-                    return g.IsVisible(c.ToPointD().ToPoint()) || g.IsOutlineVisible(c.ToPointD().ToPoint(), s_blackPen);
-                }
-            }
-
+            // TODO:P1:PERF: Profile 32%  Consider rewriting/inlining IsVisible, IsOutlineVisible logic...
+            return g.IsVisible(new Point((int)c.X, (int)c.Y)) || g.IsOutlineVisible(new Point((int)c.X, (int)c.Y), s_blackPen);
 
 
             ////Non-Zero Winding Method is used to determine whether or not a point is contained within the IndexedFace.
@@ -198,7 +202,7 @@ namespace Primitives
         internal void UpdateNormalVector_ModelingCoordinates()
         {
             //update the vector. don't just use the first three vertices - the polygon might have a convex edge there and the result will be wrong.
-            mNormalVector_ModelingCoordinates = new Coord();
+            mNormalVector_ModelingCoordinates = new Coord(0, 0, 0);
             for (int i = 0; i < Vertices.Count - 2; i++)
             {
                 mNormalVector_ModelingCoordinates += (Vertices[i].ModelingCoord - Vertices[i + 1].ModelingCoord).CrossProduct(Vertices[i + 2].ModelingCoord - Vertices[i + 1].ModelingCoord);
@@ -212,7 +216,7 @@ namespace Primitives
         internal void UpdateNormalVector()
         {
             //update the vector. don't just use the first three vertices - the polygon might have a convex edge there and the result will be wrong.
-            mNormalVector = new Coord();
+            mNormalVector = new Coord(0, 0, 0);
             for (int i = 0; i < Vertices.Count - 2; i++)
             {
                 mNormalVector += (Vertices[i].ViewCoord - Vertices[i + 1].ViewCoord).CrossProduct(Vertices[i + 2].ViewCoord - Vertices[i + 1].ViewCoord);
@@ -238,6 +242,13 @@ namespace Primitives
         {
             UpdateNormalVector();
 
+            if (_graphicsPath != null)
+            {
+                _graphicsPath.Dispose();
+                // TODO: Call _graphicsPath.Dispose(); when IndexdFace out of scope
+            }
+            _graphicsPath = null;
+
             if (mIsTransparent || Edges.Any<Edge>(e => e.OtherFace == null))
             {
                 mIsFrontFacing = true;
@@ -258,20 +269,13 @@ namespace Primitives
         }
 
 
-
-
-
-
-
-
-
-
-
-
         public bool IsBetweenCameraAndPoint3D(Coord point_ViewCoordinates)
         {
-            Coord cameraPoint = point_ViewCoordinates;
-            cameraPoint.Z = 0; //compare to a point at the same location but on the screen.
+            Coord cameraPoint = new Coord(
+                point_ViewCoordinates.X,
+                point_ViewCoordinates.Y,
+                0); //compare to a point at the same location but on the screen.
+
             return IntersectsWith_ViewCoordinates(point_ViewCoordinates, cameraPoint);
         }
 
@@ -290,7 +294,7 @@ namespace Primitives
         {
             //algorithm from http://local.wasp.uwa.edu.au/~pbourke/geometry/planeline/
 
-            intersectionPoint = new Coord();
+            intersectionPoint = new Coord(0, 0, 0);
             double uDenom = normalVector.DotProduct(point2 - point1);
             if (uDenom == 0) //the line from p2 to p1 is perpendicular to the plane's normal (i.e. parallel to plane)
                 return false;

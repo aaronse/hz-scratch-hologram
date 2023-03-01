@@ -77,7 +77,7 @@ namespace ScratchUtility
 
         public override bool Equals(object obj)
         {
-            throw new ArgumentException("PERF: PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
+            throw new ArgumentException("PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
 
             //if (obj.GetType() == typeof(PointD))
             //{

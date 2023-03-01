@@ -39,7 +39,7 @@ namespace ScratchUtility
         private static Coord mLookUpVector = new Coord(0, 1, 0);
         private static Coord mPo = new Coord(1,0,0);
         //private static Coord mPo_ViewCoordinates = new Coord();
-        private static Coord mPr = new Coord();
+        private static Coord mPr = new Coord(0, 0, 0);
         private static double mCurrentScale;
         private static double mZf;
         private static double mN_ViewCoordinates;
@@ -441,7 +441,11 @@ namespace ScratchUtility
         }
         public static void Orbit(Coord newPoLocation_ViewCoordinates) //send in without converting WindowToModel();. Z value will be ignored because Z value is always 0.
         {
-            newPoLocation_ViewCoordinates.Z = 0;
+            newPoLocation_ViewCoordinates = new Coord(
+                newPoLocation_ViewCoordinates.X,
+                newPoLocation_ViewCoordinates.Y,
+                0);
+
             // Move Po - leave Pr fixed. Keep distance between Po and Pr fixed too.
 
             Coord newPo = Transformer.WindowToModel(newPoLocation_ViewCoordinates);
@@ -454,7 +458,11 @@ namespace ScratchUtility
         }
         public static void LookAround(Coord newPrLocation_ViewCoordinates) //send in without converting WindowToModel();. Z value will be ignored because Z value is always -N_ViewCoordinates.
         {
-            newPrLocation_ViewCoordinates.Z = -N_ViewCoordinates;
+            newPrLocation_ViewCoordinates = new Coord(
+                newPrLocation_ViewCoordinates.X,
+                newPrLocation_ViewCoordinates.Y,
+                -N_ViewCoordinates);
+
             // Move Pr - leave Po fixed. Keep distance between Po and Pr fixed too.
 
             Coord newPr = Transformer.WindowToModel(newPrLocation_ViewCoordinates);
