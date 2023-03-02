@@ -11,6 +11,8 @@ namespace ViewSupport
     {
         private List<IndexedFaceSet> mShapes;
 
+        public List<IndexedFaceSet> Shapes { get { return mShapes; } }
+
         public ShapeList()
         {
             mShapes = new List<IndexedFaceSet>();

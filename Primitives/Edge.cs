@@ -33,30 +33,35 @@ namespace Primitives
     public class Edge
     {
         /// <summary>Gets the IndexedFace that created this Edge. Null for Auxiliary Faces. Knowing which Face created the Edge helps to make sense of StartVertex and EndVertex: From CreatorFace's point of view, StartVertex and EndVertex are in counter-clockwise order.</summary>
-        public IndexedFace CreatorFace { get; private set; }
+        public IndexedFace CreatorFace; //{ get; private set; }
+    
         /// <summary>Gets the Face that did not create this Edge. From OtherFace's point of view, StartVertex and EndVertex are in clockwise order instead of counter-clockwise as would be expected when looking from the point of view of the CreatorFace.</summary>
-        public IndexedFace OtherFace { get; private set; }
+        public IndexedFace OtherFace; // { get; private set; }
         /// <summary>Gets the first Vertex supplied in the creation of this Edge. From CreatorFace's point of view, StartVertex comes before EndVertex in counter-clockwise order.</summary>
-        public Vertex StartVertex { get; private set; }
+
+        public Vertex StartVertex; // { get; private set; }
         /// <summary>Gets the second Vertex supplied in the creation of this Edge. From CreatorFace's point of view, EndVertex comes after StartVertex in counter-clockwise order.</summary>
-        public Vertex EndVertex { get; private set; }
+
+        public Vertex EndVertex; // { get; private set; }
 
         /// <summary>Specifies the classification of the ViewEdge.</summary>
-        public EdgeType Type { get; private set; }
+        public EdgeType Type; // { get; private set; }
         /// <summary>Specifies whether or not this Edge connects two IndexedFaces, and if so, whether the Edge connection is Internal or External.</summary>
-        public ConnectionType ConnectionType { get; private set; }
+        public ConnectionType ConnectionType; // { get; private set; }
 
         /// <summary>Gets and sets the List of EdgeSections that make up this Edge. The StartVertex of the first EdgeSection is always either the Edge's StartVertex or EndVertex, depending on the direction of travel through the Edge. The EndVertex of the last EdgeSection is always this Edge's Vertex that is not the first EdgeSection's StartVertex.</summary>
-        public List<EdgeSection> EdgeSections { get; set; }
+        public List<EdgeSection> EdgeSections; // { get; set; }
 
         /// <summary>A List of all the coordinates along this Edge where it intersects with any IndexedFace. When splitting this Edge into EdgeSections, this list of Intersections is always used in addition to any Silhouette Edge intersections.</summary>
-        public List<Intersection> FaceIntersections { get; set; }
+        public List<Intersection> FaceIntersections; // { get; set; }
 
         /// <summary>Gets the Rectangle that bounds this Edge when drawn on the sceen (the Vertices' ViewCoords are used).</summary>
-        public Rectangle BoundingBox { get; private set; }
+        public Rectangle BoundingBox; // { get; private set; }
 
 
-        public int EdgeID { get; set; }
+        public int EdgeID; // { get; set; }
+
+        private Coord? _unitVector = null;
 
 
         public Edge(Vertex startVertex, Vertex endVertex, IndexedFace creatorFace)
@@ -128,15 +133,13 @@ namespace Primitives
             }
         }
 
-        private Coord? _unitVector = null;
-
         /// <summary>Returns true if this Edge intersects the supplied Edge when drawn on the screen. ViewCoords are used. If there is a 2D projected intersection, the Z values at the intersection are compared. Returns True only if the Z value for the the SilhouetteEdge indicates that it is in front of this Edge.</summary>
         /// <param name="silhouetteEdge">The Edge to check against.</param>
         /// <returns>True if there was an intersection. Does not count intersections at the endpoints of the Edge.</returns>
-        public bool IntersectsBehind(Edge silhouetteEdge, out Coord intersectionPoint)
+        public bool IntersectsBehind(Edge silhouetteEdge, ref Coord intersectionPoint)
         {
             //if we return early, we want to return new Coord();
-            intersectionPoint = new Coord(0, 0, 0);
+            //            intersectionPoint = new Coord(0, 0, 0);
 
             //Coord thisUnit = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();
             //Coord silhouetteUnit = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).CalcUnitVector();
@@ -172,7 +175,10 @@ namespace Primitives
             }
 
             //shortcut if the intersection occurs right at the corner of silhouetteEdge and this Edge.
-            if (silhouetteEdge.ContainsVertex(StartVertex) || silhouetteEdge.ContainsVertex(EndVertex))
+            if (silhouetteEdge.StartVertex == StartVertex ||
+                silhouetteEdge.EndVertex == StartVertex ||
+                silhouetteEdge.StartVertex == EndVertex ||
+                silhouetteEdge.EndVertex == EndVertex)
             {
                 return false;
             }
@@ -182,15 +188,19 @@ namespace Primitives
                 return false;
             }
 
-            double a = this.StartVertex.ViewCoord.X;
-            double f = this.StartVertex.ViewCoord.Y;
-            double b = this.EndVertex.ViewCoord.X;
-            double g = this.EndVertex.ViewCoord.Y;
+            Coord startVertexViewCoord = this.StartVertex.ViewCoord;
+            Coord endVertexViewCoord = this.EndVertex.ViewCoord;
+            double a = startVertexViewCoord.X;
+            double f = startVertexViewCoord.Y;
+            double b = endVertexViewCoord.X;
+            double g = endVertexViewCoord.Y;
 
-            double c = silhouetteEdge.StartVertex.ViewCoord.X;
-            double k = silhouetteEdge.StartVertex.ViewCoord.Y;
-            double d = silhouetteEdge.EndVertex.ViewCoord.X;
-            double l = silhouetteEdge.EndVertex.ViewCoord.Y;
+            Coord silhouetteEdgeStartVertexViewCoord = silhouetteEdge.StartVertex.ViewCoord;
+            Coord silhouetteEdgeEndVertexViewCoord = silhouetteEdge.EndVertex.ViewCoord;
+            double c = silhouetteEdgeStartVertexViewCoord.X;
+            double k = silhouetteEdgeStartVertexViewCoord.Y;
+            double d = silhouetteEdgeEndVertexViewCoord.X;
+            double l = silhouetteEdgeEndVertexViewCoord.Y;
 
             //Normalization technique will be used to determine if the lines intersect.
             //The following equations will be solved for t and u. If t and u are both between 0 and 1, the lines intersect
@@ -206,15 +216,18 @@ namespace Primitives
             }
 
             //They intersect. Calculate the point of intersection.
-            double zi = this.StartVertex.ViewCoord.Z + (this.EndVertex.ViewCoord.Z - this.StartVertex.ViewCoord.Z) * t;
-            double ziSilhouette = silhouetteEdge.StartVertex.ViewCoord.Z + (silhouetteEdge.EndVertex.ViewCoord.Z - silhouetteEdge.StartVertex.ViewCoord.Z) * u;
+            double zi = startVertexViewCoord.Z + (endVertexViewCoord.Z - startVertexViewCoord.Z) * t;
+            double ziSilhouette = silhouetteEdgeStartVertexViewCoord.Z + (silhouetteEdgeEndVertexViewCoord.Z - silhouetteEdgeStartVertexViewCoord.Z) * u;
             if (zi > ziSilhouette) //if zi > ziSilhouette, the Silhouette Edge is behind this Edge, and thus the intersection can be ignored.
                 return false;
 
             double xi = a + (b - a) * t;
             double yi = f + (g - f) * t;
 
-            intersectionPoint = new Coord(xi, yi, zi);
+            //intersectionPoint = new Coord(xi, yi, zi);
+            intersectionPoint.X = xi;
+            intersectionPoint.Y = yi;
+            intersectionPoint.Z = zi;
             return true;
         }
 

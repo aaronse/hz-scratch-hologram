@@ -16,9 +16,10 @@ namespace Primitives
         public List<Vertex> Vertices { get; private set; } //this list is in order of the way they were defined in the data file to preserve frontface/backface
         private Coord mNormalVector;
         private Coord mNormalVector_ModelingCoordinates;
-        private bool mIsFrontFacing;
-        private bool mIsTransparent;
-        private Rectangle mBoundingBox;
+        // TODO: Remove
+        //private bool mIsFrontFacing;
+        //private bool mIsTransparent;
+        //private Rectangle mBoundingBox;
 
         private static double mIntersectionTolerance = 0;//.01; //0.0000000000001;
 
@@ -42,8 +43,8 @@ namespace Primitives
             ParentIndexedFaceSet = parentIndexedFaceSet;
             Edges = new List<Edge>();
             Vertices = new List<Vertex>();
-            mIsFrontFacing = true;
-            mIsTransparent = false;
+            this.IsFrontFacing = true;
+            this.IsTransparent = false;
         }
         public Coord NormalVector_ModelingCoordinates
         {
@@ -59,31 +60,37 @@ namespace Primitives
                 return mNormalVector;
             }
         }
-        public bool IsFrontFacing
-        {
-            get
-            {
-                return mIsFrontFacing;
-            }
-        }
-        public bool IsTransparent
-        {
-            get
-            {
-                return mIsTransparent;
-            }
-            internal set
-            {
-                mIsTransparent = value;
-            }
-        }
-        public Rectangle BoundingBox
-        {
-            get
-            {
-                return mBoundingBox;
-            }
-        }
+        public bool IsFrontFacing;
+        //{
+        //    get
+        //    {
+        //        return mIsFrontFacing;
+        //    }
+        //}
+
+        public bool IsTransparent;
+        // TODO: Remove
+        //{
+        //    get
+        //    {
+        //        return mIsTransparent;
+        //    }
+        //    internal set
+        //    {
+        //        mIsTransparent = value;
+        //    }
+        //}
+
+        public Rectangle BoundingBox;
+
+
+        // TODO: Remove
+        //{
+        //    get
+        //    {
+        //        return mBoundingBox;
+        //    }
+        //}
 
         private GraphicsPath _graphicsPath = null;
         private PointF[] _pointPath = null;
@@ -335,22 +342,22 @@ namespace Primitives
             _graphicsPath = null;
             _pointPath = null;
 
-            if (mIsTransparent || Edges.Any<Edge>(e => e.OtherFace == null))
+            if (this.IsTransparent || Edges.Any<Edge>(e => e.OtherFace == null))
             {
-                mIsFrontFacing = true;
+                this.IsFrontFacing = true;
             }
             else
             {
                 //the face may no longer be front-facing (or no longer back-facing)
                 double dotProduct = NormalVector.DotProduct(new Coord(0, 0, 1));
                 int dotSign = Math.Sign(dotProduct);
-                mIsFrontFacing = switchBackFront ? (dotSign == -1) : (dotSign == 1);
+                this.IsFrontFacing = switchBackFront ? (dotSign == -1) : (dotSign == 1);
             }
             //update the bounding box
-            mBoundingBox = Global.GetRectangleWithGivenCorners(Vertices[0].ViewCoord.ToPointD(), Vertices[1].ViewCoord.ToPointD());
+            BoundingBox = Global.GetRectangleWithGivenCorners(Vertices[0].ViewCoord.ToPointD(), Vertices[1].ViewCoord.ToPointD());
             for (int i = 1; i < Vertices.Count; i++)
             {
-                mBoundingBox = Rectangle.Union(mBoundingBox, Global.GetRectangleWithGivenCorners(Vertices[i - 1].ViewCoord.ToPointD(), Vertices[i].ViewCoord.ToPointD()));
+                BoundingBox = Rectangle.Union(BoundingBox, Global.GetRectangleWithGivenCorners(Vertices[i - 1].ViewCoord.ToPointD(), Vertices[i].ViewCoord.ToPointD()));
             }
         }
 

@@ -225,8 +225,9 @@ namespace ViewSupport
 
         private static void DrawEdgePart(DrawOptions options, Edge e, Coord startCoord, Coord endCoord)
         {
-            Point startPoint = startCoord.ToPointD().ToPoint();
-            Point endPoint = endCoord.ToPointD().ToPoint();
+            // TODO:P2: Q: Accuracy for Edges, should we use PointF instead of Point?
+            Point startPoint = new Point((int)startCoord.X, (int)startCoord.Y);
+            Point endPoint = new Point((int)endCoord.X, (int)endCoord.Y);
 
             string edgeHash = ((startPoint.X + startPoint.Y) <= (endPoint.X + endPoint.Y))
                 ? $"{startPoint.X}:{startPoint.Y}-{endPoint.X}:{endPoint.Y}"
@@ -588,19 +589,30 @@ namespace ViewSupport
 
                 //loop through every Silhouette Edge in the ShapeList
                 bool isQuickMode = DrawOptions.QuickMode;
-                foreach (IndexedFaceSet ifs in ShapeList)
+                Coord intersectionPoint = new Coord(0, 0, 0);
+                for(int i = 0; i < ShapeList.Count; i++)
                 {
-                    foreach (Edge edgeToCheck in ifs.Edges.Where(silhouetteEdge => !isQuickMode || silhouetteEdge.Type == EdgeType.Silhouette)) //check against all edges if not QuickMode
+                    IndexedFaceSet ifs = ShapeList.Shapes[i];
+
+                    for (int j = 0; j < ifs.Edges.Count; j++)
                     {
+                        Edge edgeToCheck = ifs.Edges[j];
+
+                        //if .Where(silhouetteEdge => !isQuickMode || silhouetteEdge.Type == EdgeType.Silhouette)) //check against all edges if not QuickMode
+
+                        // Check against all edges if not QuickMode
+                        if (isQuickMode && edgeToCheck.Type != EdgeType.Silhouette)
+                        {
+                            continue;
+                        }
+
                         if (e == edgeToCheck) //don't compare against itself
                         {
                             continue;
                         }
 
                         //Check for intersection
-                        Coord intersectionPoint;
-
-                        if (e.IntersectsBehind(edgeToCheck, out intersectionPoint))
+                        if (e.IntersectsBehind(edgeToCheck, ref intersectionPoint))
                         {
                             double distanceFromStart = (intersectionPoint - e.StartVertex.ViewCoord).CalcLength() / e.Length_ViewCoordinates;
                             intersections.Add(new Intersection(e, distanceFromStart));
@@ -643,32 +655,46 @@ namespace ViewSupport
         /// <summary>Appropriately sets the Visible property of the specified EdgeSection.</summary>
         private static void ComputeVisibility(DrawOptions options, EdgeSection es)
         {
+            Edge edge = es.Edge;
+
             // TODO:P0:PERF: Add Coord.CalcMidPoint
             Coord edgeMidPoint = (es.StartCoord + es.EndCoord) / 2; //test visibility of the midpoint of the EdgeSection
 
             if (options.IsRendering && Global.DebugMode)
                 options.Graphics.DrawString(
-                    es.Edge.EdgeID.ToString() + " (" + count.ToString() + ")",
+                    edge.EdgeID.ToString() + " (" + count.ToString() + ")",
                     s_debugFont,
                     options.Theme.RedBlueModePointBrush,
                     edgeMidPoint.ToPointF());
             count++;
 
             bool isQuickMode = DrawOptions.QuickMode;
-            foreach (IndexedFaceSet ifs in ShapeList)
+            for(int i = 0; i < ShapeList.Shapes.Count; i++)
             {
-                foreach (IndexedFace face in ifs.IndexedFaces.Where(iface => !iface.IsTransparent && (!isQuickMode || iface.IsFrontFacing))) //if QuickMode, only check against front-facing faces
+                IndexedFaceSet ifs = ShapeList.Shapes[i];
+
+                for(int j = 0; j < ifs.IndexedFaces.Count; j++ )
                 {
-                    // Edge visible if part of specified face.  Could be Creator or Other face.
-                    if (es.Edge.ContainsFace(face)) 
+                    IndexedFace face = ifs.IndexedFaces[j];
+
+                    // Was .Where(iface => !iface.IsTransparent && (!isQuickMode || iface.IsFrontFacing))) 
+                    if (face.IsTransparent || (isQuickMode && !face.IsFrontFacing))
                     {
                         continue;
                     }
 
-                    // TODO:P2:Check whether visible edge accuracy here is sufficient.  We're only testing Edge's midpoint.
+                    // Edge visible if part of specified face.  Could be Creator or Other face.
+                    if (edge.CreatorFace == face || edge.OtherFace == face) //  ; .ContainsFace(face)) 
+                    {
+                        continue;
+                    }
 
                     // Skip checking edges obviously outside Face's bounding box, must be outside of the polygon (no overlap).
-                    if (!face.BoundingBox.Contains(edgeMidPoint.ToPointD().ToPoint()))
+                    Rectangle boundingBox = face.BoundingBox;
+                    if (edgeMidPoint.X < boundingBox.X || 
+                        edgeMidPoint.X > boundingBox.Right ||
+                        edgeMidPoint.Y < boundingBox.Y ||
+                        edgeMidPoint.Y > boundingBox.Bottom)
                     {
                         continue;
                     }
@@ -691,8 +717,8 @@ namespace ViewSupport
             // 'Merge faces', i.e. hide redundant edge inbetween two adjacent faces with the same normal?
             if (DrawOptions.MergeFaces)
             {
-                if (es.Edge.OtherFace != null && es.Edge.CreatorFace.NormalVector.Equals(
-                    es.Edge.OtherFace.NormalVector, 
+                if (edge.OtherFace != null && edge.CreatorFace.NormalVector.Equals(
+                    edge.OtherFace.NormalVector, 
                     Global.NormalToleranceDecimalPlaces))
                 {
                     es.Visible = false;

@@ -12,7 +12,7 @@ namespace Primitives
         /// <summary>Gets the List of Edges that make up this IndexedFaceSet</summary>
         public List<Edge> Edges { get; private set; }
 
-        public List<IndexedFace> IndexedFaces { get; private set; }
+        public List<IndexedFace> IndexedFaces; // { get; private set; }
 
         public List<Coord> AvailableVertexLocations { get; private set; }
 

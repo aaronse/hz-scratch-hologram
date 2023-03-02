@@ -17,6 +17,9 @@ namespace ScratchUtility
         public double Y; // { get; private set; }
         public double Z; // { get; private set; }
 
+        private double _length;
+        private bool _lengthComputed;
+
         // private Coord() // TODO:P2: Implement parameterless Struct constructor/initializer when possible in C#10
         //{
         //    _length = double.NaN;
@@ -62,20 +65,6 @@ namespace ScratchUtility
         }
         public static bool operator ==(Coord a, Coord b)
         {
-            //// If both are null, or both are same instance, return true.
-            //if (System.Object.ReferenceEquals(a, b))
-            //{
-            //    throw new Exception("Not expected");
-            //    //return true;
-            //}
-
-            //// If one is null, but not both, return false.
-            //if (((object)a == null) || ((object)b == null))
-            //{
-            //    throw new Exception("Not expected");
-            //    //return false;
-            //}
-
             // Return true if the fields match:
             return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
 
@@ -94,12 +83,6 @@ namespace ScratchUtility
         public override bool Equals(object obj)
         {
             throw new ArgumentException("PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
-            //if (obj.GetType() == typeof(Coord))
-            //{
-            //    return this == (Coord)obj;
-            //}
-            //else
-            //    return false;
         }
 
         public bool Equals(Coord other, int toleranceDecimalPlaces)
@@ -144,9 +127,7 @@ namespace ScratchUtility
 
         }
 
-        private double _length;
-        private bool _lengthComputed;
-        
+
         // Was .Length property, changed to method since it's doing work and the property cannot be
         // serialized.  Intentionally making computationally expensive 'getters' methods to help
         // hint to callers about the CPU cost.
