@@ -207,5 +207,20 @@ namespace ScratchUtility
         {
             return !(double.IsNaN(X) || double.IsNaN(Y) || double.IsNaN(Z));
         }
+
+        /// <summary>
+        /// Returns true if Vectors represented as Coords are Parallel in same or inverse direction.
+        /// Used to determine if two vectors intersect.
+        /// </summary>
+        public static bool IsEqualOrInverse(ref Coord a, ref Coord b)
+        {
+            if (a.X == b.X && a.Y == b.Y && a.Z == b.Z)
+                return true;
+
+            if (a.X == -1 * b.X && a.Y == -1 * b.Y && a.Z == -1 * b.Z)
+                return true;
+
+            return false;
+        }
     }
 }

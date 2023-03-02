@@ -128,6 +128,8 @@ namespace Primitives
             }
         }
 
+        private Coord? _unitVector = null;
+
         /// <summary>Returns true if this Edge intersects the supplied Edge when drawn on the screen. ViewCoords are used. If there is a 2D projected intersection, the Z values at the intersection are compared. Returns True only if the Z value for the the SilhouetteEdge indicates that it is in front of this Edge.</summary>
         /// <param name="silhouetteEdge">The Edge to check against.</param>
         /// <returns>True if there was an intersection. Does not count intersections at the endpoints of the Edge.</returns>
@@ -136,18 +138,47 @@ namespace Primitives
             //if we return early, we want to return new Coord();
             intersectionPoint = new Coord(0, 0, 0);
 
-            //no intersection if the lines are parallel
             Coord thisUnit = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();
             Coord silhouetteUnit = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).CalcUnitVector();
             if (thisUnit == silhouetteUnit || thisUnit == -1 * silhouetteUnit)
+            {
                 return false;
+            }
+
+            // TODO:P0:PERF: Replace above with cached unitVector based code below.  Left commented for now until arc segment bug fixed.
+            //Coord unitVector;
+            //Coord silhouetteVector;
+            //if (!_unitVector.HasValue)
+            //{
+            //    _unitVector = unitVector = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();
+            //}
+            //else
+            //{
+            //    unitVector = _unitVector.Value;
+            //}
+
+            //if (!silhouetteEdge._unitVector.HasValue)
+            //{
+            //    silhouetteEdge._unitVector = silhouetteVector = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).CalcUnitVector();
+            //}
+            //else
+            //{
+            //    silhouetteVector = silhouetteEdge._unitVector.Value;
+            //}
+
+            //if (Coord.IsEqualOrInverse(ref unitVector, ref silhouetteVector))
+            //    return false;
 
             //shortcut if the intersection occurs right at the corner of silhouetteEdge and this Edge.
             if (silhouetteEdge.ContainsVertex(StartVertex) || silhouetteEdge.ContainsVertex(EndVertex))
-                return false;            
+            {
+                return false;
+            }
 
             if (!silhouetteEdge.BoundingBox.IntersectsWith(BoundingBox)) //if the BoundingBoxes don't intersect, then the Edges don't intersect
+            {
                 return false;
+            }
 
             double a = this.StartVertex.ViewCoord.X;
             double f = this.StartVertex.ViewCoord.Y;
@@ -171,19 +202,18 @@ namespace Primitives
             {
                 return false;
             }
-            else //They intersect. Calculate the point of intersection.
-            {
-                double zi = this.StartVertex.ViewCoord.Z + (this.EndVertex.ViewCoord.Z - this.StartVertex.ViewCoord.Z) * t;
-                double ziSilhouette = silhouetteEdge.StartVertex.ViewCoord.Z + (silhouetteEdge.EndVertex.ViewCoord.Z - silhouetteEdge.StartVertex.ViewCoord.Z) * u;
-                if (zi > ziSilhouette) //if zi > ziSilhouette, the Silhouette Edge is behind this Edge, and thus the intersection can be ignored.
-                    return false;
 
-                double xi = a + (b - a) * t;
-                double yi = f + (g - f) * t;
+            //They intersect. Calculate the point of intersection.
+            double zi = this.StartVertex.ViewCoord.Z + (this.EndVertex.ViewCoord.Z - this.StartVertex.ViewCoord.Z) * t;
+            double ziSilhouette = silhouetteEdge.StartVertex.ViewCoord.Z + (silhouetteEdge.EndVertex.ViewCoord.Z - silhouetteEdge.StartVertex.ViewCoord.Z) * u;
+            if (zi > ziSilhouette) //if zi > ziSilhouette, the Silhouette Edge is behind this Edge, and thus the intersection can be ignored.
+                return false;
 
-                intersectionPoint = new Coord(xi, yi, zi);
-                return true;
-            }
+            double xi = a + (b - a) * t;
+            double yi = f + (g - f) * t;
+
+            intersectionPoint = new Coord(xi, yi, zi);
+            return true;
         }
 
 
