@@ -364,24 +364,33 @@ namespace ViewSupport
                     // Find first visible
                     while (i < visibleAngles.Length && !visibleAngles[i]) i += options.ViewAngleResolution;
 
+                    //// Find last visible, treat small contiguous gaps as single segement.  Goal is
+                    //// to avoid lots of tiny, almost adjacent, segments.   we
+                    //// use (k) to peek ahead.  Potentially nudging (j) to keep advancing until
+                    //// acceptably long enough segment end is encountered.
 
-                    // Find last visible, treat small contiguous gaps as single segement.  Goal is
-                    // to avoid lots of tiny, almost adjacent, segments.   we
-                    // use (k) to peek ahead.  Potentially nudging (j) to keep advancing until
-                    // acceptably long enough segment end is encountered.
+                    // Bail if didn't find a visible
+                    if (i >= visibleAngles.Length || !visibleAngles[i]) break;
+
                     int j = i;
                     int lastVisible = j;
                     int visibleMisses = 0;
                     while (j < visibleAngles.Length - 1 && (visibleAngles[j] || visibleMisses < maxVisibleMisses))
                     {
-                        visibleMisses = (visibleAngles[j]) ? 0 : visibleMisses++;
-
-                        if (visibleAngles[j]) lastVisible = j;
+                        if (visibleAngles[j])
+                        {
+                            visibleMisses = 0;
+                            lastVisible = j;
+                        }
+                        else
+                        {
+                            visibleMisses++;
+                        }
 
                         j += options.ViewAngleResolution;
                     }
 
-                    if (visibleMisses < maxVisibleMisses)
+                    if (visibleMisses < maxVisibleMisses )
                     {
                         lastVisible = j;
                     }
