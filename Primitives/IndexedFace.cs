@@ -29,7 +29,7 @@ namespace Primitives
         // 2 = Use faster PNPoly implementation, with pre check for boundary box.  Implementation from reddit, algo from https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
         // 3 = Use to measure accuracy/regressions/differences.  Compute using both Algos, accumulate total and mismatched callsstate
         // TODO: Implement Algo 2 edge intersection.  Currently only GDI implementation exists.  3-4% difference in results until Edge intersection implemented.
-        public static byte s_useIsVisibleAlgoVersion = 1;
+        public static byte s_useIsVisibleAlgoVersion = 2;
 
         private static Pen s_blackPen = new Pen(Color.Black, 2f);
         public static long _count = 0;

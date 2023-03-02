@@ -138,36 +138,38 @@ namespace Primitives
             //if we return early, we want to return new Coord();
             intersectionPoint = new Coord(0, 0, 0);
 
-            Coord thisUnit = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();
-            Coord silhouetteUnit = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).CalcUnitVector();
-            if (thisUnit == silhouetteUnit || thisUnit == -1 * silhouetteUnit)
+            //Coord thisUnit = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();
+            //Coord silhouetteUnit = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).CalcUnitVector();
+            //if (thisUnit == silhouetteUnit || thisUnit == -1 * silhouetteUnit)
+            //{
+            //    return false;
+            //}
+
+            // TODO:P0:PERF: Replace above with cached unitVector based code below.  Left commented for now until arc segment bug fixed.
+            Coord unitVector;
+            Coord silhouetteVector;
+            if (!_unitVector.HasValue)
+            {
+                _unitVector = unitVector = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();
+            }
+            else
+            {
+                unitVector = _unitVector.Value;
+            }
+
+            if (!silhouetteEdge._unitVector.HasValue)
+            {
+                silhouetteEdge._unitVector = silhouetteVector = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).CalcUnitVector();
+            }
+            else
+            {
+                silhouetteVector = silhouetteEdge._unitVector.Value;
+            }
+
+            if (Coord.IsEqualOrInverse(ref unitVector, ref silhouetteVector))
             {
                 return false;
             }
-
-            // TODO:P0:PERF: Replace above with cached unitVector based code below.  Left commented for now until arc segment bug fixed.
-            //Coord unitVector;
-            //Coord silhouetteVector;
-            //if (!_unitVector.HasValue)
-            //{
-            //    _unitVector = unitVector = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();
-            //}
-            //else
-            //{
-            //    unitVector = _unitVector.Value;
-            //}
-
-            //if (!silhouetteEdge._unitVector.HasValue)
-            //{
-            //    silhouetteEdge._unitVector = silhouetteVector = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).CalcUnitVector();
-            //}
-            //else
-            //{
-            //    silhouetteVector = silhouetteEdge._unitVector.Value;
-            //}
-
-            //if (Coord.IsEqualOrInverse(ref unitVector, ref silhouetteVector))
-            //    return false;
 
             //shortcut if the intersection occurs right at the corner of silhouetteEdge and this Edge.
             if (silhouetteEdge.ContainsVertex(StartVertex) || silhouetteEdge.ContainsVertex(EndVertex))
