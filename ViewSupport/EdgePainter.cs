@@ -209,6 +209,8 @@ namespace ViewSupport
             }
 
             System.Diagnostics.Debug.WriteLine($"s_arcSegs.ArcCount={s_arcSegs?.Count}, s_coordHits={s_coordHits}, s_edgeHits={s_edgeHits}, s_skippedEdgeCount={s_skippedEdgeCount}");
+            
+            System.Diagnostics.Debug.WriteLine($"IndexedFace.IsVisible, stats... algoVersionFlag={IndexedFace.s_useIsVisibleAlgoVersion}, missRatio ={Math.Round((100.0 * IndexedFace.s_algoMismatches) / IndexedFace.s_algoCalls, 2)}, mismatches={IndexedFace.s_algoMismatches}, s_algoCalls={IndexedFace.s_algoCalls}");
         }
 
         private static void DrawEdge(DrawOptions options, Edge e)

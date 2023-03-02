@@ -22,6 +22,20 @@ namespace Primitives
 
         private static double mIntersectionTolerance = 0;//.01; //0.0000000000001;
 
+        // TODO:P1:PERF: Profiler showed original GDI based IsVisible Algo consuming 32% of total cycles.  Rewrote/inlined IsVisible, omitted IsOutlineVisible logic for now...  Clipping/hidden surface is partially broken with existing and new algorithm when edge has negative Z axis coordinates, and/or when object close-to/behind camera.
+
+        // Algo version(s) to use for hotpath IsVisible checks
+        // 1 = Use GDI APIs, per original implementation.
+        // 2 = Use faster PNPoly implementation, with pre check for boundary box.  Implementation from reddit, algo from https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
+        // 3 = Use to measure accuracy/regressions/differences.  Compute using both Algos, accumulate total and mismatched callsstate
+        // TODO: Implement Algo 2 edge intersection.  Currently only GDI implementation exists.  3-4% difference in results until Edge intersection implemented.
+        public static byte s_useIsVisibleAlgoVersion = 2;
+
+        private static Pen s_blackPen = new Pen(Color.Black, 2f);
+        public static long _count = 0;
+
+        public static int s_algoCalls = 0;
+        public static int s_algoMismatches = 0;
 
         internal IndexedFace(IndexedFaceSet parentIndexedFaceSet)
         {
@@ -72,6 +86,7 @@ namespace Primitives
         }
 
         private GraphicsPath _graphicsPath = null;
+        private PointF[] _pointPath = null;
 
         // Static Array of Point Path Arrays, used to reduce mem/cpu for calculating point visibility within a Path using GDI
         // PathPointType.Start = 0, PathPointType.Line = 0
@@ -103,6 +118,7 @@ namespace Primitives
                 g.CloseAllFigures();
 
                 _graphicsPath = g;
+                //_pointPath = fs;
 
                 return g;
             }
@@ -141,18 +157,50 @@ namespace Primitives
         }
 
 
-        private static Pen s_blackPen = new Pen(Color.Black, 2f);
-        public static long _count = 0;
-
+        // TODO:P0:PERF ~25% !!!
         /// <summary>Returns true if the supplied Coord is contained within the on-screen projection of this IndexedFace. All Z values are ignored.</summary>
         public bool ContainsPoint2D(Coord c)
         {
-            GraphicsPath g = this.GraphicsPath;
+            bool isOutlineVisibleAlgo1 = false;
+            bool isVisibleAlgo1 = false;
+            bool isVisibleAlgo2 = false;
+
+
             _count++;
 
-            // TODO:P1:PERF: Profile 32%  Consider rewriting/inlining IsVisible, IsOutlineVisible logic...
-            return g.IsVisible(new Point((int)c.X, (int)c.Y)) || g.IsOutlineVisible(new Point((int)c.X, (int)c.Y), s_blackPen);
+            if ((s_useIsVisibleAlgoVersion & 1) == 1)
+            {
+                GraphicsPath g = this.GraphicsPath;
 
+                PointF p1 = new Point((int)c.X, (int)c.Y);
+                isOutlineVisibleAlgo1 = g.IsOutlineVisible(new Point((int)c.X, (int)c.Y), s_blackPen);
+                isVisibleAlgo1 = g.IsVisible(p1) || isOutlineVisibleAlgo1;
+            }
+
+
+            if ((s_useIsVisibleAlgoVersion & 2) == 2)
+            {
+                if (_pointPath == null)
+                {
+                    PointF[] path = new PointF[Vertices.Count + 1];
+                    for (int i = 0; i < Vertices.Count; i++)
+                    {
+                        path[i].X = (float)Vertices[i].ViewCoord.X;
+                        path[i].Y = (float)Vertices[i].ViewCoord.Y;
+                    }
+                    // Close edge
+                    path[Vertices.Count].X = path[0].X;
+                    path[Vertices.Count].Y = path[0].Y;
+
+                    _pointPath = path;
+                }
+
+                isVisibleAlgo2 = IsPointInPolygon((float)c.X, (float)c.Y, _pointPath) || isOutlineVisibleAlgo1;
+            }
+
+
+            s_algoCalls++;
+            if (isVisibleAlgo1 != isVisibleAlgo2) s_algoMismatches++;
 
             ////Non-Zero Winding Method is used to determine whether or not a point is contained within the IndexedFace.
             ////imagine a line from the point going out to somewhere that is for sure outside of the IndexedFace. If the sum of the signs of the cross product of
@@ -161,7 +209,7 @@ namespace Primitives
             ////Coord rayToDistantPoint = new Edge(c, new ViewPoint(new Coord(32768, 32768, 0))); //new Coord(BoundingBox.Right + 1, BoundingBox.Bottom + 1, 0)
 
             //Coord rayCoord = new Coord(BoundingBox.Right + 1, BoundingBox.Bottom + 1, 0);
-            
+
 
             //int crossProductSignSum = 0;
             //foreach (Edge e in Edges)
@@ -176,6 +224,43 @@ namespace Primitives
             //    }
             //}
             //return (crossProductSignSum != 0);
+
+            return ((s_useIsVisibleAlgoVersion & 1) == 1) ? isVisibleAlgo1 : isVisibleAlgo2;
+        }
+
+        /// <summary>
+        /// PNPoly, plus pre check for boundary box, See https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
+        /// </summary>
+        public bool IsPointInPolygon(float x, float y, PointF[] polygon)
+        {
+            float minX, maxX, minY, maxY;
+            minX = maxX = polygon[0].X;
+            minY = maxY = polygon[0].Y;
+            for (int i = 1; i < polygon.Length; i++)
+            {
+                PointF q = polygon[i];
+                if (q.X < minX) minX = q.X;
+                if (q.X > maxX) maxX = q.X;
+                if (q.Y < minY) minY = q.Y;
+                if (q.Y > maxY) maxY = q.Y;
+            }
+
+            if (x < minX || x > maxX || y < minY || y > maxY)
+            {
+                return false;
+            }
+
+            bool inside = false;
+            for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
+            {
+                if ((polygon[i].Y > y) != (polygon[j].Y > y) &&
+                     x < (polygon[j].X - polygon[i].X) * (y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) + polygon[i].X)
+                {
+                    inside = !inside;
+                }
+            }
+
+            return inside;
         }
 
         /// <summary>Returns true if the supplied Modeling Coord is contained within the IndexedFace. After rotating, all Z values are ignored.</summary>
@@ -248,6 +333,7 @@ namespace Primitives
                 // TODO: Call _graphicsPath.Dispose(); when IndexdFace out of scope
             }
             _graphicsPath = null;
+            _pointPath = null;
 
             if (mIsTransparent || Edges.Any<Edge>(e => e.OtherFace == null))
             {
