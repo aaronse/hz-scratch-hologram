@@ -252,8 +252,7 @@ namespace ScratchUtility
                 RecalculateViewAngle();
             }
         }
-        
-        
+                
         public static Size CanvasSize
         {
             get { return mCanvasSize; }
@@ -265,6 +264,7 @@ namespace ScratchUtility
                 RecalculateMatrix();
             }
         }
+
         public static Coord LookUpVector
         {
             get { return mLookUpVector; }
@@ -277,6 +277,7 @@ namespace ScratchUtility
                 RecalculateMatrix();
             }
         }
+
         /// <summary>
         /// Gets and sets the Point of Origin (in Modeling coordinates) for this ViewContext (the point from which the user is looking at the scene)
         /// </summary>
@@ -379,9 +380,10 @@ namespace ScratchUtility
             LookUpVector = LookUpVector - LookUpVector * 2;
         }
 
+
         #endregion
 
- 
+
 
 
 
@@ -395,6 +397,7 @@ namespace ScratchUtility
             Po += diff;
             Pr += diff;
         }
+
         /// <summary>
         /// Zooms in by moving Po closer to Pr. Zooming in too much will begin to cut objects off at the Po plane. Use Scale() to enlarge the image without moving the plane.
         /// </summary>
@@ -414,6 +417,7 @@ namespace ScratchUtility
             else
                 Po = (Po - n);
         }
+
         /// <summary>
         /// Flies toward Pr by moving Po and Pr the same amount in the direction of the line from Po to Pr.
         /// </summary>
@@ -432,6 +436,7 @@ namespace ScratchUtility
             //we need to move Pr the same distance along N to simulate flying around
             Pr = Pr - n;
         }
+
         /// <summary>
         /// Scale the image without moving Po or Pr. Multiplies CurrentScale by the specified scale amount.
         /// </summary>
@@ -439,6 +444,7 @@ namespace ScratchUtility
         {
             CurrentScale *= scaleAmount;
         }
+
         public static void Orbit(Coord newPoLocation_ViewCoordinates) //send in without converting WindowToModel();. Z value will be ignored because Z value is always 0.
         {
             newPoLocation_ViewCoordinates = new Coord(
@@ -456,6 +462,7 @@ namespace ScratchUtility
             //now put Po on that new vector.
             Po = Pr + newN;
         }
+
         public static void LookAround(Coord newPrLocation_ViewCoordinates) //send in without converting WindowToModel();. Z value will be ignored because Z value is always -N_ViewCoordinates.
         {
             newPrLocation_ViewCoordinates = new Coord(
@@ -473,6 +480,21 @@ namespace ScratchUtility
             //now put Po on that new vector.
             Pr = newN + Po;
         }
+
+        public static void SetMousePosition(Point winlocation)
+        {
+
+            Coord modelLocation = Transformer.WindowToModel(new Coord(winlocation.X, winlocation.Y, 0));
+            
+            if (DateTime.Now > nextStat)
+            {
+                nextStat = DateTime.Now.AddSeconds(1);
+                Debug.WriteLine($"win={winlocation}, model={modelLocation.ToString(2)}");
+            }
+        }
+
+        private static DateTime nextStat = DateTime.Now;
+
 
         #endregion
 

@@ -16,17 +16,17 @@ namespace ViewSupport
 
         }
 
-        public List<EdgePainter.ArcSegInfo> DeSerializeJson(string filePath)
+        public List<ArcShape> DeSerializeJson(string filePath)
         {
             string arcSegsJsonText = File.ReadAllText(filePath);
-            object parsedObj = JsonConvert.DeserializeObject(arcSegsJsonText, typeof(List<EdgePainter.ArcSegInfo>));
-            List<EdgePainter.ArcSegInfo> arcSegs = parsedObj as List<EdgePainter.ArcSegInfo>;
+            object parsedObj = JsonConvert.DeserializeObject(arcSegsJsonText, typeof(List<ArcShape>));
+            List<ArcShape> arcSegs = parsedObj as List<ArcShape>;
 
             return arcSegs;
         }
 
 
-        public StringBuilder Serialize(List<EdgePainter.ArcSegInfo> arcSegs)
+        public StringBuilder Serialize(List<ArcShape> arcSegs, List<VectorShape> vectorShapes)
         {
             // SVG Format:
             // - https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths
@@ -40,8 +40,8 @@ namespace ViewSupport
             float maxX = 1;
             float maxY = 1;
 
-            StringBuilder sb = new StringBuilder();
-
+            StringBuilder sbArcsPath = new StringBuilder();
+            StringBuilder sbArcs = new StringBuilder();
             if (arcSegs != null)
             {
                 float pi = (float)Math.PI;
@@ -81,8 +81,41 @@ namespace ViewSupport
                     if (y1 > maxY) maxY = y1;
                     if (y2 > maxY) maxY = y2;
 
-                    sb.AppendLine($"M {x1} {y1}");
-                    sb.AppendLine($"A {r} {r} 0 0 {sweepFlag} {x2} {y2}");
+                    sbArcsPath.AppendLine($"M {x1} {y1}");
+                    sbArcsPath.AppendLine($"A {r} {r} 0 0 {sweepFlag} {x2} {y2}");
+                }
+                sbArcs.Append("<path stroke=\"black\" stroke-width=\"1\" d=\"");
+                sbArcs.AppendLine(sbArcsPath.ToString());
+                sbArcs.Append("\"/>");
+            }
+
+            StringBuilder sbVectors = new StringBuilder();
+            StringBuilder sbVectorPath = new StringBuilder();
+            if (vectorShapes != null)
+            {
+                foreach (var shape in vectorShapes)
+                {
+                    LineShape line = shape as LineShape;
+                    if (line != null)
+                    {
+                        float x1 = line.Start.X;
+                        float y1 = line.Start.Y;
+                        float x2 = line.End.X;
+                        float y2 = line.End.Y;
+
+                        if (x1 > maxX) maxX = x1;
+                        if (x2 > maxX) maxX = x2;
+                        if (y1 > maxY) maxY = y1;
+                        if (y2 > maxY) maxY = y2;
+
+                        sbVectorPath.AppendLine($"M {x1} {y1}");
+                        sbVectorPath.AppendLine($"L {x2} {y2}");
+
+                        sbVectors.Append($"<path stroke=\"{line.Color}\" stroke-width=\"1\" d=\"");
+                        sbVectors.AppendLine(sbVectorPath.ToString());
+                        sbVectors.Append("\"/>");
+                        sbVectorPath.Clear();
+                    }
                 }
             }
 
@@ -91,11 +124,12 @@ namespace ViewSupport
 
             StringBuilder sbDoc = new StringBuilder();
             sbDoc.AppendLine($"<svg width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">");
-            sbDoc.AppendLine("<path stroke=\"black\" stroke-width=\"1\" d=\"");
 
-            sbDoc.AppendLine(sb.ToString());
+            sbDoc.AppendLine(sbArcs.ToString());
 
-            sbDoc.AppendLine("\"/></svg>");
+            sbDoc.AppendLine(sbVectors.ToString());
+
+            sbDoc.AppendLine("</svg>");
 
             return sbDoc;
         }

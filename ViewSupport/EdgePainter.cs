@@ -49,9 +49,12 @@ namespace ViewSupport
 
         private static Font s_debugFont = new Font("Arial", 8f, FontStyle.Regular);
 
-        private static List<ArcSegInfo> s_arcSegs;
+        private static List<ArcShape> s_arcSegs;
 
-        public static List<ArcSegInfo> ArcSegments { get { return s_arcSegs; } set { s_arcSegs = value; } }
+        public static List<VectorShape> Shapes { get; private set; }
+
+
+        public static List<ArcShape> ArcSegments { get { return s_arcSegs; } set { s_arcSegs = value; } }
 
         private static int _selectedId = -1;
 
@@ -111,44 +114,10 @@ namespace ViewSupport
             }
         }
 
-        public class ArcSegInfo
-        {
-            public ArcSegInfo()
-            {
-            }
-
-            // Public first EdgeID that gets serialize
-            public int EdgeID { get; set; }
-
-            // Internally used list of Edges, used for debug selected item highlighting
-            internal List<Edge> Edges { get; set; }
-
-            public Coord ZeroCoord { get; set; }
-            public Rectangle ArcRect { get; set; }
-            public float StartAngle { get; set; }
-            public int SweepAngle { get; set; }
-
-            public string EdgeIds
-            {
-                get
-                {
-                    if (Edges == null) return null;
-
-                    return Edges.OrderBy(e => e.EdgeID).Aggregate(
-                        "",
-                        (curr, next) => curr + ((curr.Length == 0) ? "" : ",") + next.EdgeID);
-                }
-            }
-
-            public override string ToString()
-            {
-                return $"{{ edgeId: {EdgeID}, zc: {{ x: {Math.Round(ZeroCoord.X, 3)}, y: {Math.Round(ZeroCoord.Y, 3)} }}, startAngle: {StartAngle}, sweepAngle: {SweepAngle}, arcRect: {{x:{ArcRect.X}, y:{ArcRect.Y}, width:{ArcRect.Width}, height:{ArcRect.Height} }} }}";
-            }
-        }
-
-
         internal static void Draw(DrawOptions options)
         {
+            var shapes = new List<VectorShape>();
+
             HashSet<string> drawnCoords = new HashSet<string>();
             s_drawnEdges.Clear();
             s_coordHits = 0;
@@ -176,7 +145,7 @@ namespace ViewSupport
             // Show Arcs, after visibility sections have been computed.
             if (DrawOptions.ShowArcSegments)
             {
-                s_arcSegs = new List<ArcSegInfo>();
+                s_arcSegs = new List<ArcShape>();
                 DrawArcSegments(options, s_arcSegs);
             }
             else if (DrawOptions.ShowArcs)
@@ -194,36 +163,46 @@ namespace ViewSupport
             if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
             {
                 foreach (EdgeSection es in s_visibleEdgeSections)
-                    DrawEdgeSection(options, es);
+                    DrawEdgeSection(options, shapes, es);
             }
             else
             {
                 foreach (IndexedFaceSet ifs in ShapeList)
+                {
                     foreach (Edge e in ifs.Edges)
                     {
                         if (_debugMaxEdgeId == -1 || e.EdgeID <= _debugMaxEdgeId)   // Debug limit # of edges
                         {
-                            DrawEdge(options, e);
+                            DrawEdge(options, shapes, e);
                         }
                     }
+                }
             }
 
+            Shapes = shapes;
+
             System.Diagnostics.Debug.WriteLine($"s_arcSegs.ArcCount={s_arcSegs?.Count}, s_coordHits={s_coordHits}, s_edgeHits={s_edgeHits}, s_skippedEdgeCount={s_skippedEdgeCount}");
-            
+
             System.Diagnostics.Debug.WriteLine($"IndexedFace.IsVisible, stats... algoVersionFlag={IndexedFace.s_useIsVisibleAlgoVersion}, missRatio ={Math.Round((100.0 * IndexedFace.s_algoMismatches) / IndexedFace.s_algoCalls, 2)}, mismatches={IndexedFace.s_algoMismatches}, s_algoCalls={IndexedFace.s_algoCalls}");
         }
 
-        private static void DrawEdge(DrawOptions options, Edge e)
+        private static void DrawEdge(DrawOptions options, List<VectorShape> shapes, Edge e)
         {
-            DrawEdgePart(options, e, e.StartVertex.ViewCoord, e.EndVertex.ViewCoord);
+            DrawEdgePart(options, shapes, e, e.StartVertex.ViewCoord, e.EndVertex.ViewCoord);
         }
-        private static void DrawEdgeSection(DrawOptions options, EdgeSection es)
+        private static void DrawEdgeSection(DrawOptions options, List<VectorShape> shapes, EdgeSection es)
         {
-            DrawEdgePart(options, es.Edge, es.StartCoord, es.EndCoord);
+            DrawEdgePart(options, shapes, es.Edge, es.StartCoord, es.EndCoord);
         }
 
+        
 
-        private static void DrawEdgePart(DrawOptions options, Edge e, Coord startCoord, Coord endCoord)
+        private static void DrawEdgePart(
+            DrawOptions options, 
+            List<VectorShape> shapes, 
+            Edge e, 
+            Coord startCoord, 
+            Coord endCoord)
         {
             // TODO:P2: Q: Accuracy for Edges, should we use PointF instead of Point?
             Point startPoint = new Point((int)startCoord.X, (int)startCoord.Y);
@@ -251,8 +230,19 @@ namespace ViewSupport
 
             if (options.IsRendering && DrawOptions.VectorMode)
             {
-                // Draw Edge as vector Line
-                options.Graphics.DrawLine(pPen, startPoint, endPoint);
+                if (e.EdgeID == _selectedId)
+                {
+                    options.Graphics.DrawLine(options.Theme.SelectedPen, startPoint, endPoint);
+                    Debug.WriteLine($"DrawEdgePart, selectedId : {_selectedId}, startCoord : {startCoord.ToString(2)}, endCoord : {endCoord.ToString(2)}");
+                }
+                else
+                {
+                    // Draw Edge as vector Line
+                    options.Graphics.DrawLine(pPen, startPoint, endPoint);
+                }
+
+                shapes.Add(
+                    new LineShape() { Color = options.Theme.ExportVectorColor, Start = startPoint, End = endPoint });
             }
 
             if (options.IsRendering && DrawOptions.PointsMode)
@@ -324,7 +314,7 @@ namespace ViewSupport
             }
         }
 
-        private static void DrawArcSegments(DrawOptions options, List<ArcSegInfo> arcSegs)
+        private static void DrawArcSegments(DrawOptions options, List<ArcShape> arcSegs)
         {
             foreach (var arcInfo in s_edgePointVisibleArcs.Values)
             {
@@ -418,7 +408,7 @@ namespace ViewSupport
                         // Add Arc segment to data structure to delay renderering
                         // until after ALL simple (not visibility sensitive) 180deg
                         // arcs drawn
-                        arcSegs.Add(new ArcSegInfo()
+                        arcSegs.Add(new ArcShape()
                         {
                             EdgeID = edges?[0]?.EdgeID ?? 0,
                             Edges = edges,

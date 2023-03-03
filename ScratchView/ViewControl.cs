@@ -215,6 +215,8 @@ namespace ScratchView
 
                     mLastMousePosition = e.Location;
                 }
+
+                ViewContext.SetMousePosition(e.Location);
             }
         }
 

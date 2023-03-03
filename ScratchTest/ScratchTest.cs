@@ -1,17 +1,13 @@
 using FileParser;
 using Primitives;
 using ScratchUtility;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.Xml;
-using System;
+using ViewSupport;
 
 namespace ScratchTest
 {
@@ -31,10 +27,10 @@ namespace ScratchTest
             mView.ShowGCode = mGcodeCheckBox.Checked;
             mView.RotateCanvas = mDebugCheckBox.Checked;
             SetPointsPerUnitLength();
-            ViewSupport.DrawOptions.QuickMode = quickModeCheckBox.Checked;
+            DrawOptions.QuickMode = quickModeCheckBox.Checked;
             SetVisibilityMode();
             mView.SwitchLeftRight = mSwitchCheckBox.Checked;
-            ViewSupport.DrawOptions.SelectedItemExpr = txtSelectedItem.Text;
+            DrawOptions.SelectedItemExpr = txtSelectedItem.Text;
             TrySetPointWidth();
             SetUpFileList(@".\..\..\..\Data"); // C:\Projects(NAS)\HoloZens\scratchhologram\Data");
                                                //           SetUpFileList(@"C:\Program Files\Blender Foundation\Blender");
@@ -47,7 +43,7 @@ namespace ScratchTest
  
         public void SetVisibilityMode()
         {
-            mView.VisibilityMode = mHiddenLineCheckBox.Checked ? ViewSupport.VisibilityMode.HiddenLine : ViewSupport.VisibilityMode.Transparent;
+            mView.VisibilityMode = mHiddenLineCheckBox.Checked ? VisibilityMode.HiddenLine : VisibilityMode.Transparent;
         }
 
 
@@ -156,24 +152,24 @@ namespace ScratchTest
             {
                 if (mPrintRadioButton.Checked)
                 {
-                    mView.ViewMode = ViewSupport.ViewMode.Print;
+                    mView.ViewMode = ViewMode.Print;
                 }
                 else
                 {
                     if (mRedBlueRadioButton.Checked)
-                        mView.ViewMode = ViewSupport.ViewMode.RedBlue;
+                        mView.ViewMode = ViewMode.RedBlue;
                     else if (mStereoscopicRadioButton.Checked)
-                        mView.ViewMode = ViewSupport.ViewMode.Stereoscopic;
+                        mView.ViewMode = ViewMode.Stereoscopic;
                     else if (mDarkRadioButton.Checked)
                     {
-                        ViewSupport.ThemeInfo.Current = ViewSupport.ThemeInfo.DarkTheme;
-                        mView.ViewMode = ViewSupport.ViewMode.Dark;
+                        ThemeInfo.Current = ThemeInfo.DarkTheme;
+                        mView.ViewMode = ViewMode.Dark;
                         ApplyTheme();
                     }
                     else
                     {
-                        ViewSupport.ThemeInfo.Current = ViewSupport.ThemeInfo.LightTheme;
-                        mView.ViewMode = ViewSupport.ViewMode.Normal;
+                        ThemeInfo.Current = ThemeInfo.LightTheme;
+                        mView.ViewMode = ViewMode.Normal;
                         ApplyTheme();
                     }
                 }
@@ -329,7 +325,7 @@ namespace ScratchTest
 
         private void quickModeCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            ViewSupport.DrawOptions.QuickMode = quickModeCheckBox.Checked;
+            DrawOptions.QuickMode = quickModeCheckBox.Checked;
         }
         private void mHiddenLineCheckBox_CheckedChanged(object sender, EventArgs e)
         {
@@ -341,14 +337,14 @@ namespace ScratchTest
         {
             if (!DesignMode)
             {
-                ViewSupport.DrawOptions.MergeFaces = mMergeFacesCheckBox.Checked;
+                DrawOptions.MergeFaces = mMergeFacesCheckBox.Checked;
             }
         }
 
 
         private void UpdateOutputSummary()
         {
-            var arcSegs = ViewSupport.EdgePainter.ArcSegments;
+            var arcSegs = EdgePainter.ArcSegments;
             float arcDurSecs = 2;   // TODO: Update based on actual run and/or proper math taking distance/feed into account.
             string summary = "";
 
@@ -384,30 +380,31 @@ namespace ScratchTest
 
             DateTime start = DateTime.Now;
 
-            ViewSupport.Drawing.ReDraw(false);
+            Drawing.ReDraw(false);
 
             Debug.WriteLine("Drawing.ReDraw, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
 
-            ViewSupport.SvgSerializer svgSerializer = new ViewSupport.SvgSerializer();
-            var svgText = svgSerializer.Serialize(ViewSupport.EdgePainter.ArcSegments);
+            SvgSerializer svgSerializer = new SvgSerializer();
+            var svgText = svgSerializer.Serialize(EdgePainter.ArcSegments, EdgePainter.Shapes);
             txtOutput.Text = svgText.ToString();
-
+            
             UpdateOutputSummary();
         }
 
 
         private void mExportSvgDialog_FileOk(object sender, CancelEventArgs e)
         {
-            Debug.WriteLine("Export to " + mExportSvgDialog.FileName);
+            throw new NotImplementedException("TODO: Export to " + mExportSvgDialog.FileName);
         }
 
         private void btnExportSvg_Click(object sender, EventArgs  e)
         {
-            ViewSupport.SvgSerializer svgSerializer = new ViewSupport.SvgSerializer();
-            var svgText = svgSerializer.Serialize(ViewSupport.EdgePainter.ArcSegments);
+            SvgSerializer svgSerializer = new SvgSerializer();
+            var svgText = svgSerializer.Serialize(
+                (!mArcSegmentsCheckbox.Checked) ? null : EdgePainter.ArcSegments,
+                (!mVectorsCheckBox.Checked) ? null : EdgePainter.Shapes);
 
-
-            var arcSegs = ViewSupport.EdgePainter.ArcSegments;
+            // TODO: Remove after verifying JSON serializer exists for target platform...
             //StringBuilder sbArcsJson = new StringBuilder();
             //if (arcSegs != null)
             //{
@@ -421,7 +418,6 @@ namespace ScratchTest
             //    sbArcsJson.AppendLine("]");
             //}
 
-
             //if (mExportSvgDialog.ShowDialog() == DialogResult.OK)
             {
                 string svgFilePath = "c:\\Users\\aaron\\Documents\\test.svg";
@@ -432,8 +428,12 @@ namespace ScratchTest
                 //string arcsFilePath = Path.ChangeExtension(svgFilePath, "alt.json");
                 //File.WriteAllText(arcsFilePath, sbArcsJson.ToString());
 
+                var shapes = new List<VectorShape>();
+                if (EdgePainter.ArcSegments?.Count > 0) shapes.AddRange(EdgePainter.ArcSegments);
+                if (EdgePainter.Shapes?.Count > 0) shapes.AddRange(EdgePainter.Shapes);
+
                 string arcsFilePath = Path.ChangeExtension(svgFilePath, "json");
-                string arcSegsJson = Newtonsoft.Json.JsonConvert.SerializeObject(arcSegs);
+                string arcSegsJson = Newtonsoft.Json.JsonConvert.SerializeObject(shapes);
                 File.WriteAllText(arcsFilePath, arcSegsJson.Replace(",{", ",\r\n{"));
             }
         }
@@ -443,29 +443,29 @@ namespace ScratchTest
         {
             foreach(Control control in this.Controls)
             {
-                control.ForeColor = ViewSupport.ThemeInfo.Current.TextColor;
-                control.BackColor = ViewSupport.ThemeInfo.Current.WindowBackColor;
+                control.ForeColor = ThemeInfo.Current.TextColor;
+                control.BackColor = ThemeInfo.Current.WindowBackColor;
             }
 
-            this.ForeColor = ViewSupport.ThemeInfo.Current.TextColor;
-            this.BackColor = ViewSupport.ThemeInfo.Current.WindowBackColor;
+            this.ForeColor = ThemeInfo.Current.TextColor;
+            this.BackColor = ThemeInfo.Current.WindowBackColor;
         }
 
         private void btnImportArcs_Click(object sender, EventArgs e)
         {
-            ViewSupport.SvgSerializer svgSerializer = new ViewSupport.SvgSerializer();
+            SvgSerializer svgSerializer = new SvgSerializer();
 
             string filePath = "C:\\Users\\aaron\\Documents\\test.2.json";
             var arcSegs = svgSerializer.DeSerializeJson(filePath);
 
-            ViewSupport.EdgePainter.ArcSegments = arcSegs;
+            EdgePainter.ArcSegments = arcSegs;
 
             UpdateOutputSummary();
         }
 
         private void txtSelectedItem_TextChanged(object sender, EventArgs e)
         {
-            ViewSupport.DrawOptions.SelectedItemExpr = txtSelectedItem.Text;
+            DrawOptions.SelectedItemExpr = txtSelectedItem.Text;
         }
 
         private void txtViewAngle_TextChanged(object sender, EventArgs e)

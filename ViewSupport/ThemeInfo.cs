@@ -22,6 +22,7 @@ namespace ViewSupport
             ArcPenHighlight = new Pen(Color.LimeGreen, 1f),
             ArcTextBrush = Brushes.DarkGray,
             VectorPen = new Pen(Color.Blue),
+            ExportVectorColor = "Black",
             PointBrush = Brushes.Blue,
             RedBlueModePointBrush = Brushes.Black,  // Can't be Blue
             SelectedColor = Color.Red,
@@ -38,6 +39,7 @@ namespace ViewSupport
             ArcPenHighlight = new Pen(Color.FromArgb(96, 128, 255)),  // new Pen(Color.LimeGreen, 1f),
             ArcTextBrush = Brushes.LightGray,
             VectorPen = new Pen(Color.LightBlue),
+            ExportVectorColor = "Black",
             PointBrush = Brushes.LightGray,
             RedBlueModePointBrush = Brushes.White,
             SelectedColor = Color.MediumPurple,
@@ -53,6 +55,8 @@ namespace ViewSupport
         public Pen ArcPen { get; set; }
         public Pen ArcPenHighlight { get; set; }
         public Pen VectorPen { get; set; }
+        
+        public string ExportVectorColor { get; set; }
 
         public Brush PointBrush { get; set; }
 
