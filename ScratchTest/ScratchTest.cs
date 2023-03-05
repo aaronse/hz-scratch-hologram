@@ -374,24 +374,6 @@ namespace ScratchTest
         }
 
 
-        private void mGenerateButton_Click(object sender, EventArgs e)
-        {
-            mView.ShowArcs = mArcCheckBox.Checked = true;
-
-            DateTime start = DateTime.Now;
-
-            Drawing.ReDraw(false);
-
-            Debug.WriteLine("Drawing.ReDraw, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
-
-            SvgSerializer svgSerializer = new SvgSerializer();
-            var svgText = svgSerializer.Serialize(EdgePainter.ArcSegments, EdgePainter.Shapes);
-            txtOutput.Text = svgText.ToString();
-            
-            UpdateOutputSummary();
-        }
-
-
         private void mExportSvgDialog_FileOk(object sender, CancelEventArgs e)
         {
             throw new NotImplementedException("TODO: Export to " + mExportSvgDialog.FileName);

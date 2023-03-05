@@ -10,9 +10,11 @@ namespace ScratchUtility
     // instead Profile perf to see what's *REALLY* happening...
     public struct Coord
     {
-        // TODO:P0:PERF: Using fields instead of Properties to avoid  method overhead
-        // TODO:P0:PERF: Cache/Hash/Dirty derived?  Are/Should Coord be immutable?
+        // TODO:P0:PERF: Cache/Hash/Dirty derived?  Are, or can Coord be immutable?  Consider
+        // #ifdef DEBUG_PROPS to conditionally compile performant member fields to instead be
+        // Properties to help identify unwanted mutate callers.
 
+        // PERF:  OO Sacrilege, intentionally using member fields instead of Properties to avoid method overhead
         public double X; // { get; private set; }
         public double Y; // { get; private set; }
         public double Z; // { get; private set; }
@@ -20,7 +22,7 @@ namespace ScratchUtility
         private double _length;
         private bool _lengthComputed;
 
-        // private Coord() // TODO:P2: Implement parameterless Struct constructor/initializer when possible in C#10
+        // private Coord() // TODO:P2: C#10 feature, Implement parameterless Struct constructor/initializer
         //{
         //    _length = double.NaN;
         //}

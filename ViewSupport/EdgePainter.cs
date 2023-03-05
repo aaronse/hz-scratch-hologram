@@ -233,7 +233,10 @@ namespace ViewSupport
                 if (e.EdgeID == _selectedId)
                 {
                     options.Graphics.DrawLine(options.Theme.SelectedPen, startPoint, endPoint);
-                    Debug.WriteLine($"DrawEdgePart, selectedId : {_selectedId}, startCoord : {startCoord.ToString(2)}, endCoord : {endCoord.ToString(2)}");
+                    Debug.WriteLine(
+                        $"DrawEdgePart, selectedId : {_selectedId}, e.startCoord.model : {e.StartVertex.ModelingCoord.ToString(2)}" +
+                        $", e.start es.startCoord.view : {e.StartVertex.ViewCoord.ToString(2)} {startCoord.ToString(2)}" +
+                        $", es.endCoord : {endCoord.ToString(2)}");
                 }
                 else
                 {

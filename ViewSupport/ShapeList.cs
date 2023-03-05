@@ -65,19 +65,26 @@ namespace ViewSupport
                     {
                         foreach (IndexedFace ifc in ifsInner.IndexedFaces)
                         {
-                            if (!e.ContainsFace(ifc) && !e.StartVertex.ContainsFace(ifc) && !e.EndVertex.ContainsFace(ifc)) //only compare to faces that the edge isn't a part of
+                            // Only compare to faces that the edge isn't a part of
+                            if (e.ContainsFace(ifc) || e.StartVertex.ContainsFace(ifc) || e.EndVertex.ContainsFace(ifc)) 
                             {
-                                Coord c;
-                                if (ifc.IntersectsWith_ModelingCoordinates(e, out c))
-                                {
-                                    if(ifc.ContainsPoint2D_ModelingCoordinates(c))
-                                    {
-                                        double distanceFromStart = (c - e.StartVertex.ModelingCoord).CalcLength() / e.Length_ModelingCoordinates;
-
-                                        e.FaceIntersections.Add(new Intersection(e, distanceFromStart));
-                                    }
-                                }
+                                continue;
                             }
+
+                            Coord c;
+                            if (!ifc.IntersectsWith_ModelingCoordinates(e, out c))
+                            {
+                                continue;
+                            }
+
+                            if (!ifc.ContainsPoint2D_ModelingCoordinates(c))
+                            {
+                                continue;
+                            }
+
+                            double distanceFromStart = (c - e.StartVertex.ModelingCoord).CalcLength() / e.Length_ModelingCoordinates;
+
+                            e.FaceIntersections.Add(new Intersection(e, distanceFromStart));
                         }
                     }
 

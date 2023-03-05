@@ -15,6 +15,8 @@ namespace FileParser
         public string FullPath { get; set; }
 
         public List<IndexedFaceSet> IndexedFaces { get; set; }
+
+        private bool _hasCamera = false;
         public Coord CameraPosition { get; set; }
 
         public X3DFile(string fullPath)
@@ -53,15 +55,14 @@ namespace FileParser
             XmlTextReader reader = new XmlTextReader(sr);
             
             string name = "";
-            string coordIndices = "";
-            string points = "";
+            List<string> coordIndices = new List<string>();
+            List<string> points = new List<string>();
+            _hasCamera = false;
 
             try
             {
-            
                 while (reader.Read())
                 {
-                    //Console.WriteLine(reader.Name);
                     switch (reader.NodeType)
                     {
                         case XmlNodeType.Element: // The node is an element.
@@ -71,31 +72,32 @@ namespace FileParser
                             }
                             else if (reader.Name == "IndexedFaceSet")
                             {
-                                coordIndices = reader["coordIndex"];
+                                coordIndices.Add(reader["coordIndex"]);
                             }
                             else if (reader.Name == "Coordinate")
                             {
-                                points = reader["point"];
+                                points.Add(reader["point"]);
                             }
                             else if (reader.Name == "Viewpoint")
                             {
                                 string[] camera = reader["position"].Split(' ');
                                 CameraPosition = new Coord(double.Parse(camera[1]) * scale, double.Parse(camera[2]) * scale, -double.Parse(camera[0]) * scale);
-                                //CameraPosition = new Coord(double.Parse(camera[0]) * scale, double.Parse(camera[1]) * scale, double.Parse(camera[2]) * scale);
+                                _hasCamera = true;
                             }
                             break;
                     }
 
-
-                    if (reader.NodeType == XmlNodeType.EndElement && reader.Name == "IndexedFaceSet")
-                    {
-                        IndexedFaceSet ifs = new IndexedFaceSet(name, coordIndices, points, scale);
-                        IndexedFaces.Add(ifs);
-                    }
                     if (reader.NodeType == XmlNodeType.EndElement && reader.Name == "Scene")
                     {
                         break;
                     }
+                }
+
+                for (int i = 0; i < coordIndices.Count; i++)
+                {
+                    CoordMode coordMode = (_hasCamera) ? CoordMode.YZX : CoordMode.XYZ;
+                    IndexedFaceSet ifs = new IndexedFaceSet(coordMode, name, coordIndices[i], points[i], scale);
+                    IndexedFaces.Add(ifs);
                 }
             }
             catch (Exception e)

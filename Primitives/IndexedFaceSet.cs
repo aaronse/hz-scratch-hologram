@@ -6,6 +6,13 @@ using ScratchUtility;
 
 namespace Primitives
 {
+    public enum CoordMode
+    {
+        XYZ,
+        YZX
+    }
+
+
     public class IndexedFaceSet
     {
         public List<Vertex> Vertices { get; private set; }
@@ -30,7 +37,7 @@ namespace Primitives
         /// <param name="name">The name of this IndexedFaceSet</param>
         /// <param name="coordIndices">The list of indices (0-based) into the points list from which to construct the IndexedFaces making up this IndexedFaceSet. Example: "46 0 2 44 -1, 3 1 47 45 -1" would create two quadriliteral faces, one with vertex indices 46 0 2 44, and the other with vertex indices 3 1 47 45.</param>
         /// <param name="points">The space-separated, comma delimited list of 3D Vertices used in this IndexedFaceSet. The coordIndices list refers to values in this list. Example: "0.437500 0.164063 0.765625, -0.437500 0.164063 0.765625" specifies two Vertices, one (index 0) at x=0.437500, y=0.164063 z=0.765625, and the other (index 1) at x=-0.437500 y=0.164063 z=0.765625.</param>
-        public IndexedFaceSet(string name, string coordIndices, string points, double scale)
+        public IndexedFaceSet(CoordMode coordMode, string name, string coordIndices, string points, double scale)
         {
             //todo: use a streamreader.
             Name = name;
@@ -45,21 +52,68 @@ namespace Primitives
             //find all the points
             //string[] coords = points.TrimEnd().Split( new char[] (',', '\r', '\n'), StringSplitOptions.RemoveEmptyEntries);
             string[] coords = points.TrimEnd().Split(new char[] { ',', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            string[] old_coords = points.TrimEnd().Split(',');
-            for (int i = 0; i < coords.Length; i++)
-            {
-                if (String.IsNullOrEmpty(coords[i].Trim()))
-                {
-                    continue;
-                }
 
-                string[] vals = coords[i].Trim().Split(' ');
-                //values are stored in y,z,x order
-                Coord c = new Coord(-double.Parse(vals[1]) * scale, double.Parse(vals[2]) * scale, -double.Parse(vals[0]) * scale);
-                AvailableVertexLocations.Add(c);
-                AvailableViewVertexLocations_ZeroAngle.Add(c);
-                AvailableViewVertexLocations.Add(c);
-                Vertices.Add(new Vertex(this, i));
+            double minZ = double.MaxValue;
+            double maxZ = double.MinValue;
+
+            // Parse in Two passes, first pass to find min Z to help massage model location
+            for (int pass = 0; pass < 2; pass++)
+            {
+                for (int i = 0; i < coords.Length; i++)
+                {
+                    if (String.IsNullOrEmpty(coords[i].Trim()))
+                    {
+                        continue;
+                    }
+
+                    string[] vals = coords[i].Trim().Split(' ');
+                    //values are stored in y,z,x order
+                    double x, y, z;
+
+                    if (coordMode == CoordMode.XYZ)
+                    {
+                        // Implemented XYZ so importing models straight from Fusion 360 is straightforward.
+                        x = double.Parse(vals[0]) * scale;
+                        y = double.Parse(vals[1]) * scale;
+                        z = double.Parse(vals[2]) * scale;
+                    }
+                    else if (coordMode == CoordMode.YZX)
+                    {
+                        // Original/Legacy coord mode
+                        x = -double.Parse(vals[1]) * scale;
+                        y = double.Parse(vals[2]) * scale;
+                        z = -double.Parse(vals[0]) * scale;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Unexpected Coord Mode.");
+                    }
+
+                    if (pass == 0)
+                    {
+                        // Find Min/Max bounds for Z.
+                        if (z < minZ)
+                        {
+                            minZ = z;
+                        }
+
+                        if (z > maxZ)
+                        {
+                            maxZ = z;
+                        }
+                    }
+                    else if (pass == 1)
+                    {
+                        // Offset Z so front face always 0, i.e. fixed, -ve Z will shift as view angle changes.
+                        z = z - maxZ;
+
+                        Coord c = new Coord(x, y, z);
+                        AvailableVertexLocations.Add(c);
+                        AvailableViewVertexLocations_ZeroAngle.Add(c);
+                        AvailableViewVertexLocations.Add(c);
+                        Vertices.Add(new Vertex(this, i));
+                    }
+                }
             }
 
             //create all the indexed faces by creating Edges and connecting them
@@ -86,32 +140,30 @@ namespace Primitives
                 {
 
                     Vertex currentVertex = GetExistingVertex(Vertices[int.Parse(vals[vertexIndex])].ModelingCoord);
-                    if (!indexedFace.Vertices.Contains(currentVertex)) //sometimes triangles are represented as squares, using a duplicate Vertex. We want them to actually be triangles.
+                    if (indexedFace.Vertices.Contains(currentVertex)) //sometimes triangles are represented as squares, using a duplicate Vertex. We want them to actually be triangles.
                     {
-                        Edge e = GetNewOrExistingEdge(previousVertex, currentVertex, indexedFace);
-                        if (e.CreatorFace != indexedFace && e.OtherFace == null) //if this edge was an existing edge, we need to update it so it knows that it's now a part of a new IndexedFace
-                            e.AddFace(indexedFace);
-
-                        indexedFace.Edges.Add(e);
-
-                        //make sure the Vertices know that they are now part of the new edge, if they don't already know.
-                        if (!previousVertex.Edges.Contains(e))
-                            previousVertex.Edges.Add(e);
-                        //else
-                        //    throw new Exception("how did that edge already know about me?");
-                        if (!currentVertex.Edges.Contains(e))
-                            currentVertex.Edges.Add(e);
-                        //else
-                        //    throw new Exception("how did that edge already know about me?");
-
-                        indexedFace.Vertices.Add(currentVertex);
-                        currentVertex.IndexedFaces.Add(indexedFace);
-                        previousVertex = currentVertex;
+                        throw new InvalidOperationException("Not Expected?");
                     }
-                    else
-                    {
-                        Console.WriteLine("hi");
-                    }
+
+                    Edge e = GetNewOrExistingEdge(previousVertex, currentVertex, indexedFace);
+                    if (e.CreatorFace != indexedFace && e.OtherFace == null) //if this edge was an existing edge, we need to update it so it knows that it's now a part of a new IndexedFace
+                        e.AddFace(indexedFace);
+
+                    indexedFace.Edges.Add(e);
+
+                    //make sure the Vertices know that they are now part of the new edge, if they don't already know.
+                    if (!previousVertex.Edges.Contains(e))
+                        previousVertex.Edges.Add(e);
+                    //else
+                    //    throw new Exception("how did that edge already know about me?");
+                    if (!currentVertex.Edges.Contains(e))
+                        currentVertex.Edges.Add(e);
+                    //else
+                    //    throw new Exception("how did that edge already know about me?");
+
+                    indexedFace.Vertices.Add(currentVertex);
+                    currentVertex.IndexedFaces.Add(indexedFace);
+                    previousVertex = currentVertex;
                 }
                 //add the Edge that finishes this IndexedFace
                 Edge finalEdge = GetNewOrExistingEdge(previousVertex, firstVertex, indexedFace);

@@ -83,7 +83,12 @@ namespace Primitives
                 throw new Exception("Cannot set OtherFace on an Edge which already has an OtherFace");
             OtherFace = face;
         }
-        /// <summary>Updates the ConnectionType of this Edge to accurately reflect the two IndexedFaces that it connects. No update is made if this Edge does not have an OtherFace. The ConnectionType never changes once set, so it is only necessary to call this function once. Make sure both IndexedFaces have their NormalVectors updated before calling this function.</summary>
+
+        /// <summary>Updates the ConnectionType of this Edge to accurately reflect the two 
+        /// IndexedFaces that it connects. No update is made if this Edge does not have an 
+        /// OtherFace. The ConnectionType never changes once set, so it is only necessary to call 
+        /// this function once. Make sure both IndexedFaces have their NormalVectors updated 
+        /// before calling this function.</summary>
         public void UpdateConnectionType()
         {
             if (OtherFace != null)

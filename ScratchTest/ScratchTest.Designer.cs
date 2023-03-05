@@ -60,7 +60,6 @@
             this.mOpenFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.mOpenButton = new System.Windows.Forms.Button();
             this.mFilesComboBox = new System.Windows.Forms.ComboBox();
-            this.mGenerateButton = new System.Windows.Forms.Button();
             this.txtOutput = new System.Windows.Forms.TextBox();
             this.mGcodeCheckBox = new System.Windows.Forms.CheckBox();
             this.txtOutputSummary = new System.Windows.Forms.TextBox();
@@ -442,17 +441,6 @@
             this.mFilesComboBox.TabIndex = 34;
             this.mFilesComboBox.SelectedIndexChanged += new System.EventHandler(this.mFilesComboBox_SelectedIndexChanged);
             // 
-            // mGenerateButton
-            // 
-            this.mGenerateButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.mGenerateButton.Location = new System.Drawing.Point(13, 672);
-            this.mGenerateButton.Name = "mGenerateButton";
-            this.mGenerateButton.Size = new System.Drawing.Size(117, 23);
-            this.mGenerateButton.TabIndex = 35;
-            this.mGenerateButton.Text = "Generate SVG";
-            this.mGenerateButton.UseVisualStyleBackColor = true;
-            this.mGenerateButton.Click += new System.EventHandler(this.mGenerateButton_Click);
-            // 
             // txtOutput
             // 
             this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
@@ -612,7 +600,6 @@
             this.Controls.Add(this.txtOutputSummary);
             this.Controls.Add(this.mGcodeCheckBox);
             this.Controls.Add(this.txtOutput);
-            this.Controls.Add(this.mGenerateButton);
             this.Controls.Add(this.mFilesComboBox);
             this.Controls.Add(this.mOpenButton);
             this.Controls.Add(this.mSwitchBackFrontCheckBox);
@@ -634,7 +621,7 @@
             this.Controls.Add(this.mArcSweepAngleTrack);
             this.Controls.Add(this.mViewAngleTrack);
             this.Name = "ScratchTest";
-            this.Text = "Scratchings";
+            this.Text = "Scratch Test";
             this.Load += new System.EventHandler(this.ScratchTest_Load);
             ((System.ComponentModel.ISupportInitialize)(this.mViewAngleTrack)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mArcSweepAngleTrack)).EndInit();
@@ -681,7 +668,6 @@
         private System.Windows.Forms.CheckBox mVectorsCheckBox;
         private System.Windows.Forms.CheckBox mHiddenLineCheckBox;
         private System.Windows.Forms.CheckBox quickModeCheckBox;
-        private System.Windows.Forms.Button mGenerateButton;
         private System.Windows.Forms.TextBox txtOutput;
         private System.Windows.Forms.CheckBox mGcodeCheckBox;
         private System.Windows.Forms.TextBox txtOutputSummary;

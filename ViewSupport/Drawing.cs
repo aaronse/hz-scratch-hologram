@@ -76,22 +76,6 @@ namespace ViewSupport
 
         #region Properties
 
-        //public static bool Enabled
-        //{
-        //    get { return mEnabled; }
-        //    set
-        //    {
-        //        if (mEnabled == value)
-        //            return;
-        //        mEnabled = value;
-        //        //mark as dirty if the user just toggled Enabled on.
-        //        if (mEnabled)
-        //        {
-        //            ViewContext.RecalculateMatrix();
-        //            MarkAsDirty(RedrawTypeRequired.RecalculateViewPrimitives);
-        //        }
-        //    }
-        //}
 
         /// <summary>Specifies whether or not the screen should be drawn to.</summary>
         public static bool DoDraw
@@ -125,24 +109,9 @@ namespace ViewSupport
 #endregion
 
 
-        /// <summary>If Enabled is true, causes the internal ViewPrimitives list to be recalculated and redrawn. Returns true if the invalid and redraw events occurred successfully.</summary>
-        //public static bool Invalidate()
-        //{
-        //    if (Busy)
-        //        return false;
-
-        //    //suppress events
-        //    Busy = true;
-        //    //Recalculate ViewPrimitives list (by creating a new one based on the Primitives list)
-        //    ViewPrimitives = new ViewPrimitiveList(Primitives);
-        //    ReDraw();
-
-        //    //specify that we are now ready to respond to events
-        //    Busy = false;
-        //    return true;
-        //}
-
-        /// <summary>Redraws the current ViewPrimitives list onto the off screen buffer. Calling Blit() will blit it to the supplied graphics object. Returns true if the redraw occurred successfully.</summary>
+        /// <summary>Redraws the current ViewPrimitives list onto the off screen buffer. Calling 
+        /// Blit() will blit it to the supplied graphics object. Returns true if the redraw 
+        /// occurred successfully.</summary>
         public static bool ReDraw(bool isRendering)
         {
             DrawOptions drawOptions = new DrawOptions()
@@ -151,7 +120,6 @@ namespace ViewSupport
                 Graphics = mOffScreenGraphics
             };
 
-            //if (Enabled && NextRedraw != RedrawTypeRequired.None)
             if (NextRedraw != RedrawTypeRequired.None)
             {
                 CurrentlyDrawing = true;
@@ -203,15 +171,6 @@ namespace ViewSupport
                 CurrentlyDrawing = false;
 
 
-
-
-
-                //foreach (ViewPolygon p in ViewPolygons)
-                //{
-                //    mOffScreenGraphics.DrawRectangle(Pens.Black, Rectangle.Round(p.BoundingBox));
-                //}
-
-
                 FireSceneChangedEvent();
             }
 
@@ -225,16 +184,12 @@ namespace ViewSupport
         }
         private static void DrawNormal(DrawOptions options)
         {
-            //if (DrawOptions.ShowArcs)
-            //    ViewPrimitives.DrawArcs(g);
-
             if (Shapes.Count > 0)
             {
                 EdgePainter.ShapeList = Shapes;
                 EdgePainter.Draw(options);
             }
 
-            
 
             //if (DrawOptions.ShowPoints)
             //{
