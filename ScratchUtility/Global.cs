@@ -13,7 +13,7 @@ namespace ScratchUtility
         public static bool DebugMode { get; set; }
         public static bool DesignMode { get; set; }
 
-        public static int NormalToleranceDecimalPlaces { get; set; } = 5;
+        public static int NormalToleranceDecimalPlaces { get; set; } = 4;
 
         static Global()
         {
