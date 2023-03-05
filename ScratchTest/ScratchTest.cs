@@ -26,6 +26,7 @@ namespace ScratchTest
             mView.ShowArcs = mArcCheckBox.Checked;
             mView.ShowGCode = mGcodeCheckBox.Checked;
             mView.RotateCanvas = mDebugCheckBox.Checked;
+            mView.ProfileMode = mProfileCheckbox.Checked;
             SetPointsPerUnitLength();
             DrawOptions.QuickMode = quickModeCheckBox.Checked;
             SetVisibilityMode();
@@ -474,6 +475,15 @@ namespace ScratchTest
         private void ScratchTest_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void mProfileCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!DesignMode)
+            {
+                mView.ProfileMode = mProfileCheckbox.Checked;
+                UpdateOutputSummary();
+            }
         }
     }
 

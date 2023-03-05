@@ -58,5 +58,11 @@ namespace ViewSupport
         }
     }
 
+    public class PathShape : VectorShape
+    {
+        public string Color;
+        public List<Tuple<PointF, PointF>> Path;
+    }
+
 }
 

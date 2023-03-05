@@ -10,16 +10,11 @@ using System;
 
 // TODO:P0 Implement Face selection.  Needed for Set Z0, and Select Contour.
 // TODO:P0 Implement Contour selection.
-// TODO:P0 Implement Reset Z0
-// TODO:P0 Edge Point, add Edge List
-// TODO:P0 Debug, implement highlighting selected Coord
-// TODO:P0:PERF: or Quality, merge small Arcs less than X degrees from each other.  And/Or fix underlying rounding/clipping logic error.
-// TODO:P1 Refactor, compute and rendering into separate tasks
+// TODO:P0 Implement Reset Z0, enable User to select and set Face to be at Z0.
+// TODO:P1 Refactor, separate compute and rendering into different tasks
 // TODO:P1 Perf/Bug, observed too many segments per arc, unexpected gaps.  Action: Check Arc Seg logic, determine why unexpected gaps?  Fix.
-// TODO:P1 Debug, implement Edge/Face selection highlighting...  Requires mapping Mouse XY coord to projected coords, searching for closest.  Changing currently selected.
 
-// TODO:P0:PERF: set point outside loop. grep... for edgeMidPoint.ToPointD().ToPoint()
-// TODO:P0:PERF: fix: 1) shortcut reduce new Coord alloc, 2) avoid multiple caller depth, grep... private static bool IntersectsWith(Coord normalVector, Coord pointOnFace, Coord point1, Coord point2, out Coord intersectionPoint)
+// TODO:P0:PERF: fix: 1) inline, shortcut and use 'ref' instead of new Coord allocations, 2) avoid hotpaths with deep nesting
 
 
 namespace ViewSupport
@@ -179,6 +174,12 @@ namespace ViewSupport
                 }
             }
 
+            if (DrawOptions.ProfileMode)
+            {
+                var profiles = FindPointProfiles(options, s_visibleEdgeSections);
+                DrawPointProfiles(options, profiles, shapes);
+            }
+
             Shapes = shapes;
 
             System.Diagnostics.Debug.WriteLine($"s_arcSegs.ArcCount={s_arcSegs?.Count}, s_coordHits={s_coordHits}, s_edgeHits={s_edgeHits}, s_skippedEdgeCount={s_skippedEdgeCount}");
@@ -186,10 +187,180 @@ namespace ViewSupport
             System.Diagnostics.Debug.WriteLine($"IndexedFace.IsVisible, stats... algoVersionFlag={IndexedFace.s_useIsVisibleAlgoVersion}, missRatio ={Math.Round((100.0 * IndexedFace.s_algoMismatches) / IndexedFace.s_algoCalls, 2)}, mismatches={IndexedFace.s_algoMismatches}, s_algoCalls={IndexedFace.s_algoCalls}");
         }
 
+        // Union Find inspired profile detection
+        internal class Profile
+        {
+            private List<EdgeSection> EdgeSections;
+            private Profile _parentProfile;
+            private int _profileId;
+
+            internal Profile(int profileId)
+            {
+                this.EdgeSections = new List<EdgeSection>();
+                this._parentProfile = null;
+                this._profileId = profileId;
+            }
+
+            internal void InsertEdgeSection(EdgeSection es)
+            {
+                if (_parentProfile != null)
+                {
+                    _parentProfile.InsertEdgeSection(es);
+                    return;
+                }
+
+                this.EdgeSections.Add(es);
+            }
+
+            internal void MergeProfile(Profile other)
+            {
+                if (this == other) throw new ArgumentException("Cannot merge with self");
+
+                other._parentProfile = this;
+                other.EdgeSections.AddRange(this.EdgeSections);
+                this.EdgeSections.Clear();
+            }
+
+            internal List<Tuple<PointF, PointF>> GetPointPath()
+            {
+                var path = new List<Tuple<PointF, PointF>>();
+
+                for (int i = 0; i < this.EdgeSections.Count; i++)
+                {
+                    path.Add(
+                        new Tuple<PointF, PointF>(
+                            this.EdgeSections[i].StartCoord.ToPointD().ToPointF(),
+                            this.EdgeSections[i].EndCoord.ToPointD().ToPointF()));
+                }
+
+                return path;
+            }
+
+            internal int GetEdgeSectionCount()
+            {
+                return EdgeSections?.Count ?? 0;
+            }
+        }
+
+
+
+        private static List<Profile> FindPointProfiles(DrawOptions options, List<EdgeSection> visibleEdgeSections)
+        {
+            List<Profile> profiles = new List<Profile>();
+            Dictionary<string, Profile> pointProfiles = new Dictionary<string, Profile>();
+            int profileId = 0;
+
+            if (!options.IsRendering) return null;
+
+            foreach (IndexedFaceSet ifs in ShapeList)
+            {
+                //    ifs.IndexedFaces[0].Edges[0].ve
+            }
+
+            // Point Profiles
+
+            foreach (EdgeSection es in visibleEdgeSections)
+            {
+                // Skip non front faces, for now...
+                if (es.Edge.StartVertex.ModelingCoord.Z != 0 ||
+                    es.Edge.EndVertex.ModelingCoord.Z != 0)
+                {
+                    continue;
+                }
+
+                Point startPoint = new Point((int)es.StartCoord.X, (int)es.StartCoord.Y);
+                Point endPoint = new Point((int)es.EndCoord.X, (int)es.EndCoord.Y);
+                string startPointHash = $"{startPoint.X}:{startPoint.Y}";
+                string endPointHash = $"{endPoint.X}:{endPoint.Y}";
+
+                // New or existing profile point?
+                Profile startProfile, endProfile;
+                pointProfiles.TryGetValue(startPointHash, out startProfile);
+                pointProfiles.TryGetValue(endPointHash, out endProfile);
+
+                if (startProfile == null && endProfile == null)
+                {
+                    // No matching start or end Profiles, create one
+                    Profile profile = new Profile(profileId++);
+                    profiles.Add(profile);
+                    profile.InsertEdgeSection(es);
+                    pointProfiles[startPointHash] = profile;
+                    pointProfiles[endPointHash] = profile;
+                }
+                else if (startProfile != null && endProfile != null && startProfile != endProfile)
+                {
+                    // Found mismatching start and end Profiles, merge them
+                    startProfile.InsertEdgeSection(es);
+                    startProfile.MergeProfile(endProfile);
+
+                }
+                else if (startProfile == endProfile)
+                {
+                    // Found matching profiles (i.e. adding last closing link), append
+                    startProfile.InsertEdgeSection(es);
+                }
+                else if (startProfile != null && endProfile == null)
+                {
+                    // Add to start profile
+                    startProfile.InsertEdgeSection(es);
+                    pointProfiles[endPointHash] = startProfile;
+                }
+                else if (startProfile == null && endProfile != null)
+                {
+                    // Add to end profile
+                    endProfile.InsertEdgeSection(es);
+                    pointProfiles[startPointHash] = endProfile;
+                }
+                else
+                {
+                    // Huh?
+                    throw new InvalidOperationException($"Unexpected state, startProfile={startProfile}, endProfile={endProfile}");
+                }
+            }
+
+            for (int i = profiles.Count - 1; i > 0; i--)
+            {
+                if (profiles[i].GetEdgeSectionCount() == 0)
+                {
+                    profiles.RemoveAt(i);
+                }
+            }
+
+            return profiles;
+        }
+
+        private static void DrawPointProfiles(DrawOptions options, List<Profile> profiles, List<VectorShape> shapes)
+        {
+            if (!options.IsRendering) return;
+
+            foreach(var profile in profiles)
+            {
+                var pathShape = new PathShape()
+                {
+                    Color = "Purple",
+                    Path = profile.GetPointPath()
+                };
+
+                shapes.Add(pathShape);
+
+                if (pathShape.Path.Count > 0)
+                {
+                    //var pathLine = pathShape.Path[0];
+                    for (int i = 0; i < pathShape.Path.Count; i++)
+                    {
+                        var currEdge = pathShape.Path[i];
+                        options.Graphics.DrawLine(options.Theme.SelectedPen, currEdge.Item1, currEdge.Item2);
+                        //prevPoint = currPoint;
+                    }
+                }
+            }
+        }
+
         private static void DrawEdge(DrawOptions options, List<VectorShape> shapes, Edge e)
         {
             DrawEdgePart(options, shapes, e, e.StartVertex.ViewCoord, e.EndVertex.ViewCoord);
         }
+
         private static void DrawEdgeSection(DrawOptions options, List<VectorShape> shapes, EdgeSection es)
         {
             DrawEdgePart(options, shapes, es.Edge, es.StartCoord, es.EndCoord);

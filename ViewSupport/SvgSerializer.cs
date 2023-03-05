@@ -90,7 +90,6 @@ namespace ViewSupport
             }
 
             StringBuilder sbVectors = new StringBuilder();
-            StringBuilder sbVectorPath = new StringBuilder();
             if (vectorShapes != null)
             {
                 foreach (var shape in vectorShapes)
@@ -108,6 +107,7 @@ namespace ViewSupport
                         if (y1 > maxY) maxY = y1;
                         if (y2 > maxY) maxY = y2;
 
+                        StringBuilder sbVectorPath = new StringBuilder();
                         sbVectorPath.AppendLine($"M {x1} {y1}");
                         sbVectorPath.AppendLine($"L {x2} {y2}");
 
@@ -116,7 +116,34 @@ namespace ViewSupport
                         sbVectors.Append("\"/>");
                         sbVectorPath.Clear();
                     }
+
+                    PathShape pathShape = shape as PathShape;
+                    if (pathShape != null)
+                    {
+                        StringBuilder sbVectorPath = new StringBuilder();
+                        foreach (var pathEdge in pathShape.Path)
+                        {
+                            float x1 = pathEdge.Item1.X;
+                            float y1 = pathEdge.Item1.Y;
+                            float x2 = pathEdge.Item2.X;
+                            float y2 = pathEdge.Item2.Y;
+
+                            if (x1 > maxX) maxX = x1;
+                            if (x2 > maxX) maxX = x2;
+                            if (y1 > maxY) maxY = y1;
+                            if (y2 > maxY) maxY = y2;
+
+                            sbVectorPath.AppendLine($"M {x1} {y1}");
+                            sbVectorPath.AppendLine($"L {x2} {y2}");
+                        }
+
+                        sbVectors.Append($"<path stroke=\"{pathShape.Color}\" stroke-width=\"1\" d=\"");
+                        sbVectors.AppendLine(sbVectorPath.ToString());
+                        sbVectors.Append("\"/>");
+                        sbVectorPath.Clear();
+                    }
                 }
+
             }
 
             int width = (int)maxX;

@@ -46,6 +46,7 @@ namespace Primitives
             this.IsFrontFacing = true;
             this.IsTransparent = false;
         }
+
         public Coord NormalVector_ModelingCoordinates
         {
             get
@@ -53,6 +54,7 @@ namespace Primitives
                 return mNormalVector_ModelingCoordinates;
             }
         }
+
         public Coord NormalVector
         {
             get
@@ -60,6 +62,7 @@ namespace Primitives
                 return mNormalVector;
             }
         }
+
         public bool IsFrontFacing;
         //{
         //    get
@@ -131,6 +134,7 @@ namespace Primitives
             }
         }
 
+        // TODO: Deprecated, remove after confirming Algo 2 correct, and is faster
         public GraphicsPath GraphicsPath_ModelingCoordinates
         {
             get
@@ -304,6 +308,7 @@ namespace Primitives
             mNormalVector_ModelingCoordinates += (Vertices[c - 1].ModelingCoord - Vertices[0].ModelingCoord).CrossProduct(Vertices[1].ModelingCoord - Vertices[0].ModelingCoord);
             mNormalVector_ModelingCoordinates /= mNormalVector_ModelingCoordinates.CalcLength();
         }
+
         /// <summary>Sets the NormalVector to reflect the current view of the IndexedFace on the screen. Automatically called from Refresh().</summary>
         internal void UpdateNormalVector()
         {

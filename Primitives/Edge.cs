@@ -32,21 +32,31 @@ namespace Primitives
     /// <summary>Represents the edge shared by two IndexedFaces.</summary>
     public class Edge
     {
-        /// <summary>Gets the IndexedFace that created this Edge. Null for Auxiliary Faces. Knowing which Face created the Edge helps to make sense of StartVertex and EndVertex: From CreatorFace's point of view, StartVertex and EndVertex are in counter-clockwise order.</summary>
+        /// <summary>Gets the IndexedFace that created this Edge. Null for Auxiliary Faces. Knowing 
+        /// which Face created the Edge helps to make sense of StartVertex and EndVertex: From 
+        /// CreatorFace's point of view, StartVertex and EndVertex are in counter-clockwise order.
+        /// </summary>
         public IndexedFace CreatorFace; //{ get; private set; }
     
-        /// <summary>Gets the Face that did not create this Edge. From OtherFace's point of view, StartVertex and EndVertex are in clockwise order instead of counter-clockwise as would be expected when looking from the point of view of the CreatorFace.</summary>
-        public IndexedFace OtherFace; // { get; private set; }
-        /// <summary>Gets the first Vertex supplied in the creation of this Edge. From CreatorFace's point of view, StartVertex comes before EndVertex in counter-clockwise order.</summary>
+        /// <summary>Gets the Face that did not create this Edge. From OtherFace's point of view, 
+        /// StartVertex and EndVertex are in clockwise order instead of counter-clockwise as would 
+        /// be expected when looking from the point of view of the CreatorFace.</summary>
+        public IndexedFace OtherFace { get; private set; }
 
+        /// <summary>Gets the first Vertex supplied in the creation of this Edge. From CreatorFace's 
+        /// point of view, StartVertex comes before EndVertex in counter-clockwise order.</summary>
         public Vertex StartVertex; // { get; private set; }
-        /// <summary>Gets the second Vertex supplied in the creation of this Edge. From CreatorFace's point of view, EndVertex comes after StartVertex in counter-clockwise order.</summary>
 
+        /// <summary>Gets the second Vertex supplied in the creation of this Edge. From 
+        /// CreatorFace's point of view, EndVertex comes after StartVertex in counter-clockwise 
+        /// order.</summary>
         public Vertex EndVertex; // { get; private set; }
 
         /// <summary>Specifies the classification of the ViewEdge.</summary>
         public EdgeType Type; // { get; private set; }
-        /// <summary>Specifies whether or not this Edge connects two IndexedFaces, and if so, whether the Edge connection is Internal or External.</summary>
+
+        /// <summary>Specifies whether or not this Edge connects two IndexedFaces, and if so, 
+        /// whether the Edge connection is Internal or External.</summary>
         public ConnectionType ConnectionType; // { get; private set; }
 
         /// <summary>Gets and sets the List of EdgeSections that make up this Edge. The StartVertex of the first EdgeSection is always either the Edge's StartVertex or EndVertex, depending on the direction of travel through the Edge. The EndVertex of the last EdgeSection is always this Edge's Vertex that is not the first EdgeSection's StartVertex.</summary>
@@ -109,7 +119,9 @@ namespace Primitives
         /// <summary>Returns true if this Edge has Vertices with the same VertexIndex values as the passed in Edge. The order of the Vertices is ignored.</summary>
         public bool ContainsSameVerticesAs(Edge rhs)
         {
-            return ((rhs.StartVertex.VertexIndex == this.StartVertex.VertexIndex && rhs.EndVertex.VertexIndex == this.EndVertex.VertexIndex) || (rhs.EndVertex.VertexIndex == this.StartVertex.VertexIndex && rhs.StartVertex.VertexIndex == this.EndVertex.VertexIndex));
+            return 
+                ((rhs.StartVertex.VertexIndex == this.StartVertex.VertexIndex && rhs.EndVertex.VertexIndex == this.EndVertex.VertexIndex) || 
+                (rhs.EndVertex.VertexIndex == this.StartVertex.VertexIndex && rhs.StartVertex.VertexIndex == this.EndVertex.VertexIndex));
         }
 
         /// <summary>Returns true if the specified Vertex is either the StartVertex or EndVertex of this Edge.</summary>

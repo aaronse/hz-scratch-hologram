@@ -35,6 +35,7 @@ namespace ViewSupport
         private static bool mShowGcode = false;
         private static bool mVectorMode = true;
         private static bool mPointsMode = true;
+        private static bool mProfileMode = true;
         private static VisibilityMode mVisibilityMode = VisibilityMode.Transparent;
         private static bool mRotateCanvas = false;
         private static bool mQuickMode = true;
@@ -118,6 +119,21 @@ namespace ViewSupport
                 if (mPointsMode == value)
                     return;
                 mPointsMode = value;
+                FireOptionChangedEvent();
+            }
+        }
+
+        public static bool ProfileMode
+        {
+            get
+            {
+                return mProfileMode;
+            }
+            set
+            {
+                if (mProfileMode == value)
+                    return;
+                mProfileMode = value;
                 FireOptionChangedEvent();
             }
         }

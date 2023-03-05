@@ -139,25 +139,43 @@ namespace Primitives
                 for (int vertexIndex = 1; vertexIndex < vals.Length - 1; vertexIndex++) //ignore the last value (seems to always be -1, not a vertex), so end at Length - 2
                 {
 
+                    // Sometimes triangles are represented as squares, using a duplicate Vertex. We
+                    // want them to actually be triangles.
                     Vertex currentVertex = GetExistingVertex(Vertices[int.Parse(vals[vertexIndex])].ModelingCoord);
-                    if (indexedFace.Vertices.Contains(currentVertex)) //sometimes triangles are represented as squares, using a duplicate Vertex. We want them to actually be triangles.
+                    if (indexedFace.Vertices.Contains(currentVertex)) 
                     {
                         throw new InvalidOperationException("Not Expected?");
                     }
 
+                    // If this edge was an existing edge, we need to update it so it knows that it's
+                    // now a part of a new IndexedFace
                     Edge e = GetNewOrExistingEdge(previousVertex, currentVertex, indexedFace);
-                    if (e.CreatorFace != indexedFace && e.OtherFace == null) //if this edge was an existing edge, we need to update it so it knows that it's now a part of a new IndexedFace
+                    if (e.CreatorFace != null && e.CreatorFace != indexedFace && 
+                        e.OtherFace != null && e.OtherFace != indexedFace)
+                    {
+                        // TODO: Consider Debug.Assert()
+                        throw new InvalidOperationException("Unexpected, found edge with more than two faces");
+                    }
+                    else if (e.CreatorFace != indexedFace && e.OtherFace == null)
+                    {
                         e.AddFace(indexedFace);
+                    }
 
                     indexedFace.Edges.Add(e);
 
-                    //make sure the Vertices know that they are now part of the new edge, if they don't already know.
+                    // Make sure the Vertices know that they are now part of the new edge, if they
+                    // don't already know.
                     if (!previousVertex.Edges.Contains(e))
+                    {
                         previousVertex.Edges.Add(e);
+                    }
+
                     //else
                     //    throw new Exception("how did that edge already know about me?");
                     if (!currentVertex.Edges.Contains(e))
+                    {
                         currentVertex.Edges.Add(e);
+                    }
                     //else
                     //    throw new Exception("how did that edge already know about me?");
 
@@ -165,6 +183,7 @@ namespace Primitives
                     currentVertex.IndexedFaces.Add(indexedFace);
                     previousVertex = currentVertex;
                 }
+
                 //add the Edge that finishes this IndexedFace
                 Edge finalEdge = GetNewOrExistingEdge(previousVertex, firstVertex, indexedFace);
                 if (finalEdge.CreatorFace != indexedFace) //if this edge was an existing edge, we need to update it so it knows that it's now a part of a new IndexedFace
