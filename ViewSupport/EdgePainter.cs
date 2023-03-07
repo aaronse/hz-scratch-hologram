@@ -203,12 +203,18 @@ namespace ViewSupport
                 this._profileId = profileId;
             }
 
-            internal void InsertEdgeSection(EdgeSection es)
+            internal void InsertEdgeSection(EdgeSection es, HashSet<Profile> visited = null)
             {
-                if (_parentProfile != null)
+                if (_parentProfile != null && (visited == null || !visited.Contains(_parentProfile)))
                 {
-                    // TODO:P0 Bug, need to implement loop detection e.g. add visited HashSet
-                    _parentProfile.InsertEdgeSection(es);
+                    // Detect loops, prevent recursive stack overflow, this may result in separate
+                    // Profile instances being created.
+                    // TODO:P2 Consider logging instance count, high count could indicate logic error.
+                    if (visited == null) visited = new HashSet<Profile>();
+
+                    visited.Add(this);
+
+                    _parentProfile.InsertEdgeSection(es, visited);
                     return;
                 }
 
@@ -219,9 +225,9 @@ namespace ViewSupport
             {
                 if (this == other) throw new ArgumentException("Cannot merge with self");
 
+                this.EdgeSections.AddRange(other.EdgeSections);
+                other.EdgeSections.Clear();
                 other._parentProfile = this;
-                other.EdgeSections.AddRange(this.EdgeSections);
-                this.EdgeSections.Clear();
             }
 
             internal List<Tuple<PointF, PointF>> GetPointPath()
@@ -255,13 +261,7 @@ namespace ViewSupport
 
             if (!options.IsRendering) return null;
 
-            foreach (IndexedFaceSet ifs in ShapeList)
-            {
-                //    ifs.IndexedFaces[0].Edges[0].ve
-            }
-
-            // Point Profiles
-
+            // Create set of Point profiles containing contiguous edges.
             foreach (EdgeSection es in visibleEdgeSections)
             {
                 // TODO:P2: Implement profile detection for all visible face clusters (adjacent faces sharing same normal).  Currently just detecting/rendering faces on Z == 0
@@ -322,6 +322,7 @@ namespace ViewSupport
                 }
             }
 
+            // Remove empty/redundant profiles
             for (int i = profiles.Count - 1; i > 0; i--)
             {
                 if (profiles[i].GetEdgeSectionCount() == 0)

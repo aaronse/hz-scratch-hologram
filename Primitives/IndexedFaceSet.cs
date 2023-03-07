@@ -144,7 +144,8 @@ namespace Primitives
                     Vertex currentVertex = GetExistingVertex(Vertices[int.Parse(vals[vertexIndex])].ModelingCoord);
                     if (indexedFace.Vertices.Contains(currentVertex)) 
                     {
-                        throw new InvalidOperationException("Not Expected?");
+                        // Skip...
+                        continue;
                     }
 
                     // If this edge was an existing edge, we need to update it so it knows that it's
