@@ -326,7 +326,10 @@ namespace ScratchTest
 
         private void quickModeCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            DrawOptions.QuickMode = quickModeCheckBox.Checked;
+            if (!DesignMode)
+            {
+                DrawOptions.QuickMode = quickModeCheckBox.Checked;
+            }
         }
         private void mHiddenLineCheckBox_CheckedChanged(object sender, EventArgs e)
         {
@@ -432,18 +435,6 @@ namespace ScratchTest
 
             this.ForeColor = ThemeInfo.Current.TextColor;
             this.BackColor = ThemeInfo.Current.WindowBackColor;
-        }
-
-        private void btnImportArcs_Click(object sender, EventArgs e)
-        {
-            SvgSerializer svgSerializer = new SvgSerializer();
-
-            string filePath = "C:\\Users\\aaron\\Documents\\test.2.json";
-            var arcSegs = svgSerializer.DeSerializeJson(filePath);
-
-            EdgePainter.ArcSegments = arcSegs;
-
-            UpdateOutputSummary();
         }
 
         private void txtSelectedItem_TextChanged(object sender, EventArgs e)

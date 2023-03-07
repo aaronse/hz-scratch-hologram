@@ -43,7 +43,7 @@ namespace ViewSupport
             PointBrush = Brushes.LightGray,
             RedBlueModePointBrush = Brushes.White,
             SelectedColor = Color.MediumPurple,
-            SelectedPen = new Pen(Color.Red, 1f)
+            SelectedPen = new Pen(Color.Red, 2.5f)
         };
 
         public static ThemeInfo Current = DarkTheme;

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System;
 
+// TODO:P0 Rename VectorMode mode?
 // TODO:P0 Implement Face selection.  Needed for Set Z0, and Select Contour.
 // TODO:P0 Implement Contour selection.
 // TODO:P0 Implement Reset Z0, enable User to select and set Face to be at Z0.
@@ -62,6 +63,7 @@ namespace ViewSupport
 
             internal List<Edge> Edges { get; set; }
             internal Coord ZeroCoord { get; set; }
+            internal bool IsFrontFace { get; set; }
             internal List<EdgeSection> EdgeSections { get; set; }
 
             // Using bit array to represent angles this Edge point is visible.  The bitarray has
@@ -205,6 +207,7 @@ namespace ViewSupport
             {
                 if (_parentProfile != null)
                 {
+                    // TODO:P0 Bug, need to implement loop detection e.g. add visited HashSet
                     _parentProfile.InsertEdgeSection(es);
                     return;
                 }
@@ -261,7 +264,8 @@ namespace ViewSupport
 
             foreach (EdgeSection es in visibleEdgeSections)
             {
-                // Skip non front faces, for now...
+                // TODO:P2: Implement profile detection for all visible face clusters (adjacent faces sharing same normal).  Currently just detecting/rendering faces on Z == 0
+                // Skip non front faces, for now...  
                 if (es.Edge.StartVertex.ModelingCoord.Z != 0 ||
                     es.Edge.EndVertex.ModelingCoord.Z != 0)
                 {
@@ -399,8 +403,11 @@ namespace ViewSupport
 
             pPen.Color = actualColor;
 
-            if (options.IsRendering && DrawOptions.VectorMode)
+            // Draw if rendering lines
+            if (options.IsRendering && DrawOptions.VectorMode &&
+                (!DrawOptions.ProfileMode || e.StartVertex.ModelingCoord.Z != 0 || e.EndVertex.ModelingCoord.Z != 0))
             {
+
                 if (e.EdgeID == _selectedId)
                 {
                     options.Graphics.DrawLine(options.Theme.SelectedPen, startPoint, endPoint);
@@ -495,6 +502,12 @@ namespace ViewSupport
                 List<Edge> edges = arcInfo.Edges;
 
                 var c = arcInfo.ZeroCoord;
+
+                // Skip emitting/rendering Arcs on front face if front face(s) Profile detection enabled
+                if (DrawOptions.ProfileMode && arcInfo.IsFrontFace)
+                {
+                    continue;
+                }
 
                 Rectangle arcRect = Transformer.GetArcSquare(c);
                 float startAngle = c.Z - ViewContext.N_ViewCoordinates > 0 ? 0 : 180;
@@ -668,6 +681,7 @@ namespace ViewSupport
 
                     List<Coord> angledCoords = es.Edge.GetPoints(DrawOptions.ViewPointsPerUnitLength, false);
                     List<Coord> zeroCoords = es.Edge.GetPoints(DrawOptions.ViewPointsPerUnitLength, true);
+                    bool isFrontFace = (es.Edge.StartVertex.ModelingCoord.Z == 0 && es.Edge.EndVertex.ModelingCoord.Z == 0);
 
                     for (int i = 0; i < angledCoords.Count; i++)
                     {
@@ -686,6 +700,7 @@ namespace ViewSupport
                                 {
                                     Edges = new List<Edge>() { es.Edge },
                                     ZeroCoord = zeroCoords[i],
+                                    IsFrontFace = isFrontFace
                                 };
                             }
                             else

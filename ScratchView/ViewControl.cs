@@ -113,7 +113,16 @@ namespace ScratchView
             base.OnPaint(e);
             if (!DesignMode)
             {
-                e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
+                if (DrawOptions.QuickMode)
+                {
+                    e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
+                }
+                else
+                {
+                    e.Graphics.CompositingQuality = CompositingQuality.HighQuality;
+                    e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                }
+
                 Drawing.Blit(e.Graphics);
             }
 
