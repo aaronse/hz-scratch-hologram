@@ -21,15 +21,21 @@ namespace Primitives
 
         public List<IndexedFace> IndexedFaces; // { get; private set; }
 
+        // Model Coordinates, read during parsing, never modified.
         public List<Coord> AvailableVertexLocations { get; private set; }
 
+        // View Coordinate at Zero viewing angle
         public List<Coord> AvailableViewVertexLocations_ZeroAngle { get; private set; }
+
+        // View Coordinate at Current viewing angle
         public List<Coord> AvailableViewVertexLocations { get; private set; }
 
         public string Name { get; private set; }
 
         /// <summary>Gets the Vertex in this IndexedFaceSet that is nearest the user.</summary>
         public Vertex NearestVertex { get; private set; }
+
+        static int edgeID = 0;
 
         /// <summary>
         /// Creates a new IndexedFaceSet
@@ -214,7 +220,147 @@ namespace Primitives
             }
         }
 
-        static int edgeID = 0;
+        // Make one, initialize with model represented by specified faceVertexes/params.
+        //
+        // Ensure this method is agnostic to file format used to represent the model.  Format specific
+        // parsing should have occurred already.
+        public IndexedFaceSet(CoordMode coordMode, string name, List<List<Coord>> facesCoords, double scale)
+        {
+            this.Name = name;
+            this.AvailableVertexLocations = new List<Coord>();
+            this.AvailableViewVertexLocations_ZeroAngle = new List<Coord>();
+            this.AvailableViewVertexLocations = new List<Coord>();
+            this.Vertices = new List<Vertex>();
+            this.Edges = new List<Edge>();
+            edgeID = 0;
+
+            double minZ = double.MaxValue;
+            double maxZ = double.MinValue;
+            var nextVertexId = 0;
+
+            // Build index of unique Vertex points, rounding points to configured tolerance
+            var knownCoords = new HashSet<string>();
+            foreach (var faceCoords in facesCoords)
+            {
+                foreach (var parsedCoord in faceCoords)
+                {
+                    Coord coord = parsedCoord.Clone(Global.NormalToleranceDecimalPlaces);
+
+                    if (coord != parsedCoord)
+                    {
+                        throw new InvalidOperationException("Expected parsedCoord == Coord" +
+                            ", mismatch hints that parser didn't round to Global.NormalToleranceDecimalPlaces");
+                    }
+
+                    if (knownCoords.Contains(coord.ToString()))
+                    {
+                        continue;
+                    }
+
+                    AvailableVertexLocations.Add(coord);
+                    AvailableViewVertexLocations_ZeroAngle.Add(coord);
+                    AvailableViewVertexLocations.Add(coord);
+                    var vertexIndex = nextVertexId;
+                    nextVertexId++;
+                    Vertices.Add(new Vertex(this, vertexIndex));
+                }
+            }
+
+            this.IndexedFaces = new List<IndexedFace>(facesCoords.Count);
+            for (int i = 0; i < facesCoords.Count; i++)
+            {
+                var faceCoords = facesCoords[i];
+
+                // We're ignoring the last value (seems to always be -1), so there has to be a total of at least 4 values for a triangular IndexedFace
+                if (faceCoords.Count < 3)
+                    throw new Exception("Can not create an IndexedFace from less than 3 Vertices");
+
+                IndexedFace indexedFace = new IndexedFace(this);
+                Vertex firstVertex = GetExistingVertex(faceCoords[0]);
+                indexedFace.Vertices.Add(firstVertex);
+                firstVertex.IndexedFaces.Add(indexedFace);
+                Vertex previousVertex = firstVertex;
+
+                for (int vertexIndex = 1; vertexIndex < faceCoords.Count; vertexIndex++)
+                {
+                    var faceCoord = faceCoords[vertexIndex];
+
+                    // Sometimes triangles are represented as squares, using a duplicate Vertex. We
+                    // want them to actually be triangles.
+                    Vertex currentVertex = GetExistingVertex(faceCoord);
+                    if (indexedFace.Vertices.Contains(currentVertex))
+                    {
+                        // Skip...
+                        continue;
+                    }
+
+                    // If this edge was an existing edge, we need to update it so it knows that it's
+                    // now a part of a new IndexedFace
+                    Edge e = GetNewOrExistingEdge(previousVertex, currentVertex, indexedFace);
+                    if (e.CreatorFace != null && e.CreatorFace != indexedFace &&
+                        e.OtherFace != null && e.OtherFace != indexedFace)
+                    {
+                        // TODO: Consider Debug.Assert()
+                        throw new InvalidOperationException("Unexpected, found edge with more than two faces");
+                    }
+                    else if (e.CreatorFace != indexedFace && e.OtherFace == null)
+                    {
+                        e.AddFace(indexedFace);
+                    }
+
+                    indexedFace.Edges.Add(e);
+
+                    // Make sure the Vertices know that they are now part of the new edge, if they
+                    // don't already know.
+                    if (!previousVertex.Edges.Contains(e))
+                    {
+                        previousVertex.Edges.Add(e);
+                    }
+
+                    //else
+                    //    throw new Exception("how did that edge already know about me?");
+                    if (!currentVertex.Edges.Contains(e))
+                    {
+                        currentVertex.Edges.Add(e);
+                    }
+                    //else
+                    //    throw new Exception("how did that edge already know about me?");
+
+                    indexedFace.Vertices.Add(currentVertex);
+                    currentVertex.IndexedFaces.Add(indexedFace);
+                    previousVertex = currentVertex;
+                }
+
+                //add the Edge that finishes this IndexedFace
+                Edge finalEdge = GetNewOrExistingEdge(previousVertex, firstVertex, indexedFace);
+                if (finalEdge.CreatorFace != indexedFace) //if this edge was an existing edge, we need to update it so it knows that it's now a part of a new IndexedFace
+                    finalEdge.AddFace(indexedFace);
+
+                indexedFace.Edges.Add(finalEdge);
+
+                //update the first and last Vertex to so that they know about the Edge that was just added
+                if (!indexedFace.Vertices[0].Edges.Contains(finalEdge))
+                    indexedFace.Vertices[0].Edges.Add(finalEdge);
+                if (!indexedFace.Vertices[indexedFace.Vertices.Count - 1].Edges.Contains(finalEdge))
+                    indexedFace.Vertices[indexedFace.Vertices.Count - 1].Edges.Add(finalEdge);
+
+                // TODO: Q Should/how STL support transparent faces?  .X3D parser handles transparent faces.
+                //indexedFace.IsTransparent = (int.Parse(vals[vals.Length - 1]) == 0);
+                indexedFace.IsTransparent = false;
+
+                //we're now ready to set the Normal Vectors for the IndexedFace
+                indexedFace.UpdateNormalVector();
+                indexedFace.UpdateNormalVector_ModelingCoordinates();
+
+                //now that the IndexedFace knows its NormalVector, we need to update all the Edges so they know their ConnectionType
+                foreach (Edge e in indexedFace.Edges)
+                {
+                    e.UpdateConnectionType();
+                }
+
+                IndexedFaces.Add(indexedFace);
+            }
+        }
 
         /// <summary>Creates and returns a new or returns an existing Edge with the specified Vertices. If a new Edge is created, its CreatorIndexedFace will be set to the passed in IndexedFace.</summary>
         private Edge GetNewOrExistingEdge(Vertex v1, Vertex v2, IndexedFace creatorIndexedFace)
@@ -232,6 +378,7 @@ namespace Primitives
             return newEdge;
         }
 
+
         private Vertex GetExistingVertex(Coord modelingCoord)
         {
             return Vertices.Find(v => v.ModelingCoord == modelingCoord);
@@ -239,10 +386,6 @@ namespace Primitives
 
 
         /// <summary>Recalculates the AvailableViewVertexLocations for this IndexedFaceSet based on the current Transformation matrix. Also updates the IndexedFaces and Edges accordingly.</summary>
-        //internal void Refresh()
-        //{
-        //    Refresh(false);
-        //}
         public void Refresh(bool switchBackFront)
         {
             //update the ViewVertex locations to their new values based on the new ModelToWindow matrix.
@@ -258,7 +401,6 @@ namespace Primitives
                     NearestVertex = newVertex;
             }
             RefreshArcLocationsOnly(switchBackFront);
-            
         }
 
         /// <summary>Refreshes only the AvailableViewVertexLocation list by using the stored zero-angle values to determine where each Coord is along its arc.</summary>

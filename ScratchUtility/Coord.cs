@@ -6,6 +6,7 @@ using System.Drawing;
 
 namespace ScratchUtility
 {
+    // TODO:P0 PERF: Implement GetHashCode, replace the String based hashes with custom Hash implmentation.  See https://learn.microsoft.com/en-us/archive/blogs/ericlippert/guidelines-and-rules-for-gethashcode and https://theburningmonk.com/2011/03/hashset-vs-list-vs-dictionary/
     // TODO:P2 Very tempting to start caching computed state from Calc... methods.  But, should
     // instead Profile perf to see what's *REALLY* happening...
     public struct Coord
@@ -97,11 +98,19 @@ namespace ScratchUtility
                 Math.Round(this.Z, toleranceDecimalPlaces) == Math.Round(other.Z, toleranceDecimalPlaces);
         }
 
+        public Coord Clone(int toleranceDecimalPlaces)
+        {
+            return new Coord(
+                Math.Round(this.X, toleranceDecimalPlaces),
+                Math.Round(this.Y, toleranceDecimalPlaces),
+                Math.Round(this.Z, toleranceDecimalPlaces));
+        }
+
         public override string ToString()
         {
             return "(" + X + ", " + Y + ", " + Z + ")";
         }
-        public string ToString(int decimalPlaces)
+        public string ToString  (int decimalPlaces)
         {
             return "(" + X.ToString("N" + decimalPlaces) + ", " + Y.ToString("N" + decimalPlaces) + ", " + Z.ToString("N" + decimalPlaces) + ")";
         }

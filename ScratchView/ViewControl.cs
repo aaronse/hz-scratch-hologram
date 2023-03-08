@@ -329,9 +329,9 @@ namespace ScratchView
             }
         }
 
-        public void AddShape(IndexedFaceSet ifs)
+        public void AddShapes(List<IndexedFaceSet> ifs)
         {
-            Drawing.AddShape(ifs);
+            Drawing.AddShapes(ifs);
         }
 
         public void ClearShapes()

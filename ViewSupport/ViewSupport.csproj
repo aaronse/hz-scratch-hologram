@@ -64,6 +64,7 @@
     <Compile Include="GCodeInfo.cs" />
     <Compile Include="ShapeList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StlSerializer.cs" />
     <Compile Include="SvgSerializer.cs" />
     <Compile Include="ThemeInfo.cs" />
     <Compile Include="VectorShape.cs" />

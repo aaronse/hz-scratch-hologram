@@ -558,9 +558,12 @@ namespace ViewSupport
             }
         }
 
-        public static void AddShape(IndexedFaceSet ifs)
+        public static void AddShapes(List<IndexedFaceSet> ifs)
         {
-            Shapes.Add(ifs);
+            foreach(var indexedFace in ifs)
+            {
+                Shapes.Add(indexedFace);
+            }
             MarkAsDirty(RedrawTypeRequired.RecalculateViewPrimitives);
         }
 

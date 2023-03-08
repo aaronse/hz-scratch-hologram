@@ -14,21 +14,21 @@ namespace FileParser
         public string Name { get; set; }
         public string FullPath { get; set; }
 
-        public List<IndexedFaceSet> IndexedFaces { get; set; }
+        public List<IndexedFaceSet> IndexedFaceSets { get; set; }
 
         private bool _hasCamera = false;
         public Coord CameraPosition { get; set; }
 
         public X3DFile(string fullPath)
         {
-            Name = Path.GetFileNameWithoutExtension(fullPath);
+            Name = Path.GetFileName(fullPath);
             FullPath = fullPath;
         }
 
         /// <summary>Parses the x3d file that this X3dFile represents and extracts the IndexedFaces and CameraPosition.</summary>
         public void Parse(double scale)
         {
-            IndexedFaces = new List<IndexedFaceSet>();
+            this.IndexedFaceSets = new List<IndexedFaceSet>();
 
             StreamReader sr = new StreamReader(FullPath);
 
@@ -97,7 +97,7 @@ namespace FileParser
                 {
                     CoordMode coordMode = (_hasCamera) ? CoordMode.YZX : CoordMode.XYZ;
                     IndexedFaceSet ifs = new IndexedFaceSet(coordMode, name, coordIndices[i], points[i], scale);
-                    IndexedFaces.Add(ifs);
+                    IndexedFaceSets.Add(ifs);
                 }
             }
             catch (Exception e)

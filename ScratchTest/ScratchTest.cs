@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using ViewSupport;
+using System.Linq;
 
 namespace ScratchTest
 {
@@ -222,14 +223,10 @@ namespace ScratchTest
         }
 
 
-        private void LoadX3DFile(X3DFile file, double scale)
+        private void AttachModelToUi(List<IndexedFaceSet> ifs)
         {
-            file.Parse(scale);
             mView.ClearShapes();
-            foreach (IndexedFaceSet ifs in file.IndexedFaces)
-            {
-                mView.AddShape(ifs);
-            }
+            mView.AddShapes(ifs);
             mView.PreProcessShapes();
         }
 
@@ -285,17 +282,35 @@ namespace ScratchTest
             SetUpFileList(Path.GetDirectoryName(fileName), fileName);
         }
 
+        class ModelFile
+        { 
+            public string Name { get; set; }
+            public string FilePath { get; set; }
+
+            public override string ToString()
+            {
+                return this.Name;
+            }
+        }
+
         private void SetUpFileList(string directory, string selectFileName)
         {
+            
+            var files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(".stl") || s.EndsWith(".x3d"))
+                .Select(f => new ModelFile() { FilePath = f, Name = Path.GetFileName(f) } );
+
             mFilesComboBox.Items.Clear();
-            foreach (string fileName in Directory.GetFiles(directory, "*.x3d"))
+            foreach (var file in files)
             {
-                X3DFile f = new X3DFile(fileName);
-                mFilesComboBox.Items.Add(f);
-                if (fileName == selectFileName)
+                //X3DFile f = new X3DFile(fileName);
+                mFilesComboBox.Items.Add(file);
+                //if (fileName == selectFileName)
+                if (file.Name == selectFileName)
                     mFilesComboBox.SelectedIndex = mFilesComboBox.Items.Count - 1;
             }
         }
+
         private void SetUpFileList(string directory)
         {
             SetUpFileList(directory, null);
@@ -303,7 +318,22 @@ namespace ScratchTest
 
         private void mFilesComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            LoadX3DFile((X3DFile)(mFilesComboBox.SelectedItem), 1);
+            var modelFile = mFilesComboBox.SelectedItem as ModelFile;
+            if (".x3d".Equals(Path.GetExtension(modelFile.FilePath), StringComparison.OrdinalIgnoreCase))
+            {
+                X3DFile x3dFile = new X3DFile(modelFile.FilePath);
+                x3dFile.Parse(scale: 1.0);
+
+                AttachModelToUi(x3dFile.IndexedFaceSets);
+            }
+            else if (".stl".Equals(Path.GetExtension(modelFile.FilePath), StringComparison.OrdinalIgnoreCase))
+            {
+                var scene = new List<IndexedFaceSet>();
+                var model = StlSerializer.Deserialize(modelFile.FilePath);
+                scene.Add(model);
+
+                AttachModelToUi(scene);
+            }
         }
 
         private void mVectorsCheckBox_CheckedChanged(object sender, EventArgs e)
