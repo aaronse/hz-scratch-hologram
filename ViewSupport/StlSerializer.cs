@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -36,13 +37,154 @@ namespace ViewSupport
 
         public static IndexedFaceSet Deserialize(string filePath)
         {
-            // TODO:P0 Implement auto align Z axis... Massage model's Z axis
-
             StlSerializer instance = new StlSerializer();
-            return instance.InternalDeserialize(filePath);
+            IndexedFaceSet ifs = null;
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException($"Unable to find .STL file, path: {filePath}");
+            }
+
+            // Binary or text?
+            bool isBinary = true;
+            using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                using (BinaryReader br = new BinaryReader(stream))
+                {
+                    string header = Encoding.UTF8.GetString(br.ReadBytes(6));
+                    if ("solid ".Equals(header))
+                    {
+                        isBinary = false;
+                    }
+                }
+            }
+            
+            if (isBinary)
+            {
+                ifs = instance.DeserializeBinary(filePath);
+            }
+            else
+            {
+                ifs = instance.DeserializeAscii(filePath);
+            }
+
+            return ifs;
         }
 
-        private IndexedFaceSet InternalDeserialize(string filePath)
+
+        // Related:
+        // - https://en.wikipedia.org/wiki/STL_%28file_format%29#Binary_STL
+        // - https://stackoverflow.com/questions/68568214/c-sharp-how-to-parse-an-stl-file-current-function-does-not-link-vertices-into-f
+        private IndexedFaceSet DeserializeBinary(string filePath)
+        {
+            double scale = 1.0;
+            string name = Path.GetFileNameWithoutExtension(filePath);
+            StreamReader sr = new StreamReader(filePath);
+            var parsedFaceCoords = new List<Coord>();
+            var parsedModel = new List<List<Coord>>();
+
+            try
+            {
+                using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    using (BinaryReader br = new BinaryReader(stream))
+                    {
+                        // Read header info
+                        byte[] headerBytes = br.ReadBytes(80);
+                        byte[] faceCountBytes = br.ReadBytes(4);
+                        int faceCount = BitConverter.ToInt32(faceCountBytes, 0);
+                        string headerInfo = Encoding.UTF8.GetString(headerBytes, 0, headerBytes.Length).Trim();
+                        
+                        Debug.WriteLine($"Reading STL, file: {filePath}, faces: {faceCount}, header: {headerInfo}");
+
+                        // Read data from the file until either there is no data left or 
+                        // the number of surfaces read is equal to the number of surfaces in the
+                        // file. This can prevent reading a partial block at the end and getting
+                        // out of range execptions.
+                        //
+                        // foreach triangle - 50 bytes:
+                        //     REAL32[3] – Normal vector             -12 bytes
+                        //     REAL32[3] – Vertex 1 - 12 bytes
+                        //     REAL32[3] – Vertex 2 - 12 bytes
+                        //     REAL32[3] – Vertex 3 - 12 bytes
+                        //     UINT16    – Attribute byte count      -2 bytes
+                        // end
+                        byte[] block;
+                        int iterFace = 0;
+                        while ((block = br.ReadBytes(50)) != null && iterFace++ < faceCount)
+                        {
+                            parsedFaceCoords = new List<Coord>();
+                            byte[] xComp = new byte[4];
+                            byte[] yComp = new byte[4];
+                            byte[] zComp = new byte[4];
+
+                            // Parse data block
+                            for (int i = 0; i < 4; i++)
+                            {
+                                for (int k = 0; k < 12; k++)
+                                {
+                                    int index = k + i * 12;
+
+                                    if (k < 4)
+                                    {
+                                        // xComp
+                                        xComp[k] = block[index];
+                                    }
+                                    else if (k < 8)
+                                    {
+                                        // yComp
+                                        yComp[k - 4] = block[index];
+                                    }
+                                    else
+                                    {
+                                        // zComp
+                                        zComp[k - 8] = block[index];
+                                    }
+                                }
+                                // Convert data to useable structures
+                                double x = Math.Round(BitConverter.ToSingle(xComp, 0), Global.NormalToleranceDecimalPlaces);
+                                double y = Math.Round(BitConverter.ToSingle(yComp, 0), Global.NormalToleranceDecimalPlaces);
+                                double z = Math.Round(BitConverter.ToSingle(zComp, 0), Global.NormalToleranceDecimalPlaces);
+                                
+                                if (i == 0)
+                                {
+                                    // This is a normal
+                                    Coord normCoord = new Coord(x, y, z);
+                                    
+                                    //if(Math.Abs(Math.Pow(norm.X,2) + Math.Pow(norm.X, 2) + Math.Pow(norm.X, 2) - 1) > .001)
+                                    //{
+                                    //    throw new InvalidOperationException("ERROR: Improper file read. Surface normal is not a unit vector.");
+                                    //}
+
+                                    // Ignoring Surface Normal within .STL
+                                    // ... Add.normal = norm;
+                                }
+                                else
+                                {
+                                    // This is a vertex
+                                    Coord coord = new Coord(x, y, z);
+                                    parsedFaceCoords.Add(coord);
+                                }
+                            }
+                            parsedModel.Add(parsedFaceCoords);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+
+            // IndexedFaceSet internally transformDo post parsing initialization to update Vertex/Edge graph references
+            var model = new IndexedFaceSet(CoordMode.XYZ, name, parsedModel, scale, autoCenter: true);
+
+            return model;
+
+        }
+
+
+        private IndexedFaceSet DeserializeAscii(string filePath)
         {
             double scale = 1.0;
             string name = Path.GetFileNameWithoutExtension(filePath);
