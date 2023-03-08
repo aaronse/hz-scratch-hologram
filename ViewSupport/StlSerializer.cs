@@ -79,7 +79,8 @@ namespace ViewSupport
             }
 
             // IndexedFaceSet internally transformDo post parsing initialization to update Vertex/Edge graph references
-            var model = new IndexedFaceSet(CoordMode.XYZ, name, parsedModel, scale);
+            var model = new IndexedFaceSet(CoordMode.XYZ, name, parsedModel, scale, autoCenter: true);
+
             return model;
         }
     }

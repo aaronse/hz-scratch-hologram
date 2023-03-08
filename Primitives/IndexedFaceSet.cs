@@ -43,7 +43,13 @@ namespace Primitives
         /// <param name="name">The name of this IndexedFaceSet</param>
         /// <param name="coordIndices">The list of indices (0-based) into the points list from which to construct the IndexedFaces making up this IndexedFaceSet. Example: "46 0 2 44 -1, 3 1 47 45 -1" would create two quadriliteral faces, one with vertex indices 46 0 2 44, and the other with vertex indices 3 1 47 45.</param>
         /// <param name="points">The space-separated, comma delimited list of 3D Vertices used in this IndexedFaceSet. The coordIndices list refers to values in this list. Example: "0.437500 0.164063 0.765625, -0.437500 0.164063 0.765625" specifies two Vertices, one (index 0) at x=0.437500, y=0.164063 z=0.765625, and the other (index 1) at x=-0.437500 y=0.164063 z=0.765625.</param>
-        public IndexedFaceSet(CoordMode coordMode, string name, string coordIndices, string points, double scale)
+        public IndexedFaceSet(
+            CoordMode coordMode, 
+            string name, 
+            string coordIndices, 
+            string points, 
+            double scale,
+            bool autoCenter)
         {
             //todo: use a streamreader.
             Name = name;
@@ -110,8 +116,14 @@ namespace Primitives
                     }
                     else if (pass == 1)
                     {
-                        // Offset Z so front face always 0, i.e. fixed, -ve Z will shift as view angle changes.
-                        z = z - maxZ;
+
+                        // Offset Z (so not Autocenter... got a better name?) so front face always 0,
+                        // i.e. fixed, -ve Z will shift as view angle changes.
+                        if (autoCenter)
+                        {
+                            // Auto center X & Y
+                            z = z - maxZ;
+                        }
 
                         Coord c = new Coord(x, y, z);
                         AvailableVertexLocations.Add(c);
@@ -224,7 +236,12 @@ namespace Primitives
         //
         // Ensure this method is agnostic to file format used to represent the model.  Format specific
         // parsing should have occurred already.
-        public IndexedFaceSet(CoordMode coordMode, string name, List<List<Coord>> facesCoords, double scale)
+        public IndexedFaceSet(
+            CoordMode coordMode, 
+            string name, 
+            List<List<Coord>> facesCoords, 
+            double scale,
+            bool autoCenter)
         {
             this.Name = name;
             this.AvailableVertexLocations = new List<Coord>();
@@ -238,17 +255,45 @@ namespace Primitives
             double maxZ = double.MinValue;
             var nextVertexId = 0;
 
+            // Adjust coords needed?
+            if (autoCenter)
+            {
+                foreach (var faceCoords in facesCoords)
+                {
+                    foreach (var parsedCoord in faceCoords)
+                    {
+                        if (parsedCoord.Z < minZ) minZ = parsedCoord.Z;
+                        if (parsedCoord.Z > maxZ) maxZ = parsedCoord.Z;
+                    }
+                }
+            }
+
             // Build index of unique Vertex points, rounding points to configured tolerance
             var knownCoords = new HashSet<string>();
-            foreach (var faceCoords in facesCoords)
+            for (int faceIndex = 0; faceIndex < facesCoords.Count; faceIndex++)
             {
-                foreach (var parsedCoord in faceCoords)
-                {
-                    Coord coord = parsedCoord.Clone(Global.NormalToleranceDecimalPlaces);
+                var faceCoords = facesCoords[faceIndex];
 
-                    if (coord != parsedCoord)
+                for ( int coordIndex = 0; coordIndex < faceCoords.Count; coordIndex++)
+                {
+                    var coord = facesCoords[faceIndex][coordIndex];
+                    
+                    // Adjust coords needed?
+                    if (autoCenter)
                     {
-                        throw new InvalidOperationException("Expected parsedCoord == Coord" +
+                        // Adjusting state passed in... Not just the 'coord' copy because...  Even
+                        // further down we're referencing Coord instances to lookup Vertexes being
+                        // created in this fragment.
+                        double newZ = Math.Round(coord.Z - maxZ, Global.NormalToleranceDecimalPlaces);
+                        facesCoords[faceIndex][coordIndex] = coord.SetZ(newZ);
+                    }
+
+                    // Check: Ensure Coord rounded to tolerance decimal places to reduce rounding issues
+                    // later during rendering/hidden surface detection, etc...
+                    Coord coordClone = coord.Clone(Global.NormalToleranceDecimalPlaces);
+                    if (coord != coordClone)
+                    {
+                        throw new InvalidOperationException("Expected coord == coordClone" +
                             ", mismatch hints that parser didn't round to Global.NormalToleranceDecimalPlaces");
                     }
 

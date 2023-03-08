@@ -96,7 +96,14 @@ namespace FileParser
                 for (int i = 0; i < coordIndices.Count; i++)
                 {
                     CoordMode coordMode = (_hasCamera) ? CoordMode.YZX : CoordMode.XYZ;
-                    IndexedFaceSet ifs = new IndexedFaceSet(coordMode, name, coordIndices[i], points[i], scale);
+                    IndexedFaceSet ifs = new IndexedFaceSet(
+                        coordMode, 
+                        name, 
+                        coordIndices[i], 
+                        points[i], 
+                        scale,
+                        autoCenter: true);
+
                     IndexedFaceSets.Add(ifs);
                 }
             }

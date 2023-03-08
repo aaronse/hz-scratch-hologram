@@ -12,13 +12,20 @@ namespace ScratchUtility
     public struct Coord
     {
         // TODO:P0:PERF: Cache/Hash/Dirty derived?  Are, or can Coord be immutable?  Consider
-        // #ifdef DEBUG_PROPS to conditionally compile performant member fields to instead be
-        // Properties to help identify unwanted mutate callers.
+        // #ifdef DEBUG_PROPS to 
 
-        // PERF:  OO Sacrilege, intentionally using member fields instead of Properties to avoid method overhead
-        public double X; // { get; private set; }
-        public double Y; // { get; private set; }
-        public double Z; // { get; private set; }
+#if DEBUG_USE_PROPS 
+        // Uncomment and build if/when need to verify/detect if callers are unexpectedly mutating values
+        public double X { get; private set; }   
+        public double Y { get; private set; }
+        public double Z { get; private set; }
+#else
+        // PERF:  OO Sacrilege for performance sake.  Intentionally using member fields instead of
+        // Properties to avoid method overhead.
+        public double X; 
+        public double Y; 
+        public double Z;
+#endif
 
         private double _length;
         private bool _lengthComputed;
@@ -213,6 +220,16 @@ namespace ScratchUtility
                 return true;
 
             return false;
+        }
+
+        public Coord SetZ(double newZ)
+        {
+            this.Z = newZ;
+
+            // Clear cache computed state
+            _lengthComputed = false;
+
+            return this;
         }
     }
 }
