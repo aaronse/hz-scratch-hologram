@@ -490,7 +490,7 @@
             // 
             // mOpenFileDialog
             // 
-            this.mOpenFileDialog.Filter = "(*.x3d)|*.x3d|All files (*.*)|*.*\"";
+            this.mOpenFileDialog.Filter = "(*.stl)|*.stl|(*.x3d)|*.x3d|All files (*.*)|*.*\"";
             this.mOpenFileDialog.InitialDirectory = "C:\\Users\\aaron\\Documents";
             this.mOpenFileDialog.Title = "Select an x3d file";
             this.mOpenFileDialog.FileOk += new System.ComponentModel.CancelEventHandler(this.mOpenFileDialog_FileOk);

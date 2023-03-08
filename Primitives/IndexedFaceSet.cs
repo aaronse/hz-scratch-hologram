@@ -16,6 +16,8 @@ namespace Primitives
     public class IndexedFaceSet
     {
         public List<Vertex> Vertices { get; private set; }
+        public Dictionary<Coord, Vertex> CoordVertexMap { get; private set; }
+
         /// <summary>Gets the List of Edges that make up this IndexedFaceSet</summary>
         public List<Edge> Edges { get; private set; }
 
@@ -56,7 +58,8 @@ namespace Primitives
             AvailableVertexLocations = new List<Coord>();
             AvailableViewVertexLocations_ZeroAngle = new List<Coord>();
             AvailableViewVertexLocations = new List<Coord>();
-            Vertices = new List<Vertex>();
+            this.Vertices = new List<Vertex>();
+            this.CoordVertexMap = new Dictionary<Coord, Vertex>();
             Edges = new List<Edge>();
             edgeID = 0;
 
@@ -129,7 +132,9 @@ namespace Primitives
                         AvailableVertexLocations.Add(c);
                         AvailableViewVertexLocations_ZeroAngle.Add(c);
                         AvailableViewVertexLocations.Add(c);
-                        Vertices.Add(new Vertex(this, i));
+                        Vertex vertex = new Vertex(this, i);
+                        this.Vertices.Add(vertex);
+                        this.CoordVertexMap[c] = vertex;
                     }
                 }
             }
@@ -150,7 +155,8 @@ namespace Primitives
                     throw new Exception("Can not create an IndexedFace from less than 3 Vertices");
 
                 IndexedFace indexedFace = new IndexedFace(this);
-                Vertex firstVertex = GetExistingVertex(Vertices[int.Parse(vals[0])].ModelingCoord);
+                //Vertex firstVertex = GetExistingVertex(this.Vertices[int.Parse(vals[0])].ModelingCoord);
+                Vertex firstVertex = this.Vertices[int.Parse(vals[0])];
                 indexedFace.Vertices.Add(firstVertex);
                 firstVertex.IndexedFaces.Add(indexedFace);
                 Vertex previousVertex = firstVertex;
@@ -159,7 +165,8 @@ namespace Primitives
 
                     // Sometimes triangles are represented as squares, using a duplicate Vertex. We
                     // want them to actually be triangles.
-                    Vertex currentVertex = GetExistingVertex(Vertices[int.Parse(vals[vertexIndex])].ModelingCoord);
+                    // Vertex currentVertex = GetExistingVertex(this.Vertices[int.Parse(vals[vertexIndex])].ModelingCoord);
+                    Vertex currentVertex = this.Vertices[int.Parse(vals[vertexIndex])];
                     if (indexedFace.Vertices.Contains(currentVertex)) 
                     {
                         // Skip...
@@ -248,6 +255,7 @@ namespace Primitives
             this.AvailableViewVertexLocations_ZeroAngle = new List<Coord>();
             this.AvailableViewVertexLocations = new List<Coord>();
             this.Vertices = new List<Vertex>();
+            this.CoordVertexMap = new Dictionary<Coord, Vertex>();
             this.Edges = new List<Edge>();
             edgeID = 0;
 
@@ -307,7 +315,9 @@ namespace Primitives
                     AvailableViewVertexLocations.Add(coord);
                     var vertexIndex = nextVertexId;
                     nextVertexId++;
-                    Vertices.Add(new Vertex(this, vertexIndex));
+                    Vertex vertex = new Vertex(this, vertexIndex);
+                    this.Vertices.Add(vertex);
+                    this.CoordVertexMap[coord] = vertex;
                 }
             }
 
@@ -426,7 +436,8 @@ namespace Primitives
 
         private Vertex GetExistingVertex(Coord modelingCoord)
         {
-            return Vertices.Find(v => v.ModelingCoord == modelingCoord);
+            return this.CoordVertexMap[modelingCoord];
+            //return this.Vertices.Find(v => v.ModelingCoord == modelingCoord);
         }
 
 
@@ -440,7 +451,7 @@ namespace Primitives
             {
                 Coord viewCoord = Transformer.ModelToWindow(c);
                 AvailableViewVertexLocations_ZeroAngle.Add(viewCoord);
-                Vertex newVertex = Vertices[AvailableViewVertexLocations_ZeroAngle.Count - 1];
+                Vertex newVertex = this.Vertices[AvailableViewVertexLocations_ZeroAngle.Count - 1];
                 //check if the new vertex is now the nearest vertex
                 if (NearestVertex == null || newVertex.ViewCoord.Z > NearestVertex.ViewCoord.Z) //nearer Vertices have higher Z values (less negative)
                     NearestVertex = newVertex;

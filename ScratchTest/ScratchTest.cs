@@ -297,7 +297,7 @@ namespace ScratchTest
         {
             
             var files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
-                .Where(s => s.EndsWith(".stl") || s.EndsWith(".x3d"))
+                .Where(s => s.EndsWith(".stl", StringComparison.OrdinalIgnoreCase) || s.EndsWith(".x3d", StringComparison.OrdinalIgnoreCase))
                 .Select(f => new ModelFile() { FilePath = f, Name = Path.GetFileName(f) } );
 
             mFilesComboBox.Items.Clear();
@@ -306,7 +306,7 @@ namespace ScratchTest
                 //X3DFile f = new X3DFile(fileName);
                 mFilesComboBox.Items.Add(file);
                 //if (fileName == selectFileName)
-                if (file.Name == selectFileName)
+                if (string.Equals(file.Name, Path.GetFileName(selectFileName), StringComparison.OrdinalIgnoreCase))
                     mFilesComboBox.SelectedIndex = mFilesComboBox.Items.Count - 1;
             }
         }

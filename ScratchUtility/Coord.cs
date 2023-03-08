@@ -90,9 +90,16 @@ namespace ScratchUtility
             return !(a == b);
         }
 
+        // TODO:P0 PERF: See Vector3 GetHashCode() https://referencesource.microsoft.com/#System.Numerics/System/Numerics/Vector3.cs,44
         public override bool Equals(object obj)
         {
-            throw new ArgumentException("PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
+            var a = this;
+            var b = (Coord)obj;
+
+            if (b == null) return false;
+
+            return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
+            //throw new ArgumentException("PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
         }
 
         public bool Equals(Coord other, int toleranceDecimalPlaces)

@@ -37,6 +37,8 @@ namespace ViewSupport
 
         public static IndexedFaceSet Deserialize(string filePath)
         {
+            DateTime start = DateTime.Now;
+
             StlSerializer instance = new StlSerializer();
             IndexedFaceSet ifs = null;
 
@@ -67,6 +69,8 @@ namespace ViewSupport
             {
                 ifs = instance.DeserializeAscii(filePath);
             }
+            
+            Debug.WriteLine($"StlDeserialize, durMs={(int)DateTime.Now.Subtract(start).TotalMilliseconds}, isBinary={isBinary}, vertices={ifs.Vertices.Count}, edges={ifs.Edges.Count}");
 
             return ifs;
         }
