@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Primitives;
 using ScratchUtility;
-using Primitives;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace ViewSupport
 {
@@ -49,9 +49,11 @@ namespace ViewSupport
         }
 
 
-        /// <summary>Processes the List of IndexedFaceSets to fix visual problems. For example, adds a line at the position where two IndexedFaceSets intersect.</summary>
+        /// <summary>Processes the List of IndexedFaceSets to fix visual problems. For example, 
+        /// adds a line at the position where two IndexedFaceSets intersect.</summary>
         public void PreProcess()
         {
+            DateTime start = DateTime.UtcNow;
 
             //todo: first do the plane-plane intersections, then only do the following for planes that intersect
 
@@ -90,6 +92,9 @@ namespace ViewSupport
 
                 }
             }
+
+            int durMs = (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds;
+            Debug.WriteLine($"PreProcess, durMs={durMs}");
         }
 
 

@@ -37,7 +37,7 @@ namespace ViewSupport
 
         public static IndexedFaceSet Deserialize(string filePath)
         {
-            DateTime start = DateTime.Now;
+            DateTime start = DateTime.UtcNow;
 
             StlSerializer instance = new StlSerializer();
             IndexedFaceSet ifs = null;
@@ -70,7 +70,7 @@ namespace ViewSupport
                 ifs = instance.DeserializeAscii(filePath);
             }
             
-            Debug.WriteLine($"StlDeserialize, durMs={(int)DateTime.Now.Subtract(start).TotalMilliseconds}, isBinary={isBinary}, vertices={ifs.Vertices.Count}, edges={ifs.Edges.Count}");
+            Debug.WriteLine($"StlDeserialize, durMs={(int)DateTime.UtcNow.Subtract(start).TotalMilliseconds}, isBinary={isBinary}, vertices={ifs.Vertices.Count}, edges={ifs.Edges.Count}");
 
             return ifs;
         }
@@ -115,12 +115,13 @@ namespace ViewSupport
                         // end
                         byte[] block;
                         int iterFace = 0;
+                        byte[] xComp = new byte[4];
+                        byte[] yComp = new byte[4];
+                        byte[] zComp = new byte[4];
+
                         while ((block = br.ReadBytes(50)) != null && iterFace++ < faceCount)
                         {
                             parsedFaceCoords = new List<Coord>();
-                            byte[] xComp = new byte[4];
-                            byte[] yComp = new byte[4];
-                            byte[] zComp = new byte[4];
 
                             // Parse data block
                             for (int i = 0; i < 4; i++)
@@ -153,7 +154,7 @@ namespace ViewSupport
                                 if (i == 0)
                                 {
                                     // This is a normal
-                                    Coord normCoord = new Coord(x, y, z);
+                                    // Coord normCoord = new Coord(x, y, z);
                                     
                                     //if(Math.Abs(Math.Pow(norm.X,2) + Math.Pow(norm.X, 2) + Math.Pow(norm.X, 2) - 1) > .001)
                                     //{

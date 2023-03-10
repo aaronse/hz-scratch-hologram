@@ -418,7 +418,7 @@ namespace ScratchTest
             SvgSerializer svgSerializer = new SvgSerializer();
             var svgText = svgSerializer.Serialize(
                 (!mArcSegmentsCheckbox.Checked) ? null : EdgePainter.ArcSegments,
-                (!mVectorsCheckBox.Checked) ? null : EdgePainter.Shapes);
+                EdgePainter.Shapes);
 
             // TODO: Remove after verifying JSON serializer exists for target platform...
             //StringBuilder sbArcsJson = new StringBuilder();
@@ -434,6 +434,7 @@ namespace ScratchTest
             //    sbArcsJson.AppendLine("]");
             //}
 
+            // TODO:P0 User should select target file location
             //if (mExportSvgDialog.ShowDialog() == DialogResult.OK)
             {
                 string svgFilePath = "c:\\Users\\aaron\\Documents\\test.svg";

@@ -108,7 +108,7 @@ namespace ScratchView
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            DateTime start = DateTime.Now;
+            DateTime start = DateTime.UtcNow;
 
             base.OnPaint(e);
             if (!DesignMode)
@@ -126,7 +126,7 @@ namespace ScratchView
                 Drawing.Blit(e.Graphics);
             }
 
-            Debug.WriteLine("OnPaint, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
+            Debug.WriteLine("OnPaint, durMs=" + (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
         }
 
         private void Drawing_SceneChanged()

@@ -156,7 +156,7 @@ namespace ViewSupport
                         }
                     }
             }
-
+            
             if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
             {
                 foreach (EdgeSection es in s_visibleEdgeSections)
@@ -651,7 +651,7 @@ namespace ViewSupport
             s_edgePointVisibleArcs =
                 new Dictionary<string, ArcInfo>(StringComparer.OrdinalIgnoreCase);
 
-            DateTime start = DateTime.Now;
+            DateTime start = DateTime.UtcNow;
 
             DrawOptions computeOnlyOptions = renderOptions.Clone();
             computeOnlyOptions.IsRendering = false;
@@ -727,7 +727,7 @@ namespace ViewSupport
             // Mark computed arcs based on current view orientation's hash
             s_holoVisibleHash = viewModelHash;
 
-            Debug.WriteLine("MultiViewAngleTravese, durMs=" + (int)DateTime.Now.Subtract(start).TotalMilliseconds);
+            Debug.WriteLine("MultiViewAngleTravese, durMs=" + (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds);
         }
 
         internal static void TraverseEdges(DrawOptions options)
