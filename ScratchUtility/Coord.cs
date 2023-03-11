@@ -194,6 +194,20 @@ namespace ScratchUtility
         }
 
         /// <summary>
+        /// Returns (c1 - c2) * c3, this is an inline implementation of subtract and dot product.
+        /// Helps reduce method calls and allocations.
+        /// </summary>
+        public static double DiffDot(Coord c1, Coord c2, Coord c3)
+        {
+            double dX = c1.X - c2.X;
+            double dY = c1.Y - c2.Y;
+            double dZ = c1.Z - c2.Z;
+
+            return dX * c3.X + dY * c3.Y + dZ * c3.Z;
+        }
+
+
+        /// <summary>
         /// Returns a new PointD object with this Coord's X and Y value. The Z value is eliminated.
         /// </summary>
         public PointD ToPointD()

@@ -74,8 +74,8 @@ namespace ViewSupport
                                 continue;
                             }
 
-                            Coord c;
-                            if (!ifc.IntersectsWith_ModelingCoordinates(e, out c))
+                            Coord c = new Coord(0, 0, 0);
+                            if (!ifc.IntersectsWith_ModelingCoordinates(e, ref c))
                             {
                                 continue;
                             }

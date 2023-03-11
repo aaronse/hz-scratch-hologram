@@ -263,21 +263,21 @@ namespace Primitives
 
         public bool IntersectsWith_ModelingCoordinates(
             Edge toIntersect, 
-            out Coord intersectionPoint_ModelingCoordinates)
+            ref Coord intersectionPoint_ModelingCoordinates)
         {
             return IntersectsWith(
                 normalVector: this.NormalVector_ModelingCoordinates,
                 pointOnFace: this.Vertices[0].ModelingCoord,
                 point1: toIntersect.StartVertex.ModelingCoord, 
                 point2: toIntersect.EndVertex.ModelingCoord,
-                intersectionPoint: out intersectionPoint_ModelingCoordinates);
+                intersectionPoint: ref intersectionPoint_ModelingCoordinates);
         }
 
         /// <summary>Returns true if the supplied Modeling Coord is contained within the IndexedFace.
         /// After rotating, all Z values are ignored.</summary>
         public bool ContainsPoint2D_ModelingCoordinates(Coord c)
         {
-            // TODO:P0 PERF: What's cost per Profiler measurements?
+            // TODO:P0 PERF: Cache perpendicularUnitVector?  What's cost per Profiler measurements?
             Coord axisUnitVector = this.NormalVector;
             Coord perpendicularUnitVector = axisUnitVector.CrossProduct(
                 (this.Vertices[1].ModelingCoord - this.Vertices[0].ModelingCoord).CalcUnitVector()); //parallel to plane
@@ -425,33 +425,41 @@ namespace Primitives
             return IntersectsWith_ViewCoordinates(point_ViewCoordinates, cameraPoint);
         }
 
+        private static Coord s_nopCoord = new Coord(0, 0, 0);
 
         private bool IntersectsWith_ViewCoordinates(Coord point1, Coord point2)
         {
-            Coord c;
-            return IntersectsWith(NormalVector, Vertices[0].ViewCoord, point1, point2, out c);
+            //Coord c = new Coord(0, 0, 0);
+            return IntersectsWith(NormalVector, Vertices[0].ViewCoord, point1, point2, ref s_nopCoord);
         }
 
 
         //algorithm from http://local.wasp.uwa.edu.au/~pbourke/geometry/planeline/
-        private static bool IntersectsWith(Coord normalVector, Coord pointOnFace, Coord point1, Coord point2, out Coord intersectionPoint)
+        private static bool IntersectsWith(
+            Coord normalVector, 
+            Coord pointOnFace, 
+            Coord point1, 
+            Coord point2, 
+            ref Coord intersectionPoint)
         {
-
-            intersectionPoint = new Coord(0, 0, 0);
-            double uDenom = normalVector.DotProduct(point2 - point1);
+            double uDenom = Coord.DiffDot(point2, point1, normalVector);
             if (uDenom == 0) //the line from p2 to p1 is perpendicular to the plane's normal (i.e. parallel to plane)
+            {
+                intersectionPoint = new Coord(0, 0, 0);
                 return false;
+            }
 
-            double uNum = normalVector.DotProduct(pointOnFace - point1);
+            double uNum = Coord.DiffDot(pointOnFace, point1, normalVector);
             double u = uNum / uDenom;
             if (Global.IsNotWithinTolerance(u))
-                return false;
-            else
             {
-                //P = P1 + u (P2 - P1)
-                intersectionPoint = point1 + u * (point2 - point1);
-                return true;
+                intersectionPoint = new Coord(0, 0, 0);
+                return false;
             }
+
+            //P = P1 + u (P2 - P1)
+            intersectionPoint = point1 + u * (point2 - point1);
+            return true;
         }
     }
 }
