@@ -318,7 +318,7 @@ namespace ScratchTest
 
         private void mFilesComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            bool autoCenter = trye;
+            bool autoCenter = true;
 
             var modelFile = mFilesComboBox.SelectedItem as ModelFile;
             if (".x3d".Equals(Path.GetExtension(modelFile.FilePath), StringComparison.OrdinalIgnoreCase))
