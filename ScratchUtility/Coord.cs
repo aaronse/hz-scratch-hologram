@@ -6,21 +6,20 @@ using System.Drawing;
 
 namespace ScratchUtility
 {
+    // TODO:P0 PERF: See Vector3 GetHashCode() https://referencesource.microsoft.com/#System.Numerics/System/Numerics/Vector3.cs,44
     // TODO:P0 PERF: Implement GetHashCode, replace the String based hashes with custom Hash implmentation.  See https://learn.microsoft.com/en-us/archive/blogs/ericlippert/guidelines-and-rules-for-gethashcode and https://theburningmonk.com/2011/03/hashset-vs-list-vs-dictionary/
-    // TODO:P2 Very tempting to start caching computed state from Calc... methods.  But, should
-    // instead Profile perf to see what's *REALLY* happening...
     public struct Coord
     {
         // TODO:P0:PERF: Cache/Hash/Dirty derived?  Are, or can Coord be immutable?  Consider
         // #ifdef DEBUG_PROPS to 
 
-#if DEBUG_USE_PROPS 
-        // Uncomment and build if/when need to verify/detect if callers are unexpectedly mutating values
+        // Build with DEBUG_USE_PROPS defined if/when need to verify/detect if callers are unexpectedly mutating values.
+#if DEBUG_USE_PROPS
         public double X { get; private set; }   
         public double Y { get; private set; }
         public double Z { get; private set; }
 #else
-        // PERF:  OO Sacrilege for performance sake.  Intentionally using member fields instead of
+        // PERF: OO Sacrilege for performance sake.  Intentionally using member fields instead of
         // Properties to avoid method overhead.
         public double X; 
         public double Y; 
@@ -90,7 +89,6 @@ namespace ScratchUtility
             return !(a == b);
         }
 
-        // TODO:P0 PERF: See Vector3 GetHashCode() https://referencesource.microsoft.com/#System.Numerics/System/Numerics/Vector3.cs,44
         public override bool Equals(object obj)
         {
             var a = this;

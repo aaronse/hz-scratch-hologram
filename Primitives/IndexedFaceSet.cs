@@ -24,8 +24,9 @@ namespace Primitives
         public List<IndexedFace> IndexedFaces; // { get; private set; }
 
         // Model Coordinates, read during parsing, never modified.
+        //
         public List<Coord> AvailableVertexLocations { get; private set; }
-
+        
         // View Coordinate at Zero viewing angle
         public List<Coord> AvailableViewVertexLocations_ZeroAngle { get; private set; }
 

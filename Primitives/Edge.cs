@@ -37,11 +37,11 @@ namespace Primitives
         /// CreatorFace's point of view, StartVertex and EndVertex are in counter-clockwise order.
         /// </summary>
         public IndexedFace CreatorFace; //{ get; private set; }
-    
+
         /// <summary>Gets the Face that did not create this Edge. From OtherFace's point of view, 
         /// StartVertex and EndVertex are in clockwise order instead of counter-clockwise as would 
         /// be expected when looking from the point of view of the CreatorFace.</summary>
-        public IndexedFace OtherFace { get; private set; }
+        public IndexedFace OtherFace; //{ get; private set; }
 
         /// <summary>Gets the first Vertex supplied in the creation of this Edge. From CreatorFace's 
         /// point of view, StartVertex comes before EndVertex in counter-clockwise order.</summary>

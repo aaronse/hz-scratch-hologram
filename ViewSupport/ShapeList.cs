@@ -54,21 +54,22 @@ namespace ViewSupport
         public void PreProcess()
         {
             DateTime start = DateTime.UtcNow;
-
+            int faceIntersectionCount = 0;
             //todo: first do the plane-plane intersections, then only do the following for planes that intersect
 
 
             //compare every face to every edge to split edges at intersections with faces.
             foreach (IndexedFaceSet ifs in mShapes)
             {
-                foreach (Edge e in ifs.Edges)
+                foreach (IndexedFaceSet ifsInner in mShapes)
                 {
-                    foreach (IndexedFaceSet ifsInner in mShapes)
+                    foreach (Edge e in ifs.Edges)
                     {
                         foreach (IndexedFace ifc in ifsInner.IndexedFaces)
                         {
                             // Only compare to faces that the edge isn't a part of
-                            if (e.ContainsFace(ifc) || e.StartVertex.ContainsFace(ifc) || e.EndVertex.ContainsFace(ifc)) 
+                            // TODO:P1 PERF: ContainsFace internally scans a List...  Hash instead.
+                            if (e.ContainsFace(ifc) || e.StartVertex.ContainsFace(ifc) || e.EndVertex.ContainsFace(ifc))
                             {
                                 continue;
                             }
@@ -87,14 +88,23 @@ namespace ViewSupport
                             double distanceFromStart = (c - e.StartVertex.ModelingCoord).CalcLength() / e.Length_ModelingCoordinates;
 
                             e.FaceIntersections.Add(new Intersection(e, distanceFromStart));
+                            faceIntersectionCount++;
                         }
                     }
 
                 }
             }
+            // Calc Avg and Max indexed Faces per edge 
+            int avgIndexedFacesPerEdge = mShapes[0].Edges.Aggregate((int)0, (curr, next) => curr + next.StartVertex.IndexedFaces.Count) / mShapes[0].Edges.Count;
+            int maxIndexedFacesPerEdge = mShapes[0].Edges.Aggregate((int)0, (curr, next) => Math.Max(curr, next.StartVertex.IndexedFaces.Count));
+            double missModelRatio = Math.Round((100.0 * IndexedFace.s_algoModelMismatches) / IndexedFace.s_algoModelCalls, 2);
 
             int durMs = (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds;
-            Debug.WriteLine($"PreProcess, durMs={durMs}");
+            Debug.WriteLine(
+                $"PreProcess, durMs={durMs}, faceIntersectionCount={faceIntersectionCount}" +
+                $", avgIndexedFacesPerEdge={avgIndexedFacesPerEdge}, maxIndexedFacesPerEdge={maxIndexedFacesPerEdge}," +
+                $", missModelRatio={missModelRatio}, algoModelMismatches={IndexedFace.s_algoModelMismatches}" +
+                $", algoModelCalls={IndexedFace.s_algoModelCalls}");
         }
 
 

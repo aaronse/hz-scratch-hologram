@@ -29,6 +29,7 @@ namespace Primitives
             IndexedFaces = new List<IndexedFace>();
         }
 
+        // TODO:P1 PERF: Profiled 2023-03-10 6% Vertex.ModelingCoord
         public Coord ModelingCoord
         {
             get

@@ -35,7 +35,7 @@ namespace ViewSupport
 
         }
 
-        public static IndexedFaceSet Deserialize(string filePath)
+        public static IndexedFaceSet Deserialize(string filePath, bool autoCenter = true)
         {
             DateTime start = DateTime.UtcNow;
 
@@ -63,11 +63,11 @@ namespace ViewSupport
             
             if (isBinary)
             {
-                ifs = instance.DeserializeBinary(filePath);
+                ifs = instance.DeserializeBinary(filePath, autoCenter);
             }
             else
             {
-                ifs = instance.DeserializeAscii(filePath);
+                ifs = instance.DeserializeAscii(filePath, autoCenter);
             }
             
             Debug.WriteLine($"StlDeserialize, durMs={(int)DateTime.UtcNow.Subtract(start).TotalMilliseconds}, isBinary={isBinary}, vertices={ifs.Vertices.Count}, edges={ifs.Edges.Count}");
@@ -79,7 +79,7 @@ namespace ViewSupport
         // Related:
         // - https://en.wikipedia.org/wiki/STL_%28file_format%29#Binary_STL
         // - https://stackoverflow.com/questions/68568214/c-sharp-how-to-parse-an-stl-file-current-function-does-not-link-vertices-into-f
-        private IndexedFaceSet DeserializeBinary(string filePath)
+        private IndexedFaceSet DeserializeBinary(string filePath, bool autoCenter)
         {
             double scale = 1.0;
             string name = Path.GetFileNameWithoutExtension(filePath);
@@ -182,14 +182,14 @@ namespace ViewSupport
             }
 
             // IndexedFaceSet internally transformDo post parsing initialization to update Vertex/Edge graph references
-            var model = new IndexedFaceSet(CoordMode.XYZ, name, parsedModel, scale, autoCenter: true);
+            var model = new IndexedFaceSet(CoordMode.XYZ, name, parsedModel, scale, autoCenter);
 
             return model;
 
         }
 
 
-        private IndexedFaceSet DeserializeAscii(string filePath)
+        private IndexedFaceSet DeserializeAscii(string filePath, bool autoCenter)
         {
             double scale = 1.0;
             string name = Path.GetFileNameWithoutExtension(filePath);
@@ -226,7 +226,7 @@ namespace ViewSupport
             }
 
             // IndexedFaceSet internally transformDo post parsing initialization to update Vertex/Edge graph references
-            var model = new IndexedFaceSet(CoordMode.XYZ, name, parsedModel, scale, autoCenter: true);
+            var model = new IndexedFaceSet(CoordMode.XYZ, name, parsedModel, scale, autoCenter);
 
             return model;
         }

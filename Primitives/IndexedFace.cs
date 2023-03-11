@@ -14,12 +14,6 @@ namespace Primitives
         public IndexedFaceSet ParentIndexedFaceSet { get; private set; }
         public List<Edge> Edges { get; private set; }
         public List<Vertex> Vertices { get; private set; } //this list is in order of the way they were defined in the data file to preserve frontface/backface
-        private Coord mNormalVector;
-        private Coord mNormalVector_ModelingCoordinates;
-        // TODO: Remove
-        //private bool mIsFrontFacing;
-        //private bool mIsTransparent;
-        //private Rectangle mBoundingBox;
 
         private static double mIntersectionTolerance = 0;//.01; //0.0000000000001;
 
@@ -35,68 +29,14 @@ namespace Primitives
         private static Pen s_blackPen = new Pen(Color.Black, 2f);
         public static long _count = 0;
 
-        public static int s_algoCalls = 0;
-        public static int s_algoMismatches = 0;
-
-        internal IndexedFace(IndexedFaceSet parentIndexedFaceSet)
-        {
-            ParentIndexedFaceSet = parentIndexedFaceSet;
-            Edges = new List<Edge>();
-            Vertices = new List<Vertex>();
-            this.IsFrontFacing = true;
-            this.IsTransparent = false;
-        }
-
-        public Coord NormalVector_ModelingCoordinates
-        {
-            get
-            {
-                return mNormalVector_ModelingCoordinates;
-            }
-        }
-
-        public Coord NormalVector
-        {
-            get
-            {
-                return mNormalVector;
-            }
-        }
-
-        public bool IsFrontFacing;
-        //{
-        //    get
-        //    {
-        //        return mIsFrontFacing;
-        //    }
-        //}
-
-        public bool IsTransparent;
-        // TODO: Remove
-        //{
-        //    get
-        //    {
-        //        return mIsTransparent;
-        //    }
-        //    internal set
-        //    {
-        //        mIsTransparent = value;
-        //    }
-        //}
-
-        public Rectangle BoundingBox;
-
-
-        // TODO: Remove
-        //{
-        //    get
-        //    {
-        //        return mBoundingBox;
-        //    }
-        //}
+        public static int s_algoViewCalls = 0;
+        public static int s_algoViewMismatches = 0;
+        public static int s_algoModelCalls = 0;
+        public static int s_algoModelMismatches = 0;
 
         private GraphicsPath _graphicsPath = null;
-        private PointF[] _pointPath = null;
+        private PointF[] _pointViewPath = null;
+        private PointF[] _pointModelPath = null;
 
         // Static Array of Point Path Arrays, used to reduce mem/cpu for calculating point visibility within a Path using GDI
         // PathPointType.Start = 0, PathPointType.Line = 0
@@ -111,6 +51,30 @@ namespace Primitives
             new byte[] { 0, 1, 1 },
             new byte[] { 0, 1, 1, 1 },
         };
+
+        internal IndexedFace(IndexedFaceSet parentIndexedFaceSet)
+        {
+            ParentIndexedFaceSet = parentIndexedFaceSet;
+            Edges = new List<Edge>();
+            Vertices = new List<Vertex>();
+            this.IsFrontFacing = true;
+            this.IsTransparent = false;
+        }
+
+
+#if DEBUG_USE_PROPS
+        public Coord NormalVector_ModelingCoordinates { public get; private set; }
+        public bool IsFrontFacing { public get; private set; }
+        public bool IsTransparent { public get; internal set; }
+        public Rectangle BoundingBox { public get; private set; }
+        public Coord NormalVector { public get; private set; }
+#else
+        public Coord NormalVector_ModelingCoordinates;
+        public bool IsFrontFacing;
+        public bool IsTransparent;
+        public Rectangle BoundingBox;
+        public Coord NormalVector;
+#endif
 
         // TODO:P1:PERF: Profile 3%
         public GraphicsPath GraphicsPath
@@ -135,26 +99,49 @@ namespace Primitives
         }
 
         // TODO: Deprecated, remove after confirming Algo 2 correct, and is faster
-        public GraphicsPath GraphicsPath_ModelingCoordinates
+        public GraphicsPath GetGraphicsPathForModelingCoordinates()
         {
-            get
+            Coord axisUnitVector = NormalVector;
+            Coord perpendicularUnitVector = axisUnitVector.CrossProduct((Vertices[1].ModelingCoord - Vertices[0].ModelingCoord).CalcUnitVector()); //parallel to plane
+
+            PointF[] fs = new PointF[Vertices.Count];
+            byte[] ts = new byte[Vertices.Count];
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                fs[i] = Transformer.ViewFromAxis(Vertices[i].ModelingCoord, axisUnitVector, perpendicularUnitVector);
+                ts[i] = (byte)PathPointType.Line;
+            }
+            ts[0] = (byte)PathPointType.Start;
+            GraphicsPath g = new GraphicsPath(fs, ts);
+            g.CloseAllFigures();
+            return g;
+        }
+
+        public PointF[] GetGraphicsPathForModelingCoordinatesAlgo2()
+        {
+            if (_pointModelPath == null)
             {
                 Coord axisUnitVector = NormalVector;
-                Coord perpendicularUnitVector = axisUnitVector.CrossProduct((Vertices[1].ModelingCoord - Vertices[0].ModelingCoord).CalcUnitVector()); //parallel to plane
+                //parallel to plane
+                Coord perpendicularUnitVector = 
+                    axisUnitVector.CrossProduct(
+                        (Vertices[1].ModelingCoord - Vertices[0].ModelingCoord).CalcUnitVector());
 
-                PointF[] fs = new PointF[Vertices.Count];
-                byte[] ts = new byte[Vertices.Count];
+                PointF[] path = new PointF[Vertices.Count + 1];
                 for (int i = 0; i < Vertices.Count; i++)
                 {
-                    fs[i] = Transformer.ViewFromAxis(Vertices[i].ModelingCoord, axisUnitVector, perpendicularUnitVector);
-                    ts[i] = (byte)PathPointType.Line;
+                    path[i] = Transformer.ViewFromAxis(Vertices[i].ModelingCoord, axisUnitVector, perpendicularUnitVector);
                 }
-                ts[0] = (byte)PathPointType.Start;
-                GraphicsPath g = new GraphicsPath(fs, ts);
-                g.CloseAllFigures();
-                return g;
+                // Close edge
+                path[Vertices.Count].X = path[0].X;
+                path[Vertices.Count].Y = path[0].Y;
+
+                _pointModelPath = path;
             }
+
+            return _pointModelPath;
         }
+
 
         /// <summary>Gets the direction vector (in view coordinates) of the passed-in edge when viewed from this IndexedFace.</summary>
         public Coord GetDirectionVector(Edge e)
@@ -191,7 +178,7 @@ namespace Primitives
 
             if ((s_useIsVisibleAlgoVersion & 2) == 2)
             {
-                if (_pointPath == null)
+                if (_pointViewPath == null)
                 {
                     PointF[] path = new PointF[Vertices.Count + 1];
                     for (int i = 0; i < Vertices.Count; i++)
@@ -203,15 +190,15 @@ namespace Primitives
                     path[Vertices.Count].X = path[0].X;
                     path[Vertices.Count].Y = path[0].Y;
 
-                    _pointPath = path;
+                    _pointViewPath = path;
                 }
 
-                isVisibleAlgo2 = IsPointInPolygon((float)c.X, (float)c.Y, _pointPath) || isOutlineVisibleAlgo1;
+                isVisibleAlgo2 = IsPointInPolygon((float)c.X, (float)c.Y, _pointViewPath) || isOutlineVisibleAlgo1;
             }
 
 
-            s_algoCalls++;
-            if (isVisibleAlgo1 != isVisibleAlgo2) s_algoMismatches++;
+            s_algoViewCalls++;
+            if (isVisibleAlgo1 != isVisibleAlgo2) s_algoViewMismatches++;
 
             ////Non-Zero Winding Method is used to determine whether or not a point is contained within the IndexedFace.
             ////imagine a line from the point going out to somewhere that is for sure outside of the IndexedFace. If the sum of the signs of the cross product of
@@ -274,15 +261,60 @@ namespace Primitives
             return inside;
         }
 
-        /// <summary>Returns true if the supplied Modeling Coord is contained within the IndexedFace. After rotating, all Z values are ignored.</summary>
+        public bool IntersectsWith_ModelingCoordinates(
+            Edge toIntersect, 
+            out Coord intersectionPoint_ModelingCoordinates)
+        {
+            return IntersectsWith(
+                normalVector: this.NormalVector_ModelingCoordinates,
+                pointOnFace: this.Vertices[0].ModelingCoord,
+                point1: toIntersect.StartVertex.ModelingCoord, 
+                point2: toIntersect.EndVertex.ModelingCoord,
+                intersectionPoint: out intersectionPoint_ModelingCoordinates);
+        }
+
+        /// <summary>Returns true if the supplied Modeling Coord is contained within the IndexedFace.
+        /// After rotating, all Z values are ignored.</summary>
         public bool ContainsPoint2D_ModelingCoordinates(Coord c)
         {
-            Coord axisUnitVector = NormalVector;
-            Coord perpendicularUnitVector = axisUnitVector.CrossProduct((Vertices[1].ModelingCoord - Vertices[0].ModelingCoord).CalcUnitVector()); //parallel to plane
+            // TODO:P0 PERF: What's cost per Profiler measurements?
+            Coord axisUnitVector = this.NormalVector;
+            Coord perpendicularUnitVector = axisUnitVector.CrossProduct(
+                (this.Vertices[1].ModelingCoord - this.Vertices[0].ModelingCoord).CalcUnitVector()); //parallel to plane
 
-            GraphicsPath g = GraphicsPath_ModelingCoordinates;
-            PointF cTransformed = Transformer.ViewFromAxis(c, axisUnitVector, perpendicularUnitVector);
-            return (g.IsVisible(cTransformed));
+            bool isVisibleAlgo1 = false;
+            bool isVisibleAlgo2 = false;
+
+            if ((s_useIsVisibleAlgoVersion & 1) == 1)
+            {
+                using (GraphicsPath g = GetGraphicsPathForModelingCoordinates())
+                {
+                    PointF cTransformed = Transformer.ViewFromAxis(
+                        pointToTransform: c,
+                        viewAxisUnitVector: axisUnitVector,
+                        perpendicularAxisUnitVector: perpendicularUnitVector);
+
+                    isVisibleAlgo1 = (g.IsVisible(cTransformed));
+                }
+            }
+
+            if ((s_useIsVisibleAlgoVersion & 2) == 2)
+            {
+                PointF[] path = GetGraphicsPathForModelingCoordinatesAlgo2();
+
+                PointF cTransformed = Transformer.ViewFromAxis(
+                    pointToTransform: c,
+                    viewAxisUnitVector: axisUnitVector,
+                    perpendicularAxisUnitVector: perpendicularUnitVector);
+
+                isVisibleAlgo2 = IsPointInPolygon((float)cTransformed.X, (float)cTransformed.Y, path);
+            }
+
+            s_algoModelCalls++;
+            if (isVisibleAlgo1 != isVisibleAlgo2) s_algoModelMismatches++;
+
+
+            return ((s_useIsVisibleAlgoVersion & 1) == 1) ? isVisibleAlgo1 : isVisibleAlgo2;
         }
         
 
@@ -294,39 +326,55 @@ namespace Primitives
         //    Refresh(false);
         //}
 
-        /// <summary>Sets NormalVector_ModelingCoordinates. Only needs to be called once after adding all Vertices.</summary>
+        /// <summary>Sets NormalVector_ModelingCoordinates. Only needs to be called once after 
+        /// adding all Vertices.</summary>
         internal void UpdateNormalVector_ModelingCoordinates()
         {
-            //update the vector. don't just use the first three vertices - the polygon might have a convex edge there and the result will be wrong.
-            mNormalVector_ModelingCoordinates = new Coord(0, 0, 0);
+            // Update the vector. don't just use the first three vertices - the polygon might have
+            // a convex edge there and the result will be wrong.
+            Coord modelNormal = new Coord(0, 0, 0);
+
             for (int i = 0; i < Vertices.Count - 2; i++)
             {
-                mNormalVector_ModelingCoordinates += (Vertices[i].ModelingCoord - Vertices[i + 1].ModelingCoord).CrossProduct(Vertices[i + 2].ModelingCoord - Vertices[i + 1].ModelingCoord);
+                modelNormal += 
+                    (Vertices[i].ModelingCoord - Vertices[i + 1].ModelingCoord)
+                    .CrossProduct(Vertices[i + 2].ModelingCoord - Vertices[i + 1].ModelingCoord);
             }
+            
             int c = Vertices.Count;
-            mNormalVector_ModelingCoordinates += (Vertices[c - 1].ModelingCoord - Vertices[c - 2].ModelingCoord).CrossProduct(Vertices[0].ModelingCoord - Vertices[c - 2].ModelingCoord);
-            mNormalVector_ModelingCoordinates += (Vertices[c - 1].ModelingCoord - Vertices[0].ModelingCoord).CrossProduct(Vertices[1].ModelingCoord - Vertices[0].ModelingCoord);
-            mNormalVector_ModelingCoordinates /= mNormalVector_ModelingCoordinates.CalcLength();
+            modelNormal += 
+                (Vertices[c - 1].ModelingCoord - Vertices[c - 2].ModelingCoord)
+                .CrossProduct(Vertices[0].ModelingCoord - Vertices[c - 2].ModelingCoord);
+
+            modelNormal += 
+                (Vertices[c - 1].ModelingCoord - Vertices[0].ModelingCoord)
+                .CrossProduct(Vertices[1].ModelingCoord - Vertices[0].ModelingCoord);
+
+            modelNormal /= modelNormal.CalcLength();
+
+            this.NormalVector_ModelingCoordinates = modelNormal;
         }
 
         /// <summary>Sets the NormalVector to reflect the current view of the IndexedFace on the screen. Automatically called from Refresh().</summary>
         internal void UpdateNormalVector()
         {
             //update the vector. don't just use the first three vertices - the polygon might have a convex edge there and the result will be wrong.
-            mNormalVector = new Coord(0, 0, 0);
+            this.NormalVector = new Coord(0, 0, 0);
             for (int i = 0; i < Vertices.Count - 2; i++)
             {
-                mNormalVector += (Vertices[i].ViewCoord - Vertices[i + 1].ViewCoord).CrossProduct(Vertices[i + 2].ViewCoord - Vertices[i + 1].ViewCoord);
+                this.NormalVector += 
+                    (Vertices[i].ViewCoord - Vertices[i + 1].ViewCoord)
+                    .CrossProduct(Vertices[i + 2].ViewCoord - Vertices[i + 1].ViewCoord);
             }
             int c = Vertices.Count;
-            mNormalVector += (Vertices[c - 1].ViewCoord - Vertices[c - 2].ViewCoord).CrossProduct(Vertices[0].ViewCoord - Vertices[c - 2].ViewCoord);
-            mNormalVector += (Vertices[c - 1].ViewCoord - Vertices[0].ViewCoord).CrossProduct(Vertices[1].ViewCoord - Vertices[0].ViewCoord);
-            mNormalVector /= mNormalVector.CalcLength();
+            this.NormalVector += (Vertices[c - 1].ViewCoord - Vertices[c - 2].ViewCoord).CrossProduct(Vertices[0].ViewCoord - Vertices[c - 2].ViewCoord);
+            this.NormalVector += (Vertices[c - 1].ViewCoord - Vertices[0].ViewCoord).CrossProduct(Vertices[1].ViewCoord - Vertices[0].ViewCoord);
+            this.NormalVector /= this.NormalVector.CalcLength();
 
-            if (!mNormalVector.IsValid())
+            if (!this.NormalVector.IsValid())
             {
                 StringBuilder b = new StringBuilder();
-                b.Append("Invalid Normal Vector: ").AppendLine(mNormalVector.ToString());
+                b.Append("Invalid Normal Vector: ").AppendLine(this.NormalVector.ToString());
                 b.AppendLine("Vertices: ");
                 foreach (Vertex v in Vertices)
                     b.AppendLine(v.ViewCoord.ToString());
@@ -345,7 +393,7 @@ namespace Primitives
                 // TODO: Call _graphicsPath.Dispose(); when IndexdFace out of scope
             }
             _graphicsPath = null;
-            _pointPath = null;
+            _pointViewPath = null;
 
             if (this.IsTransparent || Edges.Any<Edge>(e => e.OtherFace == null))
             {
@@ -377,20 +425,17 @@ namespace Primitives
             return IntersectsWith_ViewCoordinates(point_ViewCoordinates, cameraPoint);
         }
 
+
         private bool IntersectsWith_ViewCoordinates(Coord point1, Coord point2)
         {
             Coord c;
             return IntersectsWith(NormalVector, Vertices[0].ViewCoord, point1, point2, out c);
         }
 
-        public bool IntersectsWith_ModelingCoordinates(Edge toIntersect, out Coord intersectionPoint_ModelingCoordinates)
-        {
-            return IntersectsWith(NormalVector_ModelingCoordinates, Vertices[0].ModelingCoord, toIntersect.StartVertex.ModelingCoord, toIntersect.EndVertex.ModelingCoord, out intersectionPoint_ModelingCoordinates);
-        }
 
+        //algorithm from http://local.wasp.uwa.edu.au/~pbourke/geometry/planeline/
         private static bool IntersectsWith(Coord normalVector, Coord pointOnFace, Coord point1, Coord point2, out Coord intersectionPoint)
         {
-            //algorithm from http://local.wasp.uwa.edu.au/~pbourke/geometry/planeline/
 
             intersectionPoint = new Coord(0, 0, 0);
             double uDenom = normalVector.DotProduct(point2 - point1);

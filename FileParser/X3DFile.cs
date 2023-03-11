@@ -26,7 +26,7 @@ namespace FileParser
         }
 
         /// <summary>Parses the x3d file that this X3dFile represents and extracts the IndexedFaces and CameraPosition.</summary>
-        public void Parse(double scale)
+        public void Parse(double scale, bool autoCenter)
         {
             this.IndexedFaceSets = new List<IndexedFaceSet>();
 
@@ -102,7 +102,7 @@ namespace FileParser
                         coordIndices[i], 
                         points[i], 
                         scale,
-                        autoCenter: true);
+                        autoCenter);
 
                     IndexedFaceSets.Add(ifs);
                 }

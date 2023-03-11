@@ -318,18 +318,20 @@ namespace ScratchTest
 
         private void mFilesComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            bool autoCenter = trye;
+
             var modelFile = mFilesComboBox.SelectedItem as ModelFile;
             if (".x3d".Equals(Path.GetExtension(modelFile.FilePath), StringComparison.OrdinalIgnoreCase))
             {
                 X3DFile x3dFile = new X3DFile(modelFile.FilePath);
-                x3dFile.Parse(scale: 1.0);
+                x3dFile.Parse(scale: 1.0, autoCenter);
 
                 AttachModelToUi(x3dFile.IndexedFaceSets);
             }
             else if (".stl".Equals(Path.GetExtension(modelFile.FilePath), StringComparison.OrdinalIgnoreCase))
             {
                 var scene = new List<IndexedFaceSet>();
-                var model = StlSerializer.Deserialize(modelFile.FilePath);
+                var model = StlSerializer.Deserialize(modelFile.FilePath, autoCenter);
                 scene.Add(model);
 
                 AttachModelToUi(scene);
