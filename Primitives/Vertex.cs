@@ -9,17 +9,24 @@ namespace Primitives
     /// <summary>Represents a vertex adjoining (generally) three or more IndexedFaces by way of being the end-point for the Edges connecting those IndexedFaces.</summary>
     public class Vertex
     {
-        /// <summary>Specifies the index into the parent IndexFaceSet's AvailableVertexLocations and AvailableViewVertexLocations lists that this Vertex's location is stored.</summary>
-        public int VertexIndex { get; private set; }
-
         /// <summary>The list of Edges that this Vertex is a part of.</summary>
         public List<Edge> Edges { get; private set; }
 
         /// <summary>The list of IndexedFaces that this Vertex is a part of.</summary>
         public List<IndexedFace> IndexedFaces { get; private set; }
 
+#if DEBUG_USE_PROPS
+        /// <summary>Specifies the index into the parent IndexFaceSet's AvailableVertexLocations and AvailableViewVertexLocations lists that this Vertex's location is stored.</summary>
+        public int VertexIndex { get; private set; }
+
         /// <summary>The IndexedFaceSet that this Vertex is a part of.</summary>
         public IndexedFaceSet ParentIndexedFaceSet { get; private set; }
+#else
+        public int VertexIndex;
+
+        /// <summary>The IndexedFaceSet that this Vertex is a part of.</summary>
+        public IndexedFaceSet ParentIndexedFaceSet;
+#endif
 
         public Vertex(IndexedFaceSet parentIndexedFaceSet, int vertexIndex)
         {

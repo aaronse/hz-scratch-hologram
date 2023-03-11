@@ -194,7 +194,7 @@ namespace ScratchUtility
         }
 
         /// <summary>
-        /// Returns (c1 - c2) * c3, this is an inline implementation of subtract and dot product.
+        /// Returns (c1 - c2) . c3, this is an inline implementation of subtract and dot product.
         /// Helps reduce method calls and allocations.
         /// </summary>
         public static double DiffDot(Coord c1, Coord c2, Coord c3)

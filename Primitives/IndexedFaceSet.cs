@@ -15,28 +15,55 @@ namespace Primitives
 
     public class IndexedFaceSet
     {
+
+#if DEBUG_USE_PROPS
         public List<Vertex> Vertices { get; private set; }
+
         public Dictionary<Coord, Vertex> CoordVertexMap { get; private set; }
 
         /// <summary>Gets the List of Edges that make up this IndexedFaceSet</summary>
         public List<Edge> Edges { get; private set; }
 
-        public List<IndexedFace> IndexedFaces; // { get; private set; }
+        public List<IndexedFace> IndexedFaces { get; private set; }
 
         // Model Coordinates, read during parsing, never modified.
         //
-        public List<Coord> AvailableVertexLocations { get; private set; }
+        public Coord[] AvailableVertexLocations { get; private set; }
         
         // View Coordinate at Zero viewing angle
-        public List<Coord> AvailableViewVertexLocations_ZeroAngle { get; private set; }
+        public Coord[] AvailableViewVertexLocations_ZeroAngle { get; private set; }
 
         // View Coordinate at Current viewing angle
-        public List<Coord> AvailableViewVertexLocations { get; private set; }
+        public Coord[] AvailableViewVertexLocations { get; private set; }
 
         public string Name { get; private set; }
 
         /// <summary>Gets the Vertex in this IndexedFaceSet that is nearest the user.</summary>
         public Vertex NearestVertex { get; private set; }
+#else
+        public List<Vertex> Vertices;
+        public Dictionary<Coord, Vertex> CoordVertexMap;
+
+        /// <summary>Gets the List of Edges that make up this IndexedFaceSet</summary>
+        public List<Edge> Edges;
+
+        public List<IndexedFace> IndexedFaces;
+
+        // Model Coordinates, read during parsing, never modified.
+        //
+        public Coord[] AvailableVertexLocations;
+
+        // View Coordinate at Zero viewing angle
+        public Coord[] AvailableViewVertexLocations_ZeroAngle;
+
+        // View Coordinate at Current viewing angle
+        public Coord[] AvailableViewVertexLocations;
+
+        public string Name;
+
+        /// <summary>Gets the Vertex in this IndexedFaceSet that is nearest the user.</summary>
+        public Vertex NearestVertex;
+#endif
 
         static int edgeID = 0;
 
@@ -56,9 +83,9 @@ namespace Primitives
         {
             //todo: use a streamreader.
             Name = name;
-            AvailableVertexLocations = new List<Coord>();
-            AvailableViewVertexLocations_ZeroAngle = new List<Coord>();
-            AvailableViewVertexLocations = new List<Coord>();
+            var availableVertexLocations = new List<Coord>();
+            var availableViewVertexLocations_ZeroAngle = new List<Coord>();
+            var availableViewVertexLocations = new List<Coord>();
             this.Vertices = new List<Vertex>();
             this.CoordVertexMap = new Dictionary<Coord, Vertex>();
             Edges = new List<Edge>();
@@ -130,15 +157,20 @@ namespace Primitives
                         }
 
                         Coord c = new Coord(x, y, z);
-                        AvailableVertexLocations.Add(c);
-                        AvailableViewVertexLocations_ZeroAngle.Add(c);
-                        AvailableViewVertexLocations.Add(c);
+                        availableVertexLocations.Add(c);
+                        availableViewVertexLocations_ZeroAngle.Add(c);
+                        availableViewVertexLocations.Add(c);
                         Vertex vertex = new Vertex(this, i);
                         this.Vertices.Add(vertex);
                         this.CoordVertexMap[c] = vertex;
                     }
                 }
             }
+
+            // Convert List<T> to Arrays that are faster to seek by index
+            this.AvailableVertexLocations = availableVertexLocations.ToArray();
+            this.AvailableViewVertexLocations_ZeroAngle = availableViewVertexLocations_ZeroAngle.ToArray();
+            this.AvailableViewVertexLocations = availableViewVertexLocations.ToArray();
 
             //create all the indexed faces by creating Edges and connecting them
             string[] indices = coordIndices.Split(new char[] { ',', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -252,9 +284,9 @@ namespace Primitives
             bool autoCenter)
         {
             this.Name = name;
-            this.AvailableVertexLocations = new List<Coord>();
-            this.AvailableViewVertexLocations_ZeroAngle = new List<Coord>();
-            this.AvailableViewVertexLocations = new List<Coord>();
+            var availableVertexLocations = new List<Coord>();
+            var availableViewVertexLocations_ZeroAngle = new List<Coord>();
+            var availableViewVertexLocations = new List<Coord>();
             this.Vertices = new List<Vertex>();
             this.CoordVertexMap = new Dictionary<Coord, Vertex>();
             this.Edges = new List<Edge>();
@@ -311,9 +343,9 @@ namespace Primitives
                         continue;
                     }
 
-                    AvailableVertexLocations.Add(coord);
-                    AvailableViewVertexLocations_ZeroAngle.Add(coord);
-                    AvailableViewVertexLocations.Add(coord);
+                    availableVertexLocations.Add(coord);
+                    availableViewVertexLocations_ZeroAngle.Add(coord);
+                    availableViewVertexLocations.Add(coord);
                     var vertexIndex = nextVertexId;
                     nextVertexId++;
                     Vertex vertex = new Vertex(this, vertexIndex);
@@ -321,6 +353,12 @@ namespace Primitives
                     this.CoordVertexMap[coord] = vertex;
                 }
             }
+
+            // Convert List<T> to Arrays that are faster to seek by index
+            this.AvailableVertexLocations = availableVertexLocations.ToArray();
+            this.AvailableViewVertexLocations_ZeroAngle = availableViewVertexLocations_ZeroAngle.ToArray();
+            this.AvailableViewVertexLocations = availableViewVertexLocations.ToArray();
+
 
             this.IndexedFaces = new List<IndexedFace>(facesCoords.Count);
             for (int i = 0; i < facesCoords.Count; i++)
@@ -416,6 +454,7 @@ namespace Primitives
 
                 IndexedFaces.Add(indexedFace);
             }
+
         }
 
         /// <summary>Creates and returns a new or returns an existing Edge with the specified Vertices. If a new Edge is created, its CreatorIndexedFace will be set to the passed in IndexedFace.</summary>
@@ -446,17 +485,20 @@ namespace Primitives
         public void Refresh(bool switchBackFront)
         {
             //update the ViewVertex locations to their new values based on the new ModelToWindow matrix.
-            AvailableViewVertexLocations_ZeroAngle.Clear();
+            var availableViewVertexLocations_ZeroAngle = new List<Coord>();
             NearestVertex = null;
             foreach (Coord c in AvailableVertexLocations)
             {
                 Coord viewCoord = Transformer.ModelToWindow(c);
-                AvailableViewVertexLocations_ZeroAngle.Add(viewCoord);
-                Vertex newVertex = this.Vertices[AvailableViewVertexLocations_ZeroAngle.Count - 1];
+                availableViewVertexLocations_ZeroAngle.Add(viewCoord);
+                Vertex newVertex = this.Vertices[availableViewVertexLocations_ZeroAngle.Count - 1];
                 //check if the new vertex is now the nearest vertex
                 if (NearestVertex == null || newVertex.ViewCoord.Z > NearestVertex.ViewCoord.Z) //nearer Vertices have higher Z values (less negative)
                     NearestVertex = newVertex;
             }
+
+            this.AvailableViewVertexLocations_ZeroAngle = availableViewVertexLocations_ZeroAngle.ToArray();
+
             RefreshArcLocationsOnly(switchBackFront);
         }
 
@@ -465,13 +507,16 @@ namespace Primitives
         {
             if (ViewContext.CosViewAngle == 0)
             {
-                AvailableViewVertexLocations = new List<Coord>(AvailableViewVertexLocations_ZeroAngle);
+                this.AvailableViewVertexLocations = AvailableViewVertexLocations_ZeroAngle;
             }
             else
             {
-                AvailableViewVertexLocations.Clear();
-                for (int i = 0; i < AvailableViewVertexLocations_ZeroAngle.Count; i++)
-                    AvailableViewVertexLocations.Add(Transformer.GetArcCoord(AvailableViewVertexLocations_ZeroAngle[i]));
+                var availableViewVertexLocations = new List<Coord>();
+                var length = this.AvailableViewVertexLocations_ZeroAngle.Length;
+                for (int i = 0; i < length; i++)
+                    availableViewVertexLocations.Add(Transformer.GetArcCoord(this.AvailableViewVertexLocations_ZeroAngle[i]));
+
+                this.AvailableViewVertexLocations = availableViewVertexLocations.ToArray();
             }
 
             //update whether faces are front or back facing because a face may have moved to the other side of the object
