@@ -55,6 +55,8 @@ namespace ViewSupport
         {
             DateTime start = DateTime.UtcNow;
             int faceIntersectionCount = 0;
+            int boundingBoxSkips = 0;
+            int boundingBoxMismatches = 0;
             //todo: first do the plane-plane intersections, then only do the following for planes that intersect
 
 
@@ -74,11 +76,26 @@ namespace ViewSupport
                                 continue;
                             }
 
+                            // Skip processing if no chance of Edge intersecting the face.
+                            bool intersects = e.BoundingBox3.Overlaps(ifc.BoundingBox3);
+                            if (!intersects)
+                            {
+                                boundingBoxSkips++; // Measure
+                                continue;
+                            }
+
                             Coord c = new Coord(0, 0, 0);
                             if (!ifc.IntersectsWith_ModelingCoordinates(e, ref c))
                             {
+                                if (intersects) boundingBoxMismatches++;
                                 continue;
                             }
+
+                            // Intentionally left here since am observing inconsistencies that
+                            // haven't been root caused. If/when investigating need to change code
+                            // above to not bail if (!intersects), otherwise boundingBoxMismatches
+                            // will be artificially low.
+                            if (!intersects) boundingBoxMismatches++;
 
                             if (!ifc.ContainsPoint2D_ModelingCoordinates(c))
                             {
@@ -104,7 +121,7 @@ namespace ViewSupport
                 $"PreProcess, durMs={durMs}, faceIntersectionCount={faceIntersectionCount}" +
                 $", avgIndexedFacesPerEdge={avgIndexedFacesPerEdge}, maxIndexedFacesPerEdge={maxIndexedFacesPerEdge}," +
                 $", missModelRatio={missModelRatio}, algoModelMismatches={IndexedFace.s_algoModelMismatches}" +
-                $", algoModelCalls={IndexedFace.s_algoModelCalls}");
+                $", algoModelCalls={IndexedFace.s_algoModelCalls}, boundingBoxSkips={boundingBoxSkips}, boundingBoxMismatches={boundingBoxMismatches}");
         }
 
 

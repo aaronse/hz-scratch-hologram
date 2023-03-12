@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using ScratchUtility;
@@ -212,8 +213,8 @@ namespace Primitives
                     if (e.CreatorFace != null && e.CreatorFace != indexedFace && 
                         e.OtherFace != null && e.OtherFace != indexedFace)
                     {
-                        // TODO: Consider Debug.Assert()
-                        throw new InvalidOperationException("Unexpected, found edge with more than two faces");
+                        // TODO:P2: Investigate and fix or at least document why this is ok.
+                        Debug.WriteLine("Unexpected, found edge with more than two faces");
                     }
                     else if (e.CreatorFace != indexedFace && e.OtherFace == null)
                     {
@@ -260,7 +261,7 @@ namespace Primitives
 
                 //we're now ready to set the Normal Vectors for the IndexedFace
                 indexedFace.UpdateNormalVector();
-                indexedFace.UpdateNormalVector_ModelingCoordinates();
+                indexedFace.InitializeModelState();
 
                 //now that the IndexedFace knows its NormalVector, we need to update all the Edges so they know their ConnectionType
                 foreach (Edge e in indexedFace.Edges)
@@ -444,7 +445,7 @@ namespace Primitives
 
                 //we're now ready to set the Normal Vectors for the IndexedFace
                 indexedFace.UpdateNormalVector();
-                indexedFace.UpdateNormalVector_ModelingCoordinates();
+                indexedFace.InitializeModelState();
 
                 //now that the IndexedFace knows its NormalVector, we need to update all the Edges so they know their ConnectionType
                 foreach (Edge e in indexedFace.Edges)

@@ -68,6 +68,7 @@ namespace Primitives
         /// <summary>Gets the Rectangle that bounds this Edge when drawn on the sceen (the Vertices' ViewCoords are used).</summary>
         public Rectangle BoundingBox; // { get; private set; }
 
+        public Rect3 BoundingBox3;
 
         public int EdgeID; // { get; set; }
 
@@ -84,6 +85,7 @@ namespace Primitives
             EdgeSections = new List<EdgeSection>();
             FaceIntersections = new List<Intersection>();
             ConnectionType = ConnectionType.None;
+            BoundingBox3 = new Rect3(startVertex.ModelingCoord, endVertex.ModelingCoord); 
         }
 
         /// <summary>Sets OtherFace to be the passed-in IndexedFace</summary>
@@ -107,13 +109,17 @@ namespace Primitives
                 Coord normal = OtherFace.NormalVector;
                 Coord crossProduct = CreatorFace.NormalVector.CrossProduct(normal);
                 double val = diff.DotProduct(crossProduct);
-
+                
                 ConnectionType = Math.Sign(val) == 1 ? ConnectionType.External : ConnectionType.Internal;
             }
         }
+
         public void RefreshBoundingBox()
         {
-            BoundingBox = Global.GetRectangleWithGivenCorners(StartVertex.ViewCoord.ToPointD(), EndVertex.ViewCoord.ToPointD());
+            this.BoundingBox = Global.GetRectangleWithGivenCorners(StartVertex.ViewCoord.ToPointD(), EndVertex.ViewCoord.ToPointD());
+
+            var startCoord = StartVertex.ModelingCoord;
+            var endCoord = EndVertex.ModelingCoord;
         }
 
         /// <summary>Returns true if this Edge has Vertices with the same VertexIndex values as the passed in Edge. The order of the Vertices is ignored.</summary>

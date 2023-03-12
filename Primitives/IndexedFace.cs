@@ -63,17 +63,19 @@ namespace Primitives
 
 
 #if DEBUG_USE_PROPS
-        public Coord NormalVector_ModelingCoordinates { public get; private set; }
-        public bool IsFrontFacing { public get; private set; }
-        public bool IsTransparent { public get; internal set; }
-        public Rectangle BoundingBox { public get; private set; }
-        public Coord NormalVector { public get; private set; }
+        public Coord NormalVector_ModelingCoordinates { get; private set; }
+        public Coord NormalVector { get; private set; }
+        public bool IsFrontFacing { get; private set; }
+        public bool IsTransparent { get; internal set; }
+        public Rectangle BoundingBox { get; private set; }
+        public Rect3 BoundingBox3 { get; private set; }
 #else
         public Coord NormalVector_ModelingCoordinates;
+        public Coord NormalVector;
         public bool IsFrontFacing;
         public bool IsTransparent;
         public Rectangle BoundingBox;
-        public Coord NormalVector;
+        public Rect3 BoundingBox3;
 #endif
 
         // TODO:P1:PERF: Profile 3%
@@ -326,9 +328,17 @@ namespace Primitives
         //    Refresh(false);
         //}
 
+        internal void InitializeModelState()
+        {
+            UpdateNormalVector_ModelingCoordinates();
+
+            // Update 3D bounding box
+            this.BoundingBox3 = new Rect3(Vertices[0].ModelingCoord, Vertices[1].ModelingCoord);
+        }
+
         /// <summary>Sets NormalVector_ModelingCoordinates. Only needs to be called once after 
         /// adding all Vertices.</summary>
-        internal void UpdateNormalVector_ModelingCoordinates()
+        private void UpdateNormalVector_ModelingCoordinates()
         {
             // Update the vector. don't just use the first three vertices - the polygon might have
             // a convex edge there and the result will be wrong.
@@ -406,8 +416,12 @@ namespace Primitives
                 int dotSign = Math.Sign(dotProduct);
                 this.IsFrontFacing = switchBackFront ? (dotSign == -1) : (dotSign == 1);
             }
-            //update the bounding box
-            BoundingBox = Global.GetRectangleWithGivenCorners(Vertices[0].ViewCoord.ToPointD(), Vertices[1].ViewCoord.ToPointD());
+
+            // Update the bounding box
+            BoundingBox = Global.GetRectangleWithGivenCorners(
+                Vertices[0].ViewCoord.ToPointD(),
+                Vertices[1].ViewCoord.ToPointD());
+
             for (int i = 1; i < Vertices.Count; i++)
             {
                 BoundingBox = Rectangle.Union(BoundingBox, Global.GetRectangleWithGivenCorners(Vertices[i - 1].ViewCoord.ToPointD(), Vertices[i].ViewCoord.ToPointD()));

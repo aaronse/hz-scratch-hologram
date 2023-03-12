@@ -27,7 +27,9 @@ namespace ViewSupport
         private static int _debugMaxEdgeId = -1;
 
         internal static List<EdgeSection> s_visibleEdgeSections { get; set; }
-        
+        internal static List<EdgeSection> s_allEdgeSections { get; set; }
+
+
         public static ShapeList ShapeList { get; set; }
 
         private static long s_coordHits = 0;
@@ -134,9 +136,40 @@ namespace ViewSupport
             }
 
             // Calculate Edge visibility, so we know which full edges, or edge sections to draw/arc.
-            if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
+            bool processEdges = DrawOptions.VisibilityMode == VisibilityMode.HiddenLine || DrawOptions.ProfileMode;
+
+            if (processEdges)
             {
-                TraverseEdges(options);
+                s_visibleEdgeSections = new List<EdgeSection>();
+                s_allEdgeSections = new List<EdgeSection>();
+            }
+
+            // Do as much as we can in a single, or as few sweeps of the data structures as possible
+            foreach (IndexedFaceSet ifs in ShapeList)
+            { 
+                foreach (Edge e in ifs.Edges)
+                {
+
+                    if (!(_debugMaxEdgeId == -1 || e.EdgeID <= _debugMaxEdgeId))   // Debug limit # of edges
+                    {
+                        continue;
+                    }
+
+                    if (processEdges)
+                    {
+                        ProcessEdge(options, e);
+                    }
+
+                    if (DrawOptions.ShowArcs)
+                    {
+                        DrawArcs(options, e, drawnCoords);
+                    }
+
+                    if (DrawOptions.VisibilityMode != VisibilityMode.HiddenLine)
+                    {
+                        DrawEdge(options, shapes, e);
+                    }
+                }
             }
 
             // Show Arcs, after visibility sections have been computed.
@@ -145,40 +178,31 @@ namespace ViewSupport
                 s_arcSegs = new List<ArcShape>();
                 DrawArcSegments(options, s_arcSegs);
             }
-            else if (DrawOptions.ShowArcs)
-            {
-                foreach (IndexedFaceSet ifs in ShapeList)
-                    foreach (Edge e in ifs.Edges)
-                    {
-                        if (_debugMaxEdgeId == -1 || e.EdgeID <= _debugMaxEdgeId)   // Debug limit # of edges
-                        {
-                            DrawArcs(options, e, drawnCoords);
-                        }
-                    }
-            }
-            
+
+
             if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
             {
                 foreach (EdgeSection es in s_visibleEdgeSections)
+                { 
                     DrawEdgeSection(options, shapes, es);
-            }
-            else
-            {
-                foreach (IndexedFaceSet ifs in ShapeList)
-                {
-                    foreach (Edge e in ifs.Edges)
-                    {
-                        if (_debugMaxEdgeId == -1 || e.EdgeID <= _debugMaxEdgeId)   // Debug limit # of edges
-                        {
-                            DrawEdge(options, shapes, e);
-                        }
-                    }
                 }
             }
 
+            List<EdgeSection> renderedEdgeSections;
+            if (DrawOptions.VisibilityMode == VisibilityMode.HiddenLine)
+            {
+                renderedEdgeSections = s_visibleEdgeSections;
+            }
+            else
+            {
+                renderedEdgeSections = s_allEdgeSections;
+            }
+
+
             if (DrawOptions.ProfileMode)
             {
-                var profiles = FindPointProfiles(options, s_visibleEdgeSections);
+                // TODO:P1 If transparent rendering is high priority then need to enable Profiles to be computed against Edges, and not just Edge Sections.
+                var profiles = FindPointProfiles(options, renderedEdgeSections);
                 DrawPointProfiles(options, profiles, shapes);
             }
 
@@ -256,7 +280,10 @@ namespace ViewSupport
         }
 
 
-
+        /// <summary>
+        /// Scan for "Profiles", chains of open/closed linked edges.  Serializing Profiles as paths 
+        /// within .SVGs makes selection/toolpath creation easier in SVG consuming software.
+        /// </summary>
         private static List<Profile> FindPointProfiles(DrawOptions options, List<EdgeSection> visibleEdgeSections)
         {
             List<Profile> profiles = new List<Profile>();
@@ -737,7 +764,8 @@ namespace ViewSupport
         internal static void TraverseEdges(DrawOptions options)
         {
             s_visibleEdgeSections = new List<EdgeSection>();
-            
+            s_allEdgeSections = new List<EdgeSection>();
+
             count = 0;
 
             foreach (IndexedFaceSet ifs in ShapeList)
@@ -754,7 +782,8 @@ namespace ViewSupport
         static double count = 0;
 
 
-        /// <summary>Splits the edge up into sections with constant visibility by determining if and where it intersects any of the ShapeList's Silhouette Edges.</summary>
+        /// <summary>Splits the edge up into sections with constant visibility by determining if 
+        /// and where it intersects any of the ShapeList's Silhouette Edges.</summary>
         internal static void ProcessEdge(DrawOptions options, Edge e)
         {
             //foreach (Intersection inter in e.FaceIntersections)
@@ -820,6 +849,7 @@ namespace ViewSupport
                 foreach (Intersection si in orderedIntersections)
                 {
                     es = new EdgeSection(e, lastCoord, si.IntersectionPoint_ViewCoordinates);
+                    s_allEdgeSections.Add(es);
                     ComputeVisibility(options, es);
                     e.EdgeSections.Add(es);
                     if (es.Visible)
@@ -828,6 +858,7 @@ namespace ViewSupport
                 }
 
                 es = new EdgeSection(e, lastCoord, e.EndVertex.ViewCoord);
+                s_allEdgeSections.Add(es);
                 ComputeVisibility(options, es);
                 e.EdgeSections.Add(es);
                 if (es.Visible)
