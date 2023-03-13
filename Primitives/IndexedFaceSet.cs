@@ -482,13 +482,14 @@ namespace Primitives
         }
 
 
-        /// <summary>Recalculates the AvailableViewVertexLocations for this IndexedFaceSet based on the current Transformation matrix. Also updates the IndexedFaces and Edges accordingly.</summary>
+        /// <summary>Recalculates the AvailableViewVertexLocations for this IndexedFaceSet based on 
+        /// the current Transformation matrix. Also updates the IndexedFaces and Edges accordingly.</summary>
         public void Refresh(bool switchBackFront)
         {
             //update the ViewVertex locations to their new values based on the new ModelToWindow matrix.
             var availableViewVertexLocations_ZeroAngle = new List<Coord>();
             NearestVertex = null;
-            foreach (Coord c in AvailableVertexLocations)
+            foreach (Coord c in this.AvailableVertexLocations)
             {
                 Coord viewCoord = Transformer.ModelToWindow(c);
                 availableViewVertexLocations_ZeroAngle.Add(viewCoord);
@@ -503,7 +504,8 @@ namespace Primitives
             RefreshArcLocationsOnly(switchBackFront);
         }
 
-        /// <summary>Refreshes only the AvailableViewVertexLocation list by using the stored zero-angle values to determine where each Coord is along its arc.</summary>
+        /// <summary>Refreshes only the AvailableViewVertexLocation list by using the stored 
+        /// zero-angle values to determine where each Coord is along its arc.</summary>
         public void RefreshArcLocationsOnly(bool switchBackFront)
         {
             if (ViewContext.CosViewAngle == 0)

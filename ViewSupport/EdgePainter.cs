@@ -697,8 +697,10 @@ namespace ViewSupport
                 // Set ViewAngle
                 ViewContext.ViewAngle = iterAngle;
 
-                // Refresh computed Vertex/Faces
-                ShapeList.Refresh(DrawOptions.SwitchBackFront, false);
+                // Refresh computed Vertex/Faces.  Just compute Arcs after full processing for
+                // first (MinView) angle.
+                ShapeList.Refresh(DrawOptions.SwitchBackFront, 
+                    arcLocationsOnly: (iterAngle != ViewContext.MinViewAngle));
 
                 // Compute visible edge sections (and vertexes)
                 TraverseEdges(computeOnlyOptions);
