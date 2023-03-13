@@ -126,7 +126,9 @@ namespace ScratchView
                 Drawing.Blit(e.Graphics);
             }
 
-            Debug.WriteLine("OnPaint, durMs=" + (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds + " IndexedFace._count=" + IndexedFace._count);
+            var durMs = (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds;
+            var modelViewMismatchRatio = Math.Round((100.0 * Transformer.ModelToWindowAlgoMismatches) / (Transformer.ModelToWindowAlgoTotal), 2);
+            Debug.WriteLine($"OnPaint, durMs={durMs}, IndexedFace._count={IndexedFace._count}, ModelViewMismatches={Transformer.ModelToWindowAlgoMismatches}, modelViewMismatchRatio={modelViewMismatchRatio}");
         }
 
         private void Drawing_SceneChanged()

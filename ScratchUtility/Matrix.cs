@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 using System.Diagnostics;
 
@@ -668,5 +669,32 @@ namespace ScratchUtility
             return this;
         }
 
+        public Matrix4x4 ToMatrix4x4()
+        {
+            var row1 = rows[0];
+            var row2 = rows[1];
+            var row3 = rows[2];
+            var row4 = rows[3];
+
+            return new Matrix4x4(
+                (float)row1[0], (float)row1[1], (float)row1[2], (float)row1[3],
+                (float)row2[0], (float)row2[1], (float)row2[2], (float)row2[3],
+                (float)row3[0], (float)row3[1], (float)row3[2], (float)row3[3],
+                (float)row4[0], (float)row4[1], (float)row4[2], (float)row4[3]);
+        }
+
+        public MatrixD4x4 ToMatrixD4x4()
+        {
+            var row1 = rows[0];
+            var row2 = rows[1];
+            var row3 = rows[2];
+            var row4 = rows[3];
+
+            return new MatrixD4x4(
+                row1[0], row1[1], row1[2], row1[3],
+                row2[0], row2[1], row2[2], row2[3],
+                row3[0], row3[1], row3[2], row3[3],
+                row4[0], row4[1], row4[2], row4[3]);
+        }
     }
 }

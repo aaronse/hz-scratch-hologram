@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Drawing;
 
@@ -11,14 +12,17 @@ namespace ScratchUtility
         private static Matrix mModelToWindowMatrix;
         public static Matrix mWindowToModelMatrix { get; private set; }
 
-
+        static MatrixD4x4 ModelToWindowMatrix4x4;
+        
+        public static int ModelToWindowAlgoMismatches;
+        public static int ModelToWindowAlgoTotal;
 
         static Transformer()
         {
             mModelToWindowMatrix = new Matrix();
             mWindowToModelMatrix = new Matrix();
         }
-
+        
         public static Matrix ModelToWindowMatrix
         {
         		get
@@ -28,8 +32,11 @@ namespace ScratchUtility
         		set
         		{
                     mModelToWindowMatrix = value;
+                    ModelToWindowMatrix4x4 = mModelToWindowMatrix.ToMatrixD4x4();
                     mWindowToModelMatrix = mModelToWindowMatrix.Inverse();
-        		}
+                    ModelToWindowAlgoMismatches = 0;
+                    ModelToWindowAlgoTotal = 0;
+                }
         }
 
         //unpredictable results if windowCoord.Z != 0
@@ -43,19 +50,78 @@ namespace ScratchUtility
 
             return new Coord(result[0, 0], result[1, 0], result[2, 0]);
         }
+
+        private static Coord s_nullCoord = new Coord(0, 0, 0);
+
         public static Coord ModelToWindow(Coord modelCoord)
         {
-            Matrix toTransform = modelCoord.ToVectorCol(true);
-            Matrix result = ModelToWindowMatrix * toTransform;
+#if DEBUG_COMPARE_ALGOS
 
-            double perspectiveNormalization = result[3, 0];
+            Coord retVal1;
+            Coord retVal2;
 
+            if ((Global.ModelToWindowAlgorithm & 1) == 1)
+            {
+                // Algo 1 
+                Matrix toTransform = modelCoord.ToVectorCol(true); // 4 row, 1 col
+                Matrix result = ModelToWindowMatrix * toTransform; // 4x4 * 1x4
 
-            //normalize for perspective
-            result /= result[3, 0];
+                //normalize for perspective
+                //double perspectiveNormalization = result[3, 0];
+                var perspectiveNorm = result[3, 0];
+                result /= perspectiveNorm;
 
-            Coord retVal = new Coord(result[0, 0], result[1, 0], result[2, 0]);
-            return retVal;
+                retVal1 = new Coord(result[0, 0], result[1, 0], result[2, 0]);
+                retVal2 = s_nullCoord;
+            }
+
+            if ((Global.ModelToWindowAlgorithm & 2) == 2)
+            {
+#endif
+                // Algo 2: Inlined cr@p out of everything since Algo 1 was Hot Path.
+                // TODO:P2 Float based Matrix4x4 resulted in mismatch between Algos, caused by rounding
+                // so implemented double based MatrixD4x4 for now.  Can switch to float Matrix4x4
+                // if/when everything switches.
+
+                // Matrix multiply
+                // - Where:
+                //   - Matrix4x4 is 1 based (not 0)
+                //   - Syntax is m<row><col>
+                // [r1] = (m11 * v1) + (m12 * v2) + (m13 * v3) + (m14 * v4)
+                // [r2..r4] same as above
+                var m = ModelToWindowMatrix4x4;
+                Coord c = modelCoord;
+
+                //// Inline Matrix4x4 * Vector3
+                //float r1 = (m.M11 * c.X) + (m.M12 * c.Y) + (m.M13 * c.Z) + (m.M14);
+                //float r2 = (m.M21 * c.X) + (m.M22 * c.Y) + (m.M23 * c.Z) + (m.M24);
+                //float  r3 = (m.M31 * c.X) + (m.M32 * c.Y) + (m.M33 * c.Z) + (m.M34);
+                //float  r4 = (m.M41 * c.X) + (m.M42 * c.Y) + (m.M43 * c.Z) + (m.M44);
+
+                // Inline Normalization( Matrix4x4 * Vector3 )
+                // Note: r4 should be normalized to 1.0 if referenced further
+                double r4 = (m.M41 * c.X) + (m.M42 * c.Y) + (m.M43 * c.Z) + (m.M44);
+                double r1 = ((m.M11 * c.X) + (m.M12 * c.Y) + (m.M13 * c.Z) + (m.M14)) / r4;
+                double r2 = ((m.M21 * c.X) + (m.M22 * c.Y) + (m.M23 * c.Z) + (m.M24)) / r4;
+                double r3 = ((m.M31 * c.X) + (m.M32 * c.Y) + (m.M33 * c.Z) + (m.M34)) / r4;
+
+#if !DEBUG_COMPARE_ALGOS
+                return new Coord(r1, r2, r3);
+#else
+                retVal2 = new Coord(r1, r2, r3);
+                retVal1 = s_nullCoord;
+            }
+
+            if (Global.ModelToWindowAlgorithm == 3 && !retVal1.Equals(retVal2, 2))
+            {
+                // TODO: Compute avg/variance of mismatch
+                ModelToWindowAlgoMismatches++;
+            }
+            ModelToWindowAlgoTotal++;
+
+            //return ((s_useIsVisibleAlgoVersion & 1) == 1) ? isVisibleAlgo1 : isVisibleAlgo2;
+            return ((Global.ModelToWindowAlgorithm & 1) == 1) ? retVal1 : retVal2;
+#endif
         }
 
         // TODO: PERF: 2023-03-10 19%

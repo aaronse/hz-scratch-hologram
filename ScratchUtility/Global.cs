@@ -15,6 +15,8 @@ namespace ScratchUtility
 
         public static int NormalToleranceDecimalPlaces { get; set; } = 4;
 
+        public const byte ModelToWindowAlgorithm = 2;
+
         static Global()
         {
             DebugMode = false;
