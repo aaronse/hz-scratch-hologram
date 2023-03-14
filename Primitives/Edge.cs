@@ -122,19 +122,12 @@ namespace Primitives
             var endCoord = EndVertex.ModelingCoord;
         }
 
-        /// <summary>Returns true if this Edge has Vertices with the same VertexIndex values as the passed in Edge. The order of the Vertices is ignored.</summary>
-        public bool ContainsSameVerticesAs(Edge rhs)
-        {
-            return 
-                ((rhs.StartVertex.VertexIndex == this.StartVertex.VertexIndex && rhs.EndVertex.VertexIndex == this.EndVertex.VertexIndex) || 
-                (rhs.EndVertex.VertexIndex == this.StartVertex.VertexIndex && rhs.StartVertex.VertexIndex == this.EndVertex.VertexIndex));
-        }
-
         /// <summary>Returns true if the specified Vertex is either the StartVertex or EndVertex of this Edge.</summary>
         public bool ContainsVertex(Vertex v)
         {
             return (v == StartVertex || v == EndVertex);
         }
+
         /// <summary>Returns true if the specified IndexedFace is either the CreatorFace or OtherFace of this Edge.</summary>
         public bool ContainsFace(IndexedFace ifc)
         {
@@ -148,6 +141,7 @@ namespace Primitives
                 return (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcLength();
             }
         }
+
         public double Length_ViewCoordinates
         {
             get

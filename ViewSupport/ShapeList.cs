@@ -112,8 +112,8 @@ namespace ViewSupport
                 }
             }
             // Calc Avg and Max indexed Faces per edge 
-            int avgIndexedFacesPerEdge = mShapes[0].Edges.Aggregate((int)0, (curr, next) => curr + next.StartVertex.IndexedFaces.Count) / mShapes[0].Edges.Count;
-            int maxIndexedFacesPerEdge = mShapes[0].Edges.Aggregate((int)0, (curr, next) => Math.Max(curr, next.StartVertex.IndexedFaces.Count));
+            int avgIndexedFacesPerEdge = mShapes[0].Edges.Aggregate((int)0, (curr, next) => curr + next.StartVertex.GetIndexedFacesCount()) / mShapes[0].Edges.Count;
+            int maxIndexedFacesPerEdge = mShapes[0].Edges.Aggregate((int)0, (curr, next) => Math.Max(curr, next.StartVertex.GetIndexedFacesCount()));
             double missModelRatio = Math.Round((100.0 * IndexedFace.s_algoModelMismatches) / IndexedFace.s_algoModelCalls, 2);
 
             int durMs = (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds;

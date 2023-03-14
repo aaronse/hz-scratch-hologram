@@ -66,7 +66,7 @@ namespace Primitives
         public Vertex NearestVertex;
 #endif
 
-        static int edgeID = 0;
+        static int edgeID { get; set; } // = 0;
 
         /// <summary>
         /// Creates a new IndexedFaceSet
@@ -176,7 +176,9 @@ namespace Primitives
             //create all the indexed faces by creating Edges and connecting them
             string[] indices = coordIndices.Split(new char[] { ',', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             string[] old_indices = coordIndices.Split(',');
-            IndexedFaces = new List<IndexedFace>(indices.Length);
+            this.IndexedFaces = new List<IndexedFace>(indices.Length);
+            var knownEdges = new Dictionary<ulong, Edge>();
+
             for (int i = 0; i < indices.Length; i++)
             {
                 if (String.IsNullOrEmpty(indices[i].Trim()))
@@ -192,7 +194,7 @@ namespace Primitives
                 //Vertex firstVertex = GetExistingVertex(this.Vertices[int.Parse(vals[0])].ModelingCoord);
                 Vertex firstVertex = this.Vertices[int.Parse(vals[0])];
                 indexedFace.Vertices.Add(firstVertex);
-                firstVertex.IndexedFaces.Add(indexedFace);
+                firstVertex.AddIndexedFace(indexedFace);
                 Vertex previousVertex = firstVertex;
                 for (int vertexIndex = 1; vertexIndex < vals.Length - 1; vertexIndex++) //ignore the last value (seems to always be -1, not a vertex), so end at Length - 2
                 {
@@ -209,7 +211,12 @@ namespace Primitives
 
                     // If this edge was an existing edge, we need to update it so it knows that it's
                     // now a part of a new IndexedFace
-                    Edge e = GetNewOrExistingEdge(previousVertex, currentVertex, indexedFace);
+                    Edge e = GetNewOrExistingEdge(
+                        knownEdges,
+                        previousVertex,
+                        currentVertex,
+                        indexedFace);
+
                     if (e.CreatorFace != null && e.CreatorFace != indexedFace && 
                         e.OtherFace != null && e.OtherFace != indexedFace)
                     {
@@ -240,12 +247,17 @@ namespace Primitives
                     //    throw new Exception("how did that edge already know about me?");
 
                     indexedFace.Vertices.Add(currentVertex);
-                    currentVertex.IndexedFaces.Add(indexedFace);
+                    currentVertex.AddIndexedFace(indexedFace);
                     previousVertex = currentVertex;
                 }
 
                 //add the Edge that finishes this IndexedFace
-                Edge finalEdge = GetNewOrExistingEdge(previousVertex, firstVertex, indexedFace);
+                Edge finalEdge = GetNewOrExistingEdge(
+                    knownEdges,
+                    previousVertex,
+                    firstVertex,
+                    indexedFace);
+
                 if (finalEdge.CreatorFace != indexedFace) //if this edge was an existing edge, we need to update it so it knows that it's now a part of a new IndexedFace
                     finalEdge.AddFace(indexedFace);
 
@@ -360,8 +372,8 @@ namespace Primitives
             this.AvailableViewVertexLocations_ZeroAngle = availableViewVertexLocations_ZeroAngle.ToArray();
             this.AvailableViewVertexLocations = availableViewVertexLocations.ToArray();
 
-
             this.IndexedFaces = new List<IndexedFace>(facesCoords.Count);
+            var knownEdges = new Dictionary<ulong, Edge>();
             for (int i = 0; i < facesCoords.Count; i++)
             {
                 var faceCoords = facesCoords[i];
@@ -373,7 +385,7 @@ namespace Primitives
                 IndexedFace indexedFace = new IndexedFace(this);
                 Vertex firstVertex = GetExistingVertex(faceCoords[0]);
                 indexedFace.Vertices.Add(firstVertex);
-                firstVertex.IndexedFaces.Add(indexedFace);
+                firstVertex.AddIndexedFace(indexedFace);
                 Vertex previousVertex = firstVertex;
 
                 for (int vertexIndex = 1; vertexIndex < faceCoords.Count; vertexIndex++)
@@ -391,7 +403,12 @@ namespace Primitives
 
                     // If this edge was an existing edge, we need to update it so it knows that it's
                     // now a part of a new IndexedFace
-                    Edge e = GetNewOrExistingEdge(previousVertex, currentVertex, indexedFace);
+                    Edge e = GetNewOrExistingEdge(
+                        knownEdges,
+                        previousVertex,
+                        currentVertex,
+                        indexedFace);
+
                     if (e.CreatorFace != null && e.CreatorFace != indexedFace &&
                         e.OtherFace != null && e.OtherFace != indexedFace)
                     {
@@ -422,12 +439,17 @@ namespace Primitives
                     //    throw new Exception("how did that edge already know about me?");
 
                     indexedFace.Vertices.Add(currentVertex);
-                    currentVertex.IndexedFaces.Add(indexedFace);
+                    currentVertex.AddIndexedFace(indexedFace);
                     previousVertex = currentVertex;
                 }
 
                 //add the Edge that finishes this IndexedFace
-                Edge finalEdge = GetNewOrExistingEdge(previousVertex, firstVertex, indexedFace);
+                Edge finalEdge = GetNewOrExistingEdge(
+                    knownEdges,
+                    previousVertex,
+                    firstVertex,
+                    indexedFace);
+
                 if (finalEdge.CreatorFace != indexedFace) //if this edge was an existing edge, we need to update it so it knows that it's now a part of a new IndexedFace
                     finalEdge.AddFace(indexedFace);
 
@@ -459,18 +481,30 @@ namespace Primitives
         }
 
         /// <summary>Creates and returns a new or returns an existing Edge with the specified Vertices. If a new Edge is created, its CreatorIndexedFace will be set to the passed in IndexedFace.</summary>
-        private Edge GetNewOrExistingEdge(Vertex v1, Vertex v2, IndexedFace creatorIndexedFace)
+        private Edge GetNewOrExistingEdge(
+            Dictionary<ulong, Edge> knownEdges,
+            Vertex v1,
+            Vertex v2,
+            IndexedFace creatorIndexedFace)
         {
             Edge newEdge = new Edge(v1, v2, creatorIndexedFace);
-            foreach(Edge e in Edges)
+
+            // Build key representing with same vertex pairs.  Match even if vertexes swapped.
+            ulong edgeKey = (v1.VertexIndex < v2.VertexIndex)
+                ? (ulong)((uint)v2.VertexIndex) << 32 | (uint)v1.VertexIndex
+                : (ulong)((uint)v1.VertexIndex) << 32 | (uint)v2.VertexIndex;
+
+            // Lookup, or add, edge with matching key
+            Edge existingEdge;
+            if (knownEdges.TryGetValue(edgeKey, out existingEdge))
             {
-                if (e.ContainsSameVerticesAs(newEdge))
-                    return e;
+                return existingEdge;
             }
-            //if this is a new edge (which it is if we didn't find one with the same vertices), add it to the master collection
+            knownEdges[edgeKey] = newEdge;
+
             newEdge.EdgeID = edgeID;
             edgeID++;
-            Edges.Add(newEdge);
+            this.Edges.Add(newEdge);
             return newEdge;
         }
 
@@ -478,7 +512,6 @@ namespace Primitives
         private Vertex GetExistingVertex(Coord modelingCoord)
         {
             return this.CoordVertexMap[modelingCoord];
-            //return this.Vertices.Find(v => v.ModelingCoord == modelingCoord);
         }
 
 

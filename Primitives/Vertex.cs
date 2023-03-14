@@ -13,7 +13,9 @@ namespace Primitives
         public List<Edge> Edges { get; private set; }
 
         /// <summary>The list of IndexedFaces that this Vertex is a part of.</summary>
-        public List<IndexedFace> IndexedFaces { get; private set; }
+        private List<IndexedFace> IndexedFacesList;
+        private HashSet<IndexedFace> IndexedFacesSet;
+
 
 #if DEBUG_USE_PROPS
         /// <summary>Specifies the index into the parent IndexFaceSet's AvailableVertexLocations and AvailableViewVertexLocations lists that this Vertex's location is stored.</summary>
@@ -33,10 +35,10 @@ namespace Primitives
             ParentIndexedFaceSet = parentIndexedFaceSet;
             VertexIndex = vertexIndex;
             Edges = new List<Edge>();
-            IndexedFaces = new List<IndexedFace>();
+            IndexedFacesList = new List<IndexedFace>();
+            IndexedFacesSet = new HashSet<IndexedFace>();
         }
 
-        // TODO:P1 PERF: Profiled 2023-03-10 6% Vertex.ModelingCoord
         public Coord ModelingCoord
         {
             get
@@ -61,9 +63,18 @@ namespace Primitives
 
         public bool ContainsFace(IndexedFace ifc)
         {
-            return IndexedFaces.Contains(ifc);
+            return IndexedFacesSet.Contains(ifc);
         }
 
+        public void AddIndexedFace(IndexedFace face)
+        {
+            this.IndexedFacesList.Add(face);
+            this.IndexedFacesSet.Add(face);
+        }
 
+        public int GetIndexedFacesCount()
+        {
+            return this.IndexedFacesList.Count;
+        }
     }
 }

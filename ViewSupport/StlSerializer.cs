@@ -176,7 +176,7 @@ namespace ViewSupport
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw;
             }
@@ -220,7 +220,7 @@ namespace ViewSupport
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw;
             }

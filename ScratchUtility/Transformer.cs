@@ -124,7 +124,6 @@ namespace ScratchUtility
 #endif
         }
 
-        // TODO: PERF: 2023-03-10 19%
         public static PointF ViewFromAxis(Coord pointToTransform, Coord viewAxisUnitVector, Coord perpendicularAxisUnitVector)
         {
             Coord thirdUnitVector = viewAxisUnitVector.CrossProduct(perpendicularAxisUnitVector);
@@ -142,7 +141,6 @@ namespace ScratchUtility
 
             Matrix toTransform = pointToTransform.ToVectorCol(false);
 
-            // TODO: PERF: 2023-03-10 16% Matrix multiply
             Matrix result = m * toTransform;
             PointF retVal = new PointF((float)result[1, 0], (float)result[2, 0]);
             return retVal;
