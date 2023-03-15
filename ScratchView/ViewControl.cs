@@ -22,6 +22,7 @@ namespace ScratchView
 
         private Point mLastMousePosition = Drawing.NullPoint;
 
+        public event EventHandler ViewOptionsChanged;
 
         public ViewControl()
         {
@@ -88,6 +89,7 @@ namespace ScratchView
 
         public bool ShowArcSegments { get { return DrawOptions.ShowArcSegments; } set { DrawOptions.ShowArcSegments = value; } }
         public bool ShowGCode { get { return DrawOptions.ShowGcode; } set { DrawOptions.ShowGcode = value; } }
+        public bool ShowGlow { get { return DrawOptions.ShowGlow; } set { DrawOptions.ShowGlow = value; } }
         public bool VectorMode { get { return DrawOptions.VectorMode; } set { DrawOptions.VectorMode = value; } }
         public bool PointsMode { get { return DrawOptions.PointsMode; } set { DrawOptions.PointsMode = value; } }
         public bool ProfileMode { get { return DrawOptions.ProfileMode; } set { DrawOptions.ProfileMode = value; } }
@@ -113,6 +115,14 @@ namespace ScratchView
             base.OnPaint(e);
             if (!DesignMode)
             {
+                //e.Graphics.DrawString(
+                //    "6",
+                //    new Font("WingDings", 26f, FontStyle.Regular),
+                //    Brushes.White,
+                //    new PointF(
+                //        this.Width / 2,
+                //        this.Height / 2));
+
                 if (DrawOptions.QuickMode)
                 {
                     e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
@@ -128,7 +138,8 @@ namespace ScratchView
 
             var durMs = (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds;
             var modelViewMismatchRatio = Math.Round((100.0 * Transformer.ModelToWindowAlgoMismatches) / (Transformer.ModelToWindowAlgoTotal), 2);
-            Debug.WriteLine($"OnPaint, durMs={durMs}, IndexedFace._count={IndexedFace._count}, ModelViewMismatches={Transformer.ModelToWindowAlgoMismatches}, modelViewMismatchRatio={modelViewMismatchRatio}");
+            Debug.WriteLine($"OnPaint, frame={EdgePainter.s_frameCount}, durMs={durMs}, IndexedFace._count={IndexedFace._count}, ModelViewMismatches={Transformer.ModelToWindowAlgoMismatches}, modelViewMismatchRatio={modelViewMismatchRatio}");
+
         }
 
         private void Drawing_SceneChanged()
@@ -216,12 +227,37 @@ namespace ScratchView
                     {
                         PointD deltaMousePosition = DrawOptions.RotateCanvas ? GetDelta(mLastMousePosition, e.Location) : GetDelta(e.Location, mLastMousePosition);
 
+                        bool hasChanged = false;
+
                         if (e.Button == MouseButtons.Left)
+                        {
+                            hasChanged = true;
                             Orbit(deltaMousePosition);
+                        }
                         else if (e.Button == (MouseButtons.Left | MouseButtons.Right) || e.Button == MouseButtons.Middle)
+                        {
+                            hasChanged = true;
                             Pan(mLastMousePosition, e.Location);
+                        }
                         else if (e.Button == MouseButtons.Right)
+                        {
+                            hasChanged = true;
                             LookAround(deltaMousePosition);
+                        }
+
+                        // Disable Arc Segments if Camera is moving.  Arc Segments take many
+                        // seconds to compute, we need to keep UI responsive.  Falling back
+                        // to full Arc rendering is better than nothing, and fast enough.
+                        if (hasChanged && this.ShowArcSegments)
+                        {
+                            this.ShowArcSegments = false;
+                            this.ShowArcs = true;
+
+                            if (ViewOptionsChanged != null)
+                            {
+                                ViewOptionsChanged(this, new EventArgs());
+                            }
+                        }
                     }
 
 

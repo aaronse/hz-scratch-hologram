@@ -30,6 +30,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.mViewAngleTrack = new System.Windows.Forms.TrackBar();
             this.mArcSweepAngleTrack = new System.Windows.Forms.TrackBar();
             this.mArcCheckBox = new System.Windows.Forms.CheckBox();
@@ -51,6 +52,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.mDarkRadioButton = new System.Windows.Forms.RadioButton();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.mGlowCheckBox = new System.Windows.Forms.CheckBox();
             this.mProfileCheckbox = new System.Windows.Forms.CheckBox();
             this.mPointsCheckbox = new System.Windows.Forms.CheckBox();
             this.mMergeFacesCheckBox = new System.Windows.Forms.CheckBox();
@@ -71,9 +73,10 @@
             this.label5 = new System.Windows.Forms.Label();
             this.txtViewAngle = new System.Windows.Forms.TextBox();
             this.txtLineResolution = new System.Windows.Forms.TextBox();
-            this.mView = new ScratchView.ViewControl();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.mView = new ScratchView.ViewControl();
             ((System.ComponentModel.ISupportInitialize)(this.mViewAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mArcSweepAngleTrack)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mLineResolutionTrack)).BeginInit();
@@ -321,7 +324,7 @@
             this.groupBox1.Controls.Add(this.mRedBlueRadioButton);
             this.groupBox1.Controls.Add(this.mStereoscopicRadioButton);
             this.groupBox1.Controls.Add(this.mPrintRadioButton);
-            this.groupBox1.Location = new System.Drawing.Point(727, 513);
+            this.groupBox1.Location = new System.Drawing.Point(727, 516);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
@@ -347,6 +350,7 @@
             // groupBox2
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox2.Controls.Add(this.mGlowCheckBox);
             this.groupBox2.Controls.Add(this.mProfileCheckbox);
             this.groupBox2.Controls.Add(this.mPointsCheckbox);
             this.groupBox2.Controls.Add(this.mMergeFacesCheckBox);
@@ -363,10 +367,23 @@
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Size = new System.Drawing.Size(163, 291);
+            this.groupBox2.Size = new System.Drawing.Size(163, 299);
             this.groupBox2.TabIndex = 31;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "View";
+            // 
+            // mGlowCheckBox
+            // 
+            this.mGlowCheckBox.AutoSize = true;
+            this.mGlowCheckBox.Checked = true;
+            this.mGlowCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.mGlowCheckBox.Location = new System.Drawing.Point(7, 273);
+            this.mGlowCheckBox.Name = "mGlowCheckBox";
+            this.mGlowCheckBox.Size = new System.Drawing.Size(134, 21);
+            this.mGlowCheckBox.TabIndex = 48;
+            this.mGlowCheckBox.Text = "Gratuitious Glow";
+            this.mGlowCheckBox.UseVisualStyleBackColor = true;
+            this.mGlowCheckBox.CheckedChanged += new System.EventHandler(this.mGlowCheckBox_CheckedChanged);
             // 
             // mProfileCheckbox
             // 
@@ -384,8 +401,6 @@
             // mPointsCheckbox
             // 
             this.mPointsCheckbox.AutoSize = true;
-            this.mPointsCheckbox.Checked = true;
-            this.mPointsCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.mPointsCheckbox.Location = new System.Drawing.Point(8, 46);
             this.mPointsCheckbox.Margin = new System.Windows.Forms.Padding(4);
             this.mPointsCheckbox.Name = "mPointsCheckbox";
@@ -443,7 +458,7 @@
             this.mArcSegmentsCheckbox.Location = new System.Drawing.Point(8, 86);
             this.mArcSegmentsCheckbox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.mArcSegmentsCheckbox.Name = "mArcSegmentsCheckbox";
-            this.mArcSegmentsCheckbox.Size = new System.Drawing.Size(148, 26);
+            this.mArcSegmentsCheckbox.Size = new System.Drawing.Size(118, 21);
             this.mArcSegmentsCheckbox.TabIndex = 39;
             this.mArcSegmentsCheckbox.Text = "Arc Segments";
             this.mArcSegmentsCheckbox.UseVisualStyleBackColor = true;
@@ -600,37 +615,6 @@
             this.txtLineResolution.Size = new System.Drawing.Size(48, 22);
             this.txtLineResolution.TabIndex = 45;
             // 
-            // mView
-            // 
-            this.mView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.mView.ArcAngleResolution = 10F;
-            this.mView.ArcSweepAngle = 90F;
-            this.mView.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
-            this.mView.Location = new System.Drawing.Point(8, 95);
-            this.mView.Margin = new System.Windows.Forms.Padding(5);
-            this.mView.Name = "mView";
-            this.mView.PaddingPercent = 0.1D;
-            this.mView.PointsMode = true;
-            this.mView.PointWidth = 5D;
-            this.mView.ProfileMode = true;
-            this.mView.RotateCanvas = false;
-            this.mView.ShowArcs = true;
-            this.mView.ShowArcSegments = false;
-            this.mView.ShowGCode = false;
-            this.mView.Size = new System.Drawing.Size(710, 549);
-            this.mView.StereoscopicDisparityAngle = 8D;
-            this.mView.StereoscopicMode = ScratchUtility.StereoscopicMode.NonStereoscopic;
-            this.mView.SwitchBackFront = false;
-            this.mView.SwitchLeftRight = false;
-            this.mView.TabIndex = 29;
-            this.mView.VectorMode = true;
-            this.mView.ViewAngle = 0D;
-            this.mView.ViewMode = ViewSupport.ViewMode.Dark;
-            this.mView.ViewPointsPerUnitLength = 0D;
-            this.mView.VisibilityMode = ViewSupport.VisibilityMode.Transparent;
-            // 
             // label6
             // 
             this.label6.Location = new System.Drawing.Point(-1, 33);
@@ -648,6 +632,38 @@
             this.label7.TabIndex = 47;
             this.label7.Text = "View Angle :";
             this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // mView
+            // 
+            this.mView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.mView.ArcAngleResolution = 10F;
+            this.mView.ArcSweepAngle = 90F;
+            this.mView.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.mView.Location = new System.Drawing.Point(8, 95);
+            this.mView.Margin = new System.Windows.Forms.Padding(5);
+            this.mView.Name = "mView";
+            this.mView.PaddingPercent = 0.1D;
+            this.mView.PointsMode = false;
+            this.mView.PointWidth = 5D;
+            this.mView.ProfileMode = true;
+            this.mView.RotateCanvas = false;
+            this.mView.ShowArcs = true;
+            this.mView.ShowArcSegments = false;
+            this.mView.ShowGCode = false;
+            this.mView.ShowGlow = true;
+            this.mView.Size = new System.Drawing.Size(710, 549);
+            this.mView.StereoscopicDisparityAngle = 8D;
+            this.mView.StereoscopicMode = ScratchUtility.StereoscopicMode.NonStereoscopic;
+            this.mView.SwitchBackFront = false;
+            this.mView.SwitchLeftRight = false;
+            this.mView.TabIndex = 29;
+            this.mView.VectorMode = true;
+            this.mView.ViewAngle = 0D;
+            this.mView.ViewMode = ViewSupport.ViewMode.Dark;
+            this.mView.ViewPointsPerUnitLength = 0D;
+            this.mView.VisibilityMode = ViewSupport.VisibilityMode.Transparent;
             // 
             // ScratchTest
             // 
@@ -744,6 +760,8 @@
         private System.Windows.Forms.CheckBox mProfileCheckbox;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.CheckBox mGlowCheckBox;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 

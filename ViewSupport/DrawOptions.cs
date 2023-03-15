@@ -33,8 +33,9 @@ namespace ViewSupport
         private static bool mShowArcs = true;
         private static bool mShowArcSegments = false;
         private static bool mShowGcode = false;
+        private static bool mShowGlow = true;
         private static bool mVectorMode = true;
-        private static bool mPointsMode = true;
+        private static bool mPointsMode = false;
         private static bool mProfileMode = true;
         private static VisibilityMode mVisibilityMode = VisibilityMode.Transparent;
         private static bool mRotateCanvas = false;
@@ -197,6 +198,21 @@ namespace ViewSupport
             }
         }
 
+        public static bool ShowGlow
+        {
+            get
+            {
+                return mShowGlow;
+            }
+            set
+            {
+                if (mShowGlow == value)
+                    return;
+                mShowGlow = value;
+                FireOptionChangedEvent();
+            }
+        }
+
         public static string SelectedItemExpr
         {
             get { return mSelectedItemExpr; }
@@ -354,11 +370,21 @@ namespace ViewSupport
         // - Easier to managed/encapsulate state, determine where set.
         // - Easier to test, parallelize and scale
 
+#if DEBUG_USE_PROPS
         public bool IsRendering { get; set; }
+        public bool IsRendering2 { get; set; }
         public ThemeInfo Theme { get; set; }
         public Graphics Graphics { get; set; }
-
+        public Graphics Graphics2 { get; set; }
         public int ViewAngleResolution { get; set; } = 1;
+#else
+        public bool IsRendering;
+        public bool IsRendering2;
+        public ThemeInfo Theme;
+        public Graphics Graphics;
+        public Graphics Graphics2;
+        public int ViewAngleResolution = 1;
+#endif
 
 
         #endregion
@@ -384,6 +410,6 @@ namespace ViewSupport
             return $"{ViewPointsPerUnitLength}";
         }
 
-        #endregion
+#endregion
     }
 }

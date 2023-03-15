@@ -9,13 +9,11 @@ namespace ScratchUtility
 
     public static class Global
     {
-        private static double intersectionTolerance = 0.0000001; // 0;
+        public const byte ModelToWindowAlgorithm = 2;
+        private static double intersectionTolerance = 0.0000001;
         public static bool DebugMode { get; set; }
         public static bool DesignMode { get; set; }
-
         public static int NormalToleranceDecimalPlaces { get; set; } = 4;
-
-        public const byte ModelToWindowAlgorithm = 2;
 
         static Global()
         {
@@ -99,6 +97,5 @@ namespace ScratchUtility
             angles.Add(endAngle);
             return angles;
         }
-
     }
 }

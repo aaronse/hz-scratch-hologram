@@ -24,6 +24,8 @@ namespace ViewSupport
     public static class EdgePainter
     {
 
+        public static int s_frameCount = 0;
+
         private static int _debugMaxEdgeId = -1;
 
         internal static List<EdgeSection> s_visibleEdgeSections { get; set; }
@@ -115,6 +117,8 @@ namespace ViewSupport
 
         internal static void Draw(DrawOptions options)
         {
+            s_frameCount++;
+
             var shapes = new List<VectorShape>();
 
             HashSet<string> drawnCoords = new HashSet<string>();
@@ -367,6 +371,10 @@ namespace ViewSupport
 
         private static void DrawPointProfiles(DrawOptions options, List<Profile> profiles, List<VectorShape> shapes)
         {
+            Debug.Assert(
+                !options.IsRendering2 || (options.IsRendering && options.IsRendering2),
+                "Expect IsRendering set when IsRendering2 is set");
+
             if (!options.IsRendering) return;
 
             foreach(var profile in profiles)
@@ -381,12 +389,34 @@ namespace ViewSupport
 
                 if (pathShape.Path.Count > 0)
                 {
-                    //var pathLine = pathShape.Path[0];
                     for (int i = 0; i < pathShape.Path.Count; i++)
                     {
                         var currEdge = pathShape.Path[i];
-                        options.Graphics.DrawLine(options.Theme.SelectedPen, currEdge.Item1, currEdge.Item2);
-                        //prevPoint = currPoint;
+                        if (!options.IsRendering2) 
+                        {
+                            // Simple
+                            options.Graphics.DrawLine(options.Theme.SelectedPen, currEdge.Item1, currEdge.Item2);
+                        }
+                        else if (options.IsRendering2) 
+                        {
+                            // Gratuitously render strange varying line intensity and outer glow...
+
+                            // Pick alpha value from 55 to 255
+                            int penIndex = 
+                                55 + 
+                                (int)(100.0 * (Math.Sin((s_frameCount + i) / 45) + 1));
+                            options.Graphics.DrawLine(
+                                options.Theme.SelectedPens[penIndex],
+                                currEdge.Item1,
+                                currEdge.Item2);
+
+                            options.Graphics2.DrawLine(
+                                options.Theme.SelectedPen2,
+                                currEdge.Item1.X / 5,
+                                currEdge.Item1.Y / 5,
+                                currEdge.Item2.X / 5,
+                                currEdge.Item2.Y / 5);
+                        }
                     }
                 }
             }

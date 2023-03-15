@@ -39,10 +39,13 @@ namespace ScratchTest
                                                //begin drawing
                                                //mView.DrawingEnabled = true;
             mView.Paint += MView_Paint;
+            mView.ViewOptionsChanged += MView_ViewOptionsChanged;
+            timer1.Interval = 500;
+            timer1.Enabled = true;
+            timer1.Tick += Timer1_Tick;
             ApplyTheme();
         }
 
- 
         public void SetVisibilityMode()
         {
             mView.VisibilityMode = mHiddenLineCheckBox.Checked ? VisibilityMode.HiddenLine : VisibilityMode.Transparent;
@@ -409,6 +412,20 @@ namespace ScratchTest
             UpdateOutputSummary();
         }
 
+        private void MView_ViewOptionsChanged(object sender, EventArgs e)
+        {
+            if (DrawOptions.ShowArcSegments != mArcSegmentsCheckbox.Checked)
+            {
+                mArcSegmentsCheckbox.Checked = DrawOptions.ShowArcSegments;
+            }
+
+            if (DrawOptions.ShowArcs != mArcCheckBox.Checked)
+            {
+                mArcCheckBox.Checked = DrawOptions.ShowArcs;
+            }
+        }
+
+
 
         private void mExportSvgDialog_FileOk(object sender, CancelEventArgs e)
         {
@@ -509,7 +526,19 @@ namespace ScratchTest
                 UpdateOutputSummary();
             }
         }
+
+        private void mGlowCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!DesignMode)
+            {
+                mView.ShowGlow = mGlowCheckBox.Checked;
+                UpdateOutputSummary();
+            }
+        }
+
+        private void Timer1_Tick(object sender, EventArgs e)
+        {
+            Debug.WriteLine("tick");
+        }
     }
-
-
 }

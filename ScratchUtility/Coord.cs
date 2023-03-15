@@ -29,11 +29,6 @@ namespace ScratchUtility
         private double _length;
         private bool _lengthComputed;
 
-        // private Coord() // TODO:P2: C#10 feature, Implement parameterless Struct constructor/initializer
-        //{
-        //    _length = double.NaN;
-        //}
-
         public Coord(double x, double y, double z)
             : this()
         {
@@ -56,22 +51,27 @@ namespace ScratchUtility
         {
             return new Coord(c.X * rhs, c.Y * rhs, c.Z * rhs);
         }
+
         public static Coord operator *(double lhs, Coord c)
         {
             return c * lhs;
         }
+
         public static Coord operator /(Coord c, double rhs)
         {
             return new Coord(c.X / rhs, c.Y / rhs, c.Z / rhs);
         }
+
         public static Coord operator -(Coord c, Coord rhs)
         {
             return new Coord(c.X - rhs.X, c.Y - rhs.Y, c.Z - rhs.Z);
         }
+
         public static Coord operator +(Coord c, Coord rhs)
         {
             return new Coord(c.X + rhs.X, c.Y + rhs.Y, c.Z + rhs.Z);
         }
+
         public static bool operator ==(Coord a, Coord b)
         {
             // Return true if the fields match:
@@ -89,16 +89,16 @@ namespace ScratchUtility
             return !(a == b);
         }
 
-        public override bool Equals(object obj)
-        {
-            var a = this;
-            var b = (Coord)obj;
+        // Remove?
+        //public override bool Equals(object obj)
+        //{
+        //    var a = this;
+        //    var b = (Coord)obj;
 
-            if (b == null) return false;
+        //    if (b == null) return false;
 
-            return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
-            //throw new ArgumentException("PERF: Avoid boxing structs or handling unknown objects.  Instead, caller should intentionally call method with explicitly typed params.");
-        }
+        //    return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
+        //}
 
         public bool Equals(Coord other, int toleranceDecimalPlaces)
         {
@@ -127,7 +127,6 @@ namespace ScratchUtility
             return "(" + X.ToString("N" + decimalPlaces) + ", " + Y.ToString("N" + decimalPlaces) + ", " + Z.ToString("N" + decimalPlaces) + ")";
         }
 
-
         public Matrix ToVectorCol(bool includeBottom1)
         {
             if (includeBottom1)
@@ -147,9 +146,7 @@ namespace ScratchUtility
                 v[2, 0] = Z;
                 return v;
             }
-
         }
-
 
         // Was .Length property, changed to method since it's doing work and the property cannot be
         // serialized.  Intentionally making computationally expensive 'getters' methods to help
@@ -185,6 +182,7 @@ namespace ScratchUtility
                 );
             return retVal;
         }
+
         /// <summary>Returns the Dot Product of this and rhs.</summary>
         /// <param name="rhs">The right-hand-side Coord.</param>
         /// <returns>The Dot Product of this and rhs.</returns>
@@ -206,7 +204,6 @@ namespace ScratchUtility
             return dX * c3.X + dY * c3.Y + dZ * c3.Z;
         }
 
-
         /// <summary>
         /// Returns a new PointD object with this Coord's X and Y value. The Z value is eliminated.
         /// </summary>
@@ -214,6 +211,7 @@ namespace ScratchUtility
         {
             return new PointD(X, Y);
         }
+
         /// <summary>
         /// Returns a new PointF object with this Coord's X and Y value. The Z value is eliminated.
         /// </summary>
@@ -221,6 +219,7 @@ namespace ScratchUtility
         {
             return new PointF((float)X, (float)Y);
         }
+
         public bool IsValid()
         {
             return !(double.IsNaN(X) || double.IsNaN(Y) || double.IsNaN(Z));

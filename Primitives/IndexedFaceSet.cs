@@ -66,7 +66,7 @@ namespace Primitives
         public Vertex NearestVertex;
 #endif
 
-        static int edgeID { get; set; } // = 0;
+        static int edgeID = 0;
 
         /// <summary>
         /// Creates a new IndexedFaceSet

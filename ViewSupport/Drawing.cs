@@ -13,26 +13,26 @@ namespace ViewSupport
 {
     public delegate void SceneChangedHandler();
 
+    // TODO:P2 Gratuitous Glow, options:
+    // - A) Draw to Small bitmap then blit fullsize relying on bicubic interpolation for blur effect https://stackoverflow.com/questions/74232522/outer-glow-effect-for-text-c-sharp
 
     public static class Drawing
     {
-        /// <summary>Specifies whether or not this class should respond to events that would cause it to be redrawn. True (should not respond to events) if a drawing operation (onto the off-screen buffer) is already occuring.</summary>
+        /// <summary>Specifies whether or not this class should respond to events that would cause 
+        /// it to be redrawn. True (should not respond to events) if a drawing operation (onto the
+        /// off-screen buffer) is already occuring.</summary>
         public static bool CurrentlyDrawing { get; set; }
         private static bool mDoDraw = false;
-
         public static RedrawTypeRequired NextRedraw { get; set; }
-
         internal static ShapeList Shapes { get; private set; }
-
         internal static Brush PointBrush_BehindCanvas { get; set; }
         internal static Brush PointBrush_InFrontOfCanvas { get; set; }
-
-
         public static Point NullPoint { get { return new Point(int.MaxValue, int.MaxValue); } }
+        private static Bitmap s_offScreenBitmap;
+        private static Bitmap s_offScreenBitmap2;
+        private static Graphics s_offScreenGraphics;
+        private static Graphics s_offScreenGraphics2;
 
-        private static Bitmap mOffScreenBitmap;
-        private static Graphics mOffScreenGraphics;
-        
         public static event SceneChangedHandler SceneChanged;
 
         static Drawing()
@@ -44,8 +44,10 @@ namespace ViewSupport
             PointBrush_BehindCanvas = Brushes.DarkViolet;
             PointBrush_InFrontOfCanvas = Brushes.Blue;
             
-            mOffScreenBitmap = new Bitmap(10, 10);
-            mOffScreenGraphics = Graphics.FromImage(mOffScreenBitmap);
+            s_offScreenBitmap = new Bitmap(10, 10);
+            s_offScreenBitmap2 = new Bitmap(10, 10);
+            s_offScreenGraphics = Graphics.FromImage(s_offScreenBitmap);
+            s_offScreenGraphics2 = Graphics.FromImage(s_offScreenBitmap2);
 
             ViewContext.ViewChanged += new ViewChangedHandler(ViewContext_ViewChanged);
             DrawOptions.DrawOptionChanged += new DrawOptionChangedHandler(DrawOptions_DrawOptionChanged);
@@ -67,6 +69,7 @@ namespace ViewSupport
             if (!CurrentlyDrawing)
                 FireSceneChangedEvent();
         }
+
         ///<summary>Marks the offscreen buffer as dirty and fires the ScreenChanged event causing it to be redrawn by the host.</summary>
         public static void MarkAsDirty(RedrawTypeRequired type)
         {
@@ -101,8 +104,13 @@ namespace ViewSupport
                 if (ViewContext.CanvasSize == value)
                     return;
                 ViewContext.CanvasSize = value;
-                mOffScreenBitmap = new Bitmap(CanvasSize.Width, CanvasSize.Height);
-                mOffScreenGraphics = Graphics.FromImage(mOffScreenBitmap);
+                s_offScreenBitmap = new Bitmap(CanvasSize.Width, CanvasSize.Height);
+                s_offScreenBitmap2 = new Bitmap(CanvasSize.Width / 5, CanvasSize.Height / 5);
+                s_offScreenGraphics = Graphics.FromImage(s_offScreenBitmap);
+                s_offScreenGraphics2 = Graphics.FromImage(s_offScreenBitmap2);
+
+                s_offScreenGraphics.SmoothingMode = SmoothingMode.AntiAlias;
+                s_offScreenGraphics2.SmoothingMode = SmoothingMode.AntiAlias;
             }
         }
 
@@ -112,15 +120,20 @@ namespace ViewSupport
         /// <summary>Redraws the current ViewPrimitives list onto the off screen buffer. Calling 
         /// Blit() will blit it to the supplied graphics object. Returns true if the redraw 
         /// occurred successfully.</summary>
-        public static bool ReDraw(bool isRendering)
+        public static bool ReDraw(
+            bool isRendering,
+            bool isRendering2,
+            bool isAnimating)
         {
             DrawOptions drawOptions = new DrawOptions()
             {
                 IsRendering = isRendering,
-                Graphics = mOffScreenGraphics
+                IsRendering2 = isRendering2,
+                Graphics = s_offScreenGraphics,
+                Graphics2 = s_offScreenGraphics2
             };
 
-            if (NextRedraw != RedrawTypeRequired.None)
+            if (NextRedraw != RedrawTypeRequired.None || isAnimating)
             {
                 CurrentlyDrawing = true;
                 if (NextRedraw == RedrawTypeRequired.RecalculateViewPrimitives)
@@ -140,29 +153,24 @@ namespace ViewSupport
                 {
                     case ViewMode.Normal:
                         drawOptions.Theme = ThemeInfo.LightTheme;
-
-                        mOffScreenGraphics.Clear(drawOptions.Theme.BackgroundColor);
-                        DrawNormal(drawOptions);
+                        DrawNormal(drawOptions, true);
                         break;
                     case ViewMode.Dark:
                         drawOptions.Theme = ThemeInfo.DarkTheme;
-
-                        mOffScreenGraphics.Clear(drawOptions.Theme.BackgroundColor);
-                        DrawNormal(drawOptions);
+                        DrawNormal(drawOptions, true);
                         break;
                     case ViewMode.RedBlue:
                         drawOptions.Theme = ThemeInfo.LightTheme;
-
                         DrawRedBlue(drawOptions);
                         break;
                     case ViewMode.Stereoscopic:
                         drawOptions.Theme = ThemeInfo.LightTheme;
-                        mOffScreenGraphics.Clear(Color.White);
+                        s_offScreenGraphics.Clear(Color.White);
+                        s_offScreenGraphics2.Clear(Color.White);
                         DrawStereoscopic(drawOptions);
                         break;
                     case ViewMode.Print:
                         drawOptions.Theme = ThemeInfo.LightTheme;
-                        mOffScreenGraphics.Clear(Color.White);
                         DrawPrint(drawOptions);
                         break;
                 }
@@ -182,8 +190,15 @@ namespace ViewSupport
             if (SceneChanged != null && DoDraw)
                 SceneChanged();
         }
-        private static void DrawNormal(DrawOptions options)
+
+        private static void DrawNormal(DrawOptions options, bool clearGraphics)
         {
+            if (clearGraphics)
+            {
+                options.Graphics.Clear(options.Theme.BackgroundColor);
+                options.Graphics2.Clear(options.Theme.BackgroundColor2);
+            }
+
             if (Shapes.Count > 0)
             {
                 EdgePainter.ShapeList = Shapes;
@@ -252,12 +267,12 @@ namespace ViewSupport
                 ViewContext.StereoscopicMode = StereoscopicMode.Left; 
                 Shapes.Refresh(DrawOptions.SwitchBackFront, true);
                     
-                DrawNormal(options);
+                DrawNormal(options, false);
 
                 ViewContext.StereoscopicMode = StereoscopicMode.Right;
                 Shapes.Refresh(DrawOptions.SwitchBackFront, true);
                     
-                DrawNormal(rightOptions);
+                DrawNormal(rightOptions, false);
                 ViewContext.StereoscopicMode = StereoscopicMode.NonStereoscopic;
 
                 Shapes.Refresh(DrawOptions.SwitchBackFront, true);
@@ -281,7 +296,7 @@ namespace ViewSupport
 
             ViewContext.StereoscopicMode = StereoscopicMode.Left;
             Shapes.Refresh(DrawOptions.SwitchBackFront, true);
-            DrawNormal(options);
+            DrawNormal(options, false);
 
             //now offset the other direction (default right)
             if (DrawOptions.SwitchLeftRight)
@@ -291,7 +306,7 @@ namespace ViewSupport
 
             ViewContext.StereoscopicMode = StereoscopicMode.Right;
             Shapes.Refresh(DrawOptions.SwitchBackFront, true);
-            DrawNormal(options);
+            DrawNormal(options, false);
 
             //reset the ViewAngle and graphics transform
             ViewContext.StereoscopicMode = StereoscopicMode.NonStereoscopic;
@@ -334,7 +349,7 @@ namespace ViewSupport
 
         private static void DrawPrint(DrawOptions options)
         {
-            DrawNormal(options);
+            DrawNormal(options, true);
 
             foreach (IndexedFaceSet ifs in EdgePainter.ShapeList)
             {
@@ -537,10 +552,14 @@ namespace ViewSupport
         /// <param name="g"></param>
         public static void Blit(Graphics g)
         {
+            bool isRendering = true;
+            bool isRendering2 = DrawOptions.ShowGlow;
+            bool isAnimating = DrawOptions.ShowGlow;
+
             if (DoDraw)
             {
-                if (NextRedraw != RedrawTypeRequired.None)
-                    ReDraw(true);
+                if (NextRedraw != RedrawTypeRequired.None || isAnimating)
+                    ReDraw(isRendering, isRendering2, isAnimating);
 
                 g.ResetTransform();
                 if (DrawOptions.RotateCanvas)
@@ -554,7 +573,39 @@ namespace ViewSupport
                     g.TranslateTransform(CanvasSize.Height, CanvasSize.Width);
                     g.RotateTransform(180);
                 }
-                g.DrawImageUnscaled(mOffScreenBitmap, 0, 0);
+
+                var destRect = new Rectangle(
+                    0,
+                    0,
+                    s_offScreenBitmap.Width,
+                    s_offScreenBitmap.Height);
+
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                // Optional for wider blur...
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                //g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                g.DrawImage(
+                    s_offScreenBitmap2,
+                    destRect,
+                    srcX: 0,
+                    srcY: 0,
+                    srcWidth: s_offScreenBitmap2.Width,
+                    srcHeight: s_offScreenBitmap2.Height,
+                    srcUnit: GraphicsUnit.Pixel
+                    );
+
+                g.CompositingMode = CompositingMode.SourceOver;
+
+                g.DrawImage(
+                    s_offScreenBitmap,
+                    destRect,
+                    srcX: 0,
+                    srcY: 0,
+                    srcWidth: s_offScreenBitmap.Width,
+                    srcHeight: s_offScreenBitmap.Height,
+                    srcUnit: GraphicsUnit.Pixel
+                    );
             }
         }
 
