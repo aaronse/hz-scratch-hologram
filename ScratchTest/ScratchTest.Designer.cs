@@ -474,7 +474,7 @@
             this.mVectorsCheckBox.Name = "mVectorsCheckBox";
             this.mVectorsCheckBox.Size = new System.Drawing.Size(78, 21);
             this.mVectorsCheckBox.TabIndex = 2;
-            this.mVectorsCheckBox.Text = "Vectors";
+            this.mVectorsCheckBox.Text = "Lines";
             this.mVectorsCheckBox.UseVisualStyleBackColor = true;
             this.mVectorsCheckBox.CheckedChanged += new System.EventHandler(this.mVectorsCheckBox_CheckedChanged);
             // 

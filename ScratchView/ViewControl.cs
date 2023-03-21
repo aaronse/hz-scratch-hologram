@@ -138,7 +138,15 @@ namespace ScratchView
 
             var durMs = (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds;
             var modelViewMismatchRatio = Math.Round((100.0 * Transformer.ModelToWindowAlgoMismatches) / (Transformer.ModelToWindowAlgoTotal), 2);
-            Debug.WriteLine($"OnPaint, frame={EdgePainter.s_frameCount}, durMs={durMs}, IndexedFace._count={IndexedFace._count}, ModelViewMismatches={Transformer.ModelToWindowAlgoMismatches}, modelViewMismatchRatio={modelViewMismatchRatio}");
+            Debug.WriteLine(
+                $"OnPaint, frame={EdgePainter.s_frameCount}, durMs={durMs}, IndexedFace._count={IndexedFace._count}" +
+                $", ModelViewMismatches={Transformer.ModelToWindowAlgoMismatches}" +
+                $", modelViewMismatchRatio={modelViewMismatchRatio}" +
+                $", Edge.s_duplicateEdges={Edge.s_duplicateEdges}" + 
+                $", s_nanHits={IndexedFace.s_nanHits}" +
+                $", s_duplicateFaces={IndexedFaceSet.s_duplicateFaces}");
+            
+
 
         }
 
@@ -218,9 +226,10 @@ namespace ScratchView
                 {
                     /*
                      * left mouse = orbit
-                     * middle mouse (or both left and right at same time) = pan
+                     * middle mouse = pan
                      * scroll = zoom
                      * right mouse = look around
+                     * Both left and right at same time = scale
                      */
                     //Point deltaMousePosition = e.Location;
                     if (mLastMousePosition != Drawing.NullPoint)
@@ -234,10 +243,15 @@ namespace ScratchView
                             hasChanged = true;
                             Orbit(deltaMousePosition);
                         }
-                        else if (e.Button == (MouseButtons.Left | MouseButtons.Right) || e.Button == MouseButtons.Middle)
+                        else if (e.Button == MouseButtons.Middle)
                         {
                             hasChanged = true;
                             Pan(mLastMousePosition, e.Location);
+                        }
+                        else if (e.Button == (MouseButtons.Left | MouseButtons.Right))
+                        {
+                            hasChanged = true;
+                            Scale(mLastMousePosition, e.Location);
                         }
                         else if (e.Button == MouseButtons.Right)
                         {
@@ -282,10 +296,12 @@ namespace ScratchView
             Coord currentMouse = new Coord(currentMouseClick.X * multiplier, currentMouseClick.Y * multiplier, 0);
             ViewContext.Pan(lastMouse, currentMouse);
         }
+
         private void Orbit(PointD deltaMousePosition)
         {
             Coord newPoLocation_ViewCoordinates = new Coord((deltaMousePosition.X * ViewContext.N.CalcLength() / 2) + (Width / 2), (deltaMousePosition.Y * ViewContext.N.CalcLength() / 2) + (Height / 2), 0);
             ViewContext.Orbit(newPoLocation_ViewCoordinates);
+        
         }
         private void LookAround(PointD deltaMousePosition)
         {
@@ -294,9 +310,13 @@ namespace ScratchView
             ViewContext.LookAround(newPrLocation_ViewCoordinates);
         }
 
-
-
-
+        private void Scale(Point lastMousePos, Point currMousePos)
+        {
+            double multiplier = 0.05;
+            double delta = (lastMousePos.Y - currMousePos.Y) * multiplier;
+            double scaleAmount = (delta < 0) ? -1.05 : 0.95;
+            ViewContext.Scale(Math.Abs(scaleAmount));
+        }
 
         public void SetPo(double x, double y, double z)
         {

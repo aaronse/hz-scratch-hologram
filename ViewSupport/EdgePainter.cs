@@ -8,14 +8,12 @@ using System.Linq;
 using System.Text;
 using System;
 
-// TODO:P0 Rename VectorMode mode?
-// TODO:P0 Implement Face selection.  Needed for Set Z0, and Select Contour.
-// TODO:P0 Implement Contour selection.
-// TODO:P0 Implement Reset Z0, enable User to select and set Face to be at Z0.
+// TODO:P1 Implement Face selection.  Needed for Set Z0, and Select Contour.
+// TODO:P1 Implement Contour selection.
+// TODO:P1 Implement Reset Z0, enable User to select and set Face to be at Z0.
 // TODO:P1 Refactor, separate compute and rendering into different tasks
 // TODO:P1 Perf/Bug, observed too many segments per arc, unexpected gaps.  Action: Check Arc Seg logic, determine why unexpected gaps?  Fix.
-
-// TODO:P0:PERF: fix: 1) inline, shortcut and use 'ref' instead of new Coord allocations, 2) avoid hotpaths with deep nesting
+// TODO:P0:PERF: fix: 1) inline, shortcut and use 'ref' instead of new Coord allocations as stack params, 2) avoid hotpaths with deep nesting
 
 
 namespace ViewSupport
@@ -697,7 +695,7 @@ namespace ViewSupport
             }
         }
 
-        // TODO:P0:PERF: improve algorithms, reduce repeated/unrequired work, implement Async multi core compute
+        // TODO:P1:PERF: improve algorithms/datastructures, reduce repeated/unrequired work, implement Async multi core compute
         internal static void MultiViewAngleTravese(DrawOptions renderOptions)
         {
             string viewModelHash = ViewContext.GetViewHash() + ":" + DrawOptions.GetViewHash();
@@ -904,8 +902,8 @@ namespace ViewSupport
         {
             Edge edge = es.Edge;
 
-            // TODO:P0:PERF: Add Coord.CalcMidPoint
-            Coord edgeMidPoint = (es.StartCoord + es.EndCoord) / 2; //test visibility of the midpoint of the EdgeSection
+            // Test visibility of the midpoint of the EdgeSection
+            Coord edgeMidPoint = Coord.SumDiv(es.StartCoord, es.EndCoord, 2); 
 
             if (options.IsRendering && Global.DebugMode)
                 options.Graphics.DrawString(

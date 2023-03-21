@@ -16,6 +16,9 @@ namespace Primitives
 
     public class IndexedFaceSet
     {
+        static int edgeID = 0;
+
+        public static int s_duplicateFaces = 0;
 
 #if DEBUG_USE_PROPS
         public List<Vertex> Vertices { get; private set; }
@@ -66,7 +69,6 @@ namespace Primitives
         public Vertex NearestVertex;
 #endif
 
-        static int edgeID = 0;
 
         /// <summary>
         /// Creates a new IndexedFaceSet
@@ -374,9 +376,9 @@ namespace Primitives
 
             this.IndexedFaces = new List<IndexedFace>(facesCoords.Count);
             var knownEdges = new Dictionary<ulong, Edge>();
-            for (int i = 0; i < facesCoords.Count; i++)
+            for (int facesCoordIndex = 0; facesCoordIndex < facesCoords.Count; facesCoordIndex++)
             {
-                var faceCoords = facesCoords[i];
+                var faceCoords = facesCoords[facesCoordIndex];
 
                 // We're ignoring the last value (seems to always be -1), so there has to be a total of at least 4 values for a triangular IndexedFace
                 if (faceCoords.Count < 3)
@@ -412,8 +414,8 @@ namespace Primitives
                     if (e.CreatorFace != null && e.CreatorFace != indexedFace &&
                         e.OtherFace != null && e.OtherFace != indexedFace)
                     {
-                        // TODO: Consider Debug.Assert()
-                        throw new InvalidOperationException("Unexpected, found edge with more than two faces");
+                        s_duplicateFaces++;
+                        //throw new InvalidOperationException("Unexpected, found edge with more than two faces");
                     }
                     else if (e.CreatorFace != indexedFace && e.OtherFace == null)
                     {
@@ -450,7 +452,9 @@ namespace Primitives
                     firstVertex,
                     indexedFace);
 
-                if (finalEdge.CreatorFace != indexedFace) //if this edge was an existing edge, we need to update it so it knows that it's now a part of a new IndexedFace
+                // If this edge was an existing edge, we need to update it so it knows that it's
+                // now a part of a new IndexedFace
+                if (finalEdge.CreatorFace != indexedFace) 
                     finalEdge.AddFace(indexedFace);
 
                 indexedFace.Edges.Add(finalEdge);
@@ -470,8 +474,9 @@ namespace Primitives
                 indexedFace.InitializeModelState();
 
                 //now that the IndexedFace knows its NormalVector, we need to update all the Edges so they know their ConnectionType
-                foreach (Edge e in indexedFace.Edges)
+                for (int i = 0; i < indexedFace.Edges.Count; i++)
                 {
+                    Edge e = indexedFace.Edges[i];
                     e.UpdateConnectionType();
                 }
 

@@ -32,6 +32,25 @@ namespace Primitives
     /// <summary>Represents the edge shared by two IndexedFaces.</summary>
     public class Edge
     {
+        private Coord? _unitVector = null;
+
+        public static int s_duplicateEdges = 0;
+
+#if DEBUG_USE_PROPS
+
+    public IndexedFace CreatorFace { get; private set; }
+    public IndexedFace OtherFace { get; private set; }
+    public Vertex StartVertex { get; private set; }
+    public Vertex EndVertex { get; private set; }
+    public EdgeType Type { get; private set; }
+    public ConnectionType ConnectionType { get; private set; }
+    public List<EdgeSection> EdgeSections { get; set; }
+    public List<Intersection> FaceIntersections { get; set; }
+    public Rectangle BoundingBox { get; private set; }
+    public Rect3 BoundingBox3 { get; set; }
+    public int EdgeID { get; set; }
+
+#else
         /// <summary>Gets the IndexedFace that created this Edge. Null for Auxiliary Faces. Knowing 
         /// which Face created the Edge helps to make sense of StartVertex and EndVertex: From 
         /// CreatorFace's point of view, StartVertex and EndVertex are in counter-clockwise order.
@@ -71,8 +90,8 @@ namespace Primitives
         public Rect3 BoundingBox3;
 
         public int EdgeID; // { get; set; }
+#endif 
 
-        private Coord? _unitVector = null;
 
 
         public Edge(Vertex startVertex, Vertex endVertex, IndexedFace creatorFace)
@@ -92,7 +111,13 @@ namespace Primitives
         public void AddFace(IndexedFace face)
         {
             if (OtherFace != null)
-                throw new Exception("Cannot set OtherFace on an Edge which already has an OtherFace");
+            {
+                // Monitor how oftern edge is referenced by more than 2 faces.  Mostly ignoring for now.
+                // TODO:P2 Handle 3+ faces sharing the same Edge.
+                //throw new Exception("Cannot set OtherFace on an Edge which already has an OtherFace");
+                s_duplicateEdges++;
+            }
+                
             OtherFace = face;
         }
 
@@ -110,7 +135,15 @@ namespace Primitives
                 Coord crossProduct = CreatorFace.NormalVector.CrossProduct(normal);
                 double val = diff.DotProduct(crossProduct);
                 
-                ConnectionType = Math.Sign(val) == 1 ? ConnectionType.External : ConnectionType.Internal;
+                if (double.IsNaN(val))
+                {
+                    ConnectionType = ConnectionType.External;
+                }
+                else
+                {
+                    ConnectionType = Math.Sign(val) == 1 ? ConnectionType.External : ConnectionType.Internal;
+
+                }
             }
         }
 
@@ -155,17 +188,7 @@ namespace Primitives
         /// <returns>True if there was an intersection. Does not count intersections at the endpoints of the Edge.</returns>
         public bool IntersectsBehind(Edge silhouetteEdge, ref Coord intersectionPoint)
         {
-            //if we return early, we want to return new Coord();
-            //            intersectionPoint = new Coord(0, 0, 0);
-
-            //Coord thisUnit = (EndVertex.ModelingCoord - StartVertex.ModelingCoord).CalcUnitVector();
-            //Coord silhouetteUnit = (silhouetteEdge.EndVertex.ModelingCoord - silhouetteEdge.StartVertex.ModelingCoord).CalcUnitVector();
-            //if (thisUnit == silhouetteUnit || thisUnit == -1 * silhouetteUnit)
-            //{
-            //    return false;
-            //}
-
-            // TODO:P0:PERF: Replace above with cached unitVector based code below.  Left commented for now until arc segment bug fixed.
+            // Caching Unit Vectors, since profiler called out compute being a hot path.
             Coord unitVector;
             Coord silhouetteVector;
             if (!_unitVector.HasValue)
@@ -191,7 +214,7 @@ namespace Primitives
                 return false;
             }
 
-            //shortcut if the intersection occurs right at the corner of silhouetteEdge and this Edge.
+            // Shortcut if the intersection occurs right at the corner of silhouetteEdge and this Edge.
             if (silhouetteEdge.StartVertex == StartVertex ||
                 silhouetteEdge.EndVertex == StartVertex ||
                 silhouetteEdge.StartVertex == EndVertex ||
@@ -200,7 +223,8 @@ namespace Primitives
                 return false;
             }
 
-            if (!silhouetteEdge.BoundingBox.IntersectsWith(BoundingBox)) //if the BoundingBoxes don't intersect, then the Edges don't intersect
+            // If the BoundingBoxes don't intersect, then the Edges don't intersect
+            if (!silhouetteEdge.BoundingBox.IntersectsWith(BoundingBox)) 
             {
                 return false;
             }
@@ -233,15 +257,18 @@ namespace Primitives
             }
 
             //They intersect. Calculate the point of intersection.
-            double zi = startVertexViewCoord.Z + (endVertexViewCoord.Z - startVertexViewCoord.Z) * t;
-            double ziSilhouette = silhouetteEdgeStartVertexViewCoord.Z + (silhouetteEdgeEndVertexViewCoord.Z - silhouetteEdgeStartVertexViewCoord.Z) * u;
+            double zi = 
+                startVertexViewCoord.Z + 
+                (endVertexViewCoord.Z - startVertexViewCoord.Z) * t;
+            double ziSilhouette = 
+                silhouetteEdgeStartVertexViewCoord.Z + 
+                (silhouetteEdgeEndVertexViewCoord.Z - silhouetteEdgeStartVertexViewCoord.Z) * u;
             if (zi > ziSilhouette) //if zi > ziSilhouette, the Silhouette Edge is behind this Edge, and thus the intersection can be ignored.
                 return false;
 
             double xi = a + (b - a) * t;
             double yi = f + (g - f) * t;
 
-            //intersectionPoint = new Coord(xi, yi, zi);
             intersectionPoint.X = xi;
             intersectionPoint.Y = yi;
             intersectionPoint.Z = zi;

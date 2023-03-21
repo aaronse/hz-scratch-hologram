@@ -34,16 +34,22 @@ namespace ScratchTest
             mView.SwitchLeftRight = mSwitchCheckBox.Checked;
             DrawOptions.SelectedItemExpr = txtSelectedItem.Text;
             TrySetPointWidth();
-            SetUpFileList(@".\..\..\..\Data"); // C:\Projects(NAS)\HoloZens\scratchhologram\Data");
-                                               //           SetUpFileList(@"C:\Program Files\Blender Foundation\Blender");
-                                               //begin drawing
-                                               //mView.DrawingEnabled = true;
             mView.Paint += MView_Paint;
             mView.ViewOptionsChanged += MView_ViewOptionsChanged;
             timer1.Interval = 500;
             timer1.Enabled = true;
             timer1.Tick += Timer1_Tick;
             ApplyTheme();
+
+            // Try to prepopulate drop down with checked in model files
+            try
+            {
+                SetUpFileList(@".\..\..\..\Data");
+            }
+            catch (Exception)
+            {
+                // Gulp...
+            }
         }
 
         public void SetVisibilityMode()
@@ -429,49 +435,38 @@ namespace ScratchTest
 
         private void mExportSvgDialog_FileOk(object sender, CancelEventArgs e)
         {
-            throw new NotImplementedException("TODO: Export to " + mExportSvgDialog.FileName);
+            ExportSvgFile();
         }
 
-        private void btnExportSvg_Click(object sender, EventArgs  e)
+        private void btnExportSvg_Click(object sender, EventArgs e)
+        {
+            mExportSvgDialog.OverwritePrompt = false;
+            mExportSvgDialog.CheckFileExists = false;
+
+            if (mExportSvgDialog.ShowDialog() == DialogResult.OK)
+            {
+            }
+        }
+
+        void ExportSvgFile()
         {
             SvgSerializer svgSerializer = new SvgSerializer();
             var svgText = svgSerializer.Serialize(
                 (!mArcSegmentsCheckbox.Checked) ? null : EdgePainter.ArcSegments,
                 EdgePainter.Shapes);
 
-            // TODO: Remove after verifying JSON serializer exists for target platform...
-            //StringBuilder sbArcsJson = new StringBuilder();
-            //if (arcSegs != null)
-            //{
-            //    sbArcsJson.AppendLine("[");
-            //    for (int i = 0; i < arcSegs.Count; i++)
-            //    {
-            //        var arcSeg = arcSegs[i];
-            //        if (i > 0) sbArcsJson.Append(", ");
-            //        sbArcsJson.AppendLine(arcSeg.ToString());
-            //    }
-            //    sbArcsJson.AppendLine("]");
-            //}
+            //string svgFilePath = "c:\\Users\\aaron\\Documents\\test.svg";
+            string svgFilePath = mExportSvgDialog.FileName;
 
-            // TODO:P0 User should select target file location
-            //if (mExportSvgDialog.ShowDialog() == DialogResult.OK)
-            {
-                string svgFilePath = "c:\\Users\\aaron\\Documents\\test.svg";
-                //string svgFilePath = mExportSvgDialog.FileName;
+            File.WriteAllText(svgFilePath, svgText.ToString());
 
-                File.WriteAllText(svgFilePath, svgText.ToString());
+            var shapes = new List<VectorShape>();
+            if (EdgePainter.ArcSegments?.Count > 0) shapes.AddRange(EdgePainter.ArcSegments);
+            if (EdgePainter.Shapes?.Count > 0) shapes.AddRange(EdgePainter.Shapes);
 
-                //string arcsFilePath = Path.ChangeExtension(svgFilePath, "alt.json");
-                //File.WriteAllText(arcsFilePath, sbArcsJson.ToString());
-
-                var shapes = new List<VectorShape>();
-                if (EdgePainter.ArcSegments?.Count > 0) shapes.AddRange(EdgePainter.ArcSegments);
-                if (EdgePainter.Shapes?.Count > 0) shapes.AddRange(EdgePainter.Shapes);
-
-                string arcsFilePath = Path.ChangeExtension(svgFilePath, "json");
-                string arcSegsJson = Newtonsoft.Json.JsonConvert.SerializeObject(shapes);
-                File.WriteAllText(arcsFilePath, arcSegsJson.Replace(",{", ",\r\n{"));
-            }
+            string arcsFilePath = Path.ChangeExtension(svgFilePath, "json");
+            string arcSegsJson = Newtonsoft.Json.JsonConvert.SerializeObject(shapes);
+            File.WriteAllText(arcsFilePath, arcSegsJson.Replace(",{", ",\r\n{"));
         }
 
 
@@ -538,7 +533,6 @@ namespace ScratchTest
 
         private void Timer1_Tick(object sender, EventArgs e)
         {
-            Debug.WriteLine("tick");
         }
     }
 }

@@ -11,9 +11,16 @@ namespace ScratchUtility
     {
         public const byte ModelToWindowAlgorithm = 2;
         private static double intersectionTolerance = 0.0000001;
+
+#if DEBUG_USE_PROPS
         public static bool DebugMode { get; set; }
         public static bool DesignMode { get; set; }
         public static int NormalToleranceDecimalPlaces { get; set; } = 4;
+#else
+        public static bool DebugMode;
+        public static bool DesignMode;
+        public static int NormalToleranceDecimalPlaces = 4;
+#endif
 
         static Global()
         {

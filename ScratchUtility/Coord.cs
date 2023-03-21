@@ -6,12 +6,12 @@ using System.Drawing;
 
 namespace ScratchUtility
 {
-    // TODO:P0 PERF: See Vector3 GetHashCode() https://referencesource.microsoft.com/#System.Numerics/System/Numerics/Vector3.cs,44
-    // TODO:P0 PERF: Implement GetHashCode, replace the String based hashes with custom Hash implmentation.  See https://learn.microsoft.com/en-us/archive/blogs/ericlippert/guidelines-and-rules-for-gethashcode and https://theburningmonk.com/2011/03/hashset-vs-list-vs-dictionary/
+    // TODO:P1 PERF: Profile Perf of Coors vs Vector3.  Suspect this should be replaced with Vector3.
+    // TODO:P1 PERF: See Vector3 GetHashCode() https://referencesource.microsoft.com/#System.Numerics/System/Numerics/Vector3.cs,44
+    // TODO:P1 PERF: Implement GetHashCode, replace the String based hashes with custom Hash implmentation.  See https://learn.microsoft.com/en-us/archive/blogs/ericlippert/guidelines-and-rules-for-gethashcode and https://theburningmonk.com/2011/03/hashset-vs-list-vs-dictionary/
+
     public struct Coord
     {
-        // TODO:P0:PERF: Cache/Hash/Dirty derived?  Are, or can Coord be immutable?  Consider
-        // #ifdef DEBUG_PROPS to 
 
         // Build with DEBUG_USE_PROPS defined if/when need to verify/detect if callers are unexpectedly mutating values.
 #if DEBUG_USE_PROPS
@@ -21,8 +21,8 @@ namespace ScratchUtility
 #else
         // PERF: OO Sacrilege for performance sake.  Intentionally using member fields instead of
         // Properties to avoid method overhead.
-        public double X; 
-        public double Y; 
+        public double X;
+        public double Y;
         public double Z;
 #endif
 
@@ -76,12 +76,6 @@ namespace ScratchUtility
         {
             // Return true if the fields match:
             return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
-
-            //if (a.X != b.X) return false;
-            //if (a.Y != b.Y) return false;
-            //if (a.Z != b.Z) return false;
-
-            //return true;
         }
 
         public static bool operator !=(Coord a, Coord b)
@@ -89,25 +83,54 @@ namespace ScratchUtility
             return !(a == b);
         }
 
-        // Remove?
-        //public override bool Equals(object obj)
-        //{
-        //    var a = this;
-        //    var b = (Coord)obj;
-
-        //    if (b == null) return false;
-
-        //    return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
-        //}
+        private static double[] s_toleranceValues = new double[]
+            {
+                0.1,
+                0.01,
+                0.001,
+                0.0001,
+                0.00001,
+            };
 
         public bool Equals(Coord other, int toleranceDecimalPlaces)
         {
-            // TODO:P0:PERF: Diff instead of Math.Round calls?
+            double toleranceValue = s_toleranceValues[toleranceDecimalPlaces];
 
-            // Return true if the fields match:
-            return Math.Round(this.X, toleranceDecimalPlaces) == Math.Round(other.X, toleranceDecimalPlaces) &&
-                Math.Round(this.Y, toleranceDecimalPlaces) == Math.Round(other.Y, toleranceDecimalPlaces) &&
-                Math.Round(this.Z, toleranceDecimalPlaces) == Math.Round(other.Z, toleranceDecimalPlaces);
+            if (this.X != other.X)
+            {
+                if (this.X > other.X && (this.X - other.X) > toleranceValue) return false;
+                if (other.X > this.X && (other.X - this.X) > toleranceValue) return false;
+            }
+
+            if (this.Y != other.Y)
+            {
+                if (this.Y > other.Y && (this.Y - other.Y) > toleranceValue) return false;
+                if (other.Y > this.Y && (other.Y - this.Y) > toleranceValue) return false;
+            }
+
+            if (this.Z != other.Z)
+            {
+                if (this.Z > other.Z && (this.Z - other.Z) > toleranceValue) return false;
+                if (other.Z > this.Z && (other.Z - this.Z) > toleranceValue) return false;
+            }
+
+            // Remove after baking...
+            //var oldVal = Math.Round(this.X, toleranceDecimalPlaces) == Math.Round(other.X, toleranceDecimalPlaces) &&
+            //    Math.Round(this.Y, toleranceDecimalPlaces) == Math.Round(other.Y, toleranceDecimalPlaces) &&
+            //    Math.Round(this.Z, toleranceDecimalPlaces) == Math.Round(other.Z, toleranceDecimalPlaces);
+
+            //if (!oldVal)
+            //{
+            //    oldVal = oldVal;
+            //}
+
+            // Return true, fields match exactly, or close enough
+            return true;
+        }
+
+        public static bool Equals(Coord left, Coord right, int toleranceDecimalPlaces)
+        {
+            return left.Equals(right, toleranceDecimalPlaces);
         }
 
         public Coord Clone(int toleranceDecimalPlaces)
@@ -202,6 +225,23 @@ namespace ScratchUtility
             double dZ = c1.Z - c2.Z;
 
             return dX * c3.X + dY * c3.Y + dZ * c3.Z;
+        }
+
+        /// <summary>
+        /// Returns (c1 + c2) / denom, inline implementation of Coord Sum divided by a scalar.
+        /// Use to reduce method calls and allocations
+        /// </summary>
+        /// <param name="c1"></param>
+        /// <param name="c2"></param>
+        /// <param name="denom"></param>
+        /// <returns></returns>
+        public static Coord SumDiv(Coord c1, Coord c2, int denom)
+        {
+            double x = (c1.X + c2.X) / denom;
+            double y = (c1.Y + c2.Y) / denom;
+            double z = (c1.Z + c2.Z) / denom;
+
+            return new Coord(x, y, z);
         }
 
         /// <summary>

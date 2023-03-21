@@ -171,7 +171,11 @@ namespace ViewSupport
                                     parsedFaceCoords.Add(coord);
                                 }
                             }
-                            parsedModel.Add(parsedFaceCoords);
+
+                            if (IsValidFace(parsedFaceCoords))
+                            {
+                                parsedModel.Add(parsedFaceCoords);
+                            }
                         }
                     }
                 }
@@ -215,7 +219,11 @@ namespace ViewSupport
 
                     if (lineParts[0] == "endloop")
                     {
-                        parsedModel.Add(parsedFaceCoords);
+                        if (IsValidFace(parsedFaceCoords))
+                        {
+                            parsedModel.Add(parsedFaceCoords);
+                        }
+                        
                         parsedFaceCoords = new List<Coord>();
                     }
                 }
@@ -229,6 +237,23 @@ namespace ViewSupport
             var model = new IndexedFaceSet(CoordMode.XYZ, name, parsedModel, scale, autoCenter);
 
             return model;
+        }
+
+        private bool IsValidFace(List<Coord> face)
+        {
+            bool isValid = true;
+
+            // Detect and skip faces with 2 or more Vertexes in exactly the same location, or
+            // approximately the same location even.
+            if (face.Count == 3 &&
+                (Coord.Equals(face[0], face[1], Global.NormalToleranceDecimalPlaces) ||
+                Coord.Equals(face[1], face[2], Global.NormalToleranceDecimalPlaces) ||
+                Coord.Equals(face[0], face[2], Global.NormalToleranceDecimalPlaces)))
+            {
+                isValid = false; ;
+            }
+
+            return isValid;
         }
     }
 }

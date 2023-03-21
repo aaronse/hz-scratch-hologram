@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using ScratchUtility;
@@ -11,12 +12,6 @@ namespace Primitives
     /// <summary>IndexedFace is analagous to a polygon.</summary>
     public class IndexedFace
     {
-        public IndexedFaceSet ParentIndexedFaceSet { get; private set; }
-        public List<Edge> Edges { get; private set; }
-        public List<Vertex> Vertices { get; private set; } //this list is in order of the way they were defined in the data file to preserve frontface/backface
-
-        private static double mIntersectionTolerance = 0;//.01; //0.0000000000001;
-
         // TODO:P1:PERF: Profiler showed original GDI based IsVisible Algo consuming 32% of total cycles.  Rewrote/inlined IsVisible, omitted IsOutlineVisible logic for now...  Clipping/hidden surface is partially broken with existing and new algorithm when edge has negative Z axis coordinates, and/or when object close-to/behind camera.
 
         // Algo version(s) to use for hotpath IsVisible checks
@@ -33,6 +28,8 @@ namespace Primitives
         public static int s_algoViewMismatches = 0;
         public static int s_algoModelCalls = 0;
         public static int s_algoModelMismatches = 0;
+
+        public static int s_nanHits = 0;
 
         private GraphicsPath _graphicsPath = null;
         private PointF[] _pointViewPath = null;
@@ -51,6 +48,11 @@ namespace Primitives
             new byte[] { 0, 1, 1 },
             new byte[] { 0, 1, 1, 1 },
         };
+
+
+        public IndexedFaceSet ParentIndexedFaceSet { get; private set; }
+        public List<Edge> Edges { get; private set; }
+        public List<Vertex> Vertices { get; private set; } //this list is in order of the way they were defined in the data file to preserve frontface/backface
 
         internal IndexedFace(IndexedFaceSet parentIndexedFaceSet)
         {
@@ -71,7 +73,11 @@ namespace Primitives
         public Rect3 BoundingBox3 { get; private set; }
 #else
         public Coord NormalVector_ModelingCoordinates;
-        public Coord NormalVector;
+        public Coord NormalVector
+        {
+            get;
+            set;
+        }
         public bool IsFrontFacing;
         public bool IsTransparent;
         public Rectangle BoundingBox;
@@ -156,9 +162,8 @@ namespace Primitives
                 throw new Exception("Failed to get direction vector. This Face is not one of supplied Edge's Faces.");
         }
 
-
-        // TODO:P0:PERF ~25% !!!
-        /// <summary>Returns true if the supplied Coord is contained within the on-screen projection of this IndexedFace. All Z values are ignored.</summary>
+        /// <summary>Returns true if the supplied Coord is contained within the on-screen 
+        /// projection of this IndexedFace. All Z values are ignored.</summary>
         public bool ContainsPoint2D(Coord c)
         {
             bool isOutlineVisibleAlgo1 = false;
@@ -279,7 +284,6 @@ namespace Primitives
         /// After rotating, all Z values are ignored.</summary>
         public bool ContainsPoint2D_ModelingCoordinates(Coord c)
         {
-            // TODO:P0 PERF: Cache perpendicularUnitVector?  What's cost per Profiler measurements?
             Coord axisUnitVector = this.NormalVector;
             Coord perpendicularUnitVector = axisUnitVector.CrossProduct(
                 (this.Vertices[1].ModelingCoord - this.Vertices[0].ModelingCoord).CalcUnitVector()); //parallel to plane
@@ -368,29 +372,37 @@ namespace Primitives
         /// <summary>Sets the NormalVector to reflect the current view of the IndexedFace on the screen. Automatically called from Refresh().</summary>
         internal void UpdateNormalVector()
         {
-            //update the vector. don't just use the first three vertices - the polygon might have a convex edge there and the result will be wrong.
-            this.NormalVector = new Coord(0, 0, 0);
+            // Update the vector. don't just use the first three vertices - the polygon might have
+            // a convex edge there and the result will be wrong.
+            var normalVector = new Coord(0, 0, 0);
             for (int i = 0; i < Vertices.Count - 2; i++)
             {
-                this.NormalVector += 
+                normalVector += 
                     (Vertices[i].ViewCoord - Vertices[i + 1].ViewCoord)
                     .CrossProduct(Vertices[i + 2].ViewCoord - Vertices[i + 1].ViewCoord);
             }
             int c = Vertices.Count;
-            this.NormalVector += (Vertices[c - 1].ViewCoord - Vertices[c - 2].ViewCoord).CrossProduct(Vertices[0].ViewCoord - Vertices[c - 2].ViewCoord);
-            this.NormalVector += (Vertices[c - 1].ViewCoord - Vertices[0].ViewCoord).CrossProduct(Vertices[1].ViewCoord - Vertices[0].ViewCoord);
-            this.NormalVector /= this.NormalVector.CalcLength();
+            normalVector += (Vertices[c - 1].ViewCoord - Vertices[c - 2].ViewCoord).CrossProduct(Vertices[0].ViewCoord - Vertices[c - 2].ViewCoord);
+            normalVector += (Vertices[c - 1].ViewCoord - Vertices[0].ViewCoord).CrossProduct(Vertices[1].ViewCoord - Vertices[0].ViewCoord);
+            normalVector /= normalVector.CalcLength();
 
-            if (!this.NormalVector.IsValid())
+            if (!normalVector.IsValid())
             {
                 StringBuilder b = new StringBuilder();
-                b.Append("Invalid Normal Vector: ").AppendLine(this.NormalVector.ToString());
+                b.Append("Invalid Normal Vector: ").AppendLine(normalVector.ToString());
                 b.AppendLine("Vertices: ");
                 foreach (Vertex v in Vertices)
                     b.AppendLine(v.ViewCoord.ToString());
                 System.Diagnostics.Debug.WriteLine(b.ToString());
                 //throw new Exception(b.ToString());
             }
+            
+            if (double.IsNaN(normalVector.X) || double.IsNaN(normalVector.Y) || double.IsNaN(normalVector.Z))
+            {
+                s_nanHits++;
+            }
+
+            this.NormalVector = normalVector;
         }
 
         internal void Refresh(bool switchBackFront)

@@ -99,7 +99,7 @@ namespace ScratchUtility
                 //float  r4 = (m.M41 * c.X) + (m.M42 * c.Y) + (m.M43 * c.Z) + (m.M44);
 
                 // Inline Normalization( Matrix4x4 * Vector3 )
-                // Note: r4 should be normalized to 1.0 if referenced further
+                // Note: r4 should be normalized to 1.0 if referenced after r1..r3 are assigned.
                 double r4 = (m.M41 * c.X) + (m.M42 * c.Y) + (m.M43 * c.Z) + (m.M44);
                 double r1 = ((m.M11 * c.X) + (m.M12 * c.Y) + (m.M13 * c.Z) + (m.M14)) / r4;
                 double r2 = ((m.M21 * c.X) + (m.M22 * c.Y) + (m.M23 * c.Z) + (m.M24)) / r4;
