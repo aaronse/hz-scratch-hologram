@@ -3,9 +3,14 @@ App for creating 3D [Specular Holograms](https://en.wikipedia.org/wiki/Specular_
 on 2D surfaces.  Also known as abrasion holograms or [Chatoyant](https://en.wikipedia.org/wiki/Chatoyancy) 
 holograms.  
 
+<center> 
+
 [![Aza HoloZens youtube video](https://i.ytimg.com/vi/1uku3OEgDNg/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDmtLtot2FTjpBS1rR6wLmUO8Q8xg)](https://www.youtube.com/watch?v=1uku3OEgDNg)
 
-Brief overview video @ https://www.youtube.com/watch?v=1uku3OEgDNg.
+Quick overview @ https://www.youtube.com/watch?v=1uku3OEgDNg.
+
+</center> 
+
 
 This started as a fork of Mike Miller's https://github.com/mymikemiller/scratchhologram (see [changelist history](https://github.com/aaronse/hz-scratch-hologram/commits/master/)
 for functional/perf edits I've made since).
@@ -23,7 +28,8 @@ https://www.printables.com/model/419594-v1e-lowrider-3-pen-drag-knife-drag-bit-r
 ## History, Related work and Acknowledgments
 Myself and other V1E forum members stumbled (~2023/2) onto [Steve Mould's Specular Hologram video](https://www.youtube.com/watch?v=sv-38lwV6vc),
 we collectively had a [speculative discussion](https://forum.v1e.com/t/drag-knife-and-laser-etched-specular-holograms/36888) 
-on how to get our CNC/Laser machines to achieve great results, that poor Steve was painstakingly doing by hand.
+on how to get our CNC/Laser machines to achieve great results.  Steve painstakingly made the holograms with a compass, showing what's possible by hand.  
+We wanted to see what's possible with our CNCs and Lasers.
 
 Some info and resources I stumbled across when researching into background, options and alternatives...
 
@@ -44,15 +50,19 @@ Some info and resources I stumbled across when researching into background, opti
 * YouTube Playlist Hologram scratch abrasion videos @ [Holograms scratch abrasion - YouTube ](https://www.youtube.com/playlist?list=PL60100E8F3572CEB1)
   * Checkout hologram on Star Wars vinyl records.
 * Very different from Red Laser Holograms [LitiHolo 3D Hologram Printer Video Intro - YouTube ](https://www.youtube.com/watch?v=tbLrAwaqdN8)
-[/quote]
+* $50 Holocraft app, is listed for sale @ https://deftware.myshopify.com/products/holocraft, looks 
+  interesting.  I have **NOT** tried the app.  Mentioning here incase it's a good fit for what     
+  you're looking for.
 
 
 ## Using HoloZens
-Currently (2024/1/3) you need to clone/download this code, compile in Visual Studio and run on Windows.
+Currently (2024/1/3), you'll need some patience and determination...  Clone/download this code, compile in 
+Visual Studio and run on Windows.  I haven't made time/prioritized packaging this up in a way that'd work for more people.
 
 Watch the YouTube video for quick overview, ping me if you want more detailed video/instructions showing 
 how to use.  I'll try to put something together if there's enough interest.
 
+Please share if you make something interesting and/or learn techniques that are helpful to know.  Cheers!
 
 ## More Info
 Consider checking out [https://forum.v1e.com/t/drag-knife-and-laser-etched-specular-holograms/36888](https://forum.v1e.com/t/drag-knife-and-laser-etched-specular-holograms/36888),
