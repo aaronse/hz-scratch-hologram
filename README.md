@@ -4,10 +4,11 @@ on 2D surfaces.  Also known as abrasion holograms or [Chatoyant](https://en.wiki
 holograms.  
 
 [![Aza HoloZens youtube video](https://i.ytimg.com/vi/1uku3OEgDNg/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDmtLtot2FTjpBS1rR6wLmUO8Q8xg)](https://www.youtube.com/watch?v=1uku3OEgDNg)
+
 Brief overview video @ https://www.youtube.com/watch?v=1uku3OEgDNg.
 
-This started as a fork of Mike Miller's https://github.com/mymikemiller/scratchhologram (see changelist 
-history for functional/perf edits I've made since).
+This started as a fork of Mike Miller's https://github.com/mymikemiller/scratchhologram (see [changelist history](https://github.com/aaronse/hz-scratch-hologram/commits/master/)
+for functional/perf edits I've made since).
 
 Use this app to convert **Basic** 3D models (with very few faces/triangles) from .STL to 
 .SVG image files that can be used in your CNC/Laser CAM software (e.g. EstlCam, Fusion 360, LightBurn, etc...) 
