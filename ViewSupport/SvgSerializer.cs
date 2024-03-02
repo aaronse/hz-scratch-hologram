@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -40,8 +41,10 @@ namespace ViewSupport
             float maxX = 1;
             float maxY = 1;
 
+            CultureInfo culture = new CultureInfo("en-US");
             StringBuilder sbArcsPath = new StringBuilder();
             StringBuilder sbArcs = new StringBuilder();
+
             if (arcSegs != null)
             {
                 float pi = (float)Math.PI;
@@ -81,8 +84,10 @@ namespace ViewSupport
                     if (y1 > maxY) maxY = y1;
                     if (y2 > maxY) maxY = y2;
 
-                    sbArcsPath.AppendLine($"M {x1} {y1}");
-                    sbArcsPath.AppendLine($"A {r} {r} 0 0 {sweepFlag} {x2} {y2}");
+                    sbArcsPath.AppendLine(string.Format(culture, "M {0} {1}", x1, y1));
+                    sbArcsPath.AppendLine(string.Format(culture, "A {0} {0} 0 0 {1} {2} {3}", r, sweepFlag, x2, y2));
+                    //sbArcsPath.AppendLine($"M {x1} {y1}");
+                    //sbArcsPath.AppendLine($"A {r} {r} 0 0 {sweepFlag} {x2} {y2}");
                 }
                 sbArcs.Append("<path stroke=\"black\" stroke-width=\"1\" d=\"");
                 sbArcs.AppendLine(sbArcsPath.ToString());
