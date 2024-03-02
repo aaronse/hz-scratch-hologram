@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -40,8 +41,10 @@ namespace ViewSupport
             float maxX = 1;
             float maxY = 1;
 
+            CultureInfo culture = new CultureInfo("en-US");
             StringBuilder sbArcsPath = new StringBuilder();
             StringBuilder sbArcs = new StringBuilder();
+
             if (arcSegs != null)
             {
                 float pi = (float)Math.PI;
@@ -56,6 +59,7 @@ namespace ViewSupport
                         return as1Hash.CompareTo(as2Hash);
                     });
 
+                // svg arc: https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths#arcs
                 foreach (var arcSeg in arcSegs)
                 {
                     // TODO:P1 Should 0 and/or small angle sweep be skipped or merged with close by sweeps?  Maybe 0 or small angle gaps are logic/rounding BUG needing to be fixed?
@@ -81,9 +85,10 @@ namespace ViewSupport
                     if (y1 > maxY) maxY = y1;
                     if (y2 > maxY) maxY = y2;
 
-                    sbArcsPath.AppendLine($"M {x1} {y1}");
-                    sbArcsPath.AppendLine($"A {r} {r} 0 0 {sweepFlag} {x2} {y2}");
+                    sbArcsPath.AppendLine(string.Format(culture, "M {0} {1}", x1, y1));
+                    sbArcsPath.AppendLine(string.Format(culture, "A {0} {0} 0 0 {1} {2} {3}", r, sweepFlag, x2, y2));
                 }
+
                 sbArcs.Append("<path stroke=\"black\" stroke-width=\"1\" d=\"");
                 sbArcs.AppendLine(sbArcsPath.ToString());
                 sbArcs.Append("\"/>");
@@ -108,8 +113,8 @@ namespace ViewSupport
                         if (y2 > maxY) maxY = y2;
 
                         StringBuilder sbVectorPath = new StringBuilder();
-                        sbVectorPath.AppendLine($"M {x1} {y1}");
-                        sbVectorPath.AppendLine($"L {x2} {y2}");
+                        sbVectorPath.AppendLine(string.Format(culture, "M {0} {1}", x1, y1));
+                        sbVectorPath.AppendLine(string.Format(culture, "L {0} {1}", x2, y2));
 
                         sbVectors.Append($"<path stroke=\"{line.Color}\" stroke-width=\"1\" d=\"");
                         sbVectors.AppendLine(sbVectorPath.ToString());
@@ -133,8 +138,8 @@ namespace ViewSupport
                             if (y1 > maxY) maxY = y1;
                             if (y2 > maxY) maxY = y2;
 
-                            sbVectorPath.AppendLine($"M {x1} {y1}");
-                            sbVectorPath.AppendLine($"L {x2} {y2}");
+                            sbVectorPath.AppendLine(string.Format(culture, "M {0} {1}", x1, y1));
+                            sbVectorPath.AppendLine(string.Format(culture, "L {0} {1}", x2, y2));
                         }
 
                         sbVectors.Append($"<path stroke=\"{pathShape.Color}\" stroke-width=\"1\" d=\"");
@@ -146,11 +151,11 @@ namespace ViewSupport
 
             }
 
-            int width = (int)maxX;
-            int height = (int)maxY;
+            int width = (int)Math.Ceiling(maxX);
+            int height = (int)Math.Ceiling(maxY);
 
             StringBuilder sbDoc = new StringBuilder();
-            sbDoc.AppendLine($"<svg width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">");
+            sbDoc.AppendLine(string.Format(culture, "<svg width=\"{0}\" height=\"{1}\" viewBox=\"0 0 {0} {1}\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">", width, height));
 
             sbDoc.AppendLine(sbArcs.ToString());
 
